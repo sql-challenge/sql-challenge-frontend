@@ -62,6 +62,7 @@ class ApiClient {
             let data: ApiResponse<T>
             try {
                 data = await response.json()
+                // debugger;
             } catch {
                 // If response is not JSON, create a generic error
                 if (!response.ok) {
@@ -71,11 +72,15 @@ class ApiClient {
                 data = {} as ApiResponse<T>
         
             }
-
+            // debugger;
+            if (data.error) {
+                throw new ApiError(data.error, response.status)
+            }
             // Handle error responses
             if (!response.ok) {
                 throw new ApiError((data.error || data.message) || "Requisição falhou", response.status, data.fieldErrors)
             }
+            // debugger;
 
             return data.data as T
         } catch (error) {

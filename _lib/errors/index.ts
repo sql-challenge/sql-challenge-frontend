@@ -9,7 +9,7 @@ export class ApiError extends Error {
     public code?: string,
   ) {
     super(message)
-    this.name = "ApiError"
+    this.name = "API_ERROR"
   }
 
   /**
@@ -49,7 +49,7 @@ export class ApiError extends Error {
     }
     //
     if (this.isServerError()) {
-      return `[Status HTTP ${this.statusCode}] Aconteceu um erro no lado do servidor.`
+      return `[${this.name}] ${this.message || "Aconteceu um erro no lado do servidor."}`
     }
     //
     return this.message

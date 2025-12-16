@@ -34,6 +34,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Check for saved user in localStorage after mount
     const savedUser = localStorage.getItem("user")
+    //
     if (savedUser) {
       try {
         setUser(JSON.parse(savedUser))
@@ -50,7 +51,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // Simulate API call
     // await new Promise((resolve) => setTimeout(resolve, 1000))
 
-    const user = await api.post<User>('/api/user/auth/', {email, password})
+    const user = await api.post<User | null>('/api/user/auth/', { email, password })
     // persist session
     // change to jwt or order thing 
     setUser(user)
@@ -59,7 +60,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (form: UserSignUp) => {
     const user = await api.post<User>('/api/user/', form)
-
+    // debugger;
     setUser(user)
     localStorage.setItem("user", JSON.stringify(user))
   }
