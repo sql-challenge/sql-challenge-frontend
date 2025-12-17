@@ -28,8 +28,6 @@ services:
       - PORT=8000
       - FRONTEND_URL="http://frontend"
       - FRONTEND_PORT=3000
-    depends_on:
-      - postgres
     restart: unless-stopped
     networks:
       - app-network
