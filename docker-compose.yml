@@ -41,7 +41,7 @@ services:
       - ./sql-challenge-frontend/.env
     environment:
       - PORT=3000
-      - NEXT_PUBLIC_API_BASE_URL=https://sql-challenger.ddns.net:8000
+      - NEXT_PUBLIC_API_BASE_URL=https://sql-challenger.ddns.net
       - NEXT_PUBLIC_API_PORT=8000
     depends_on:
       - backend
