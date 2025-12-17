@@ -137,4 +137,4 @@ class ApiClient {
 }
 
 // Export singleton instance
-export const api = new ApiClient(`${process.env["NEXT_PUBLIC_API_BASE_URL"]}:${process.env["NEXT_PUBLIC_API_PORT"]}`)
+export const api = new ApiClient(`${process.env["NEXT_PUBLIC_API_BASE_URL"]}`)
