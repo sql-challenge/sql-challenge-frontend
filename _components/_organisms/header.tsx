@@ -3,11 +3,7 @@
 import { Logo } from "@/_components/_molecules/logo"
 import { ThemeToggler } from "@/_components/_atoms/themeToggler"
 import { UserMenu } from "@/_components/_molecules/userMenu"
-import { User, useUser } from "@/_context/userContext"
-
-interface HeaderProps {
-    user: User
-}
+import { useUser } from "@/_context/userContext"
 
 export function Header() {
     // const {user} = useUser()
