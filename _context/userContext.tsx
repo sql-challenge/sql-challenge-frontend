@@ -3,7 +3,7 @@
 import { api } from "@/_lib/api"
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import { User, UserSignUp } from '@/_lib/types/user'
+import { User, UserSignUp, UserSignUpForm } from '@/_lib/types/user'
 // export type User = {
 //   id: string
 //   name: string
@@ -21,7 +21,7 @@ type UserContextType = {
   user: User | null
   // isLoading: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (form: UserSignUp) => Promise<void>
+  signUp: (form: UserSignUpForm) => Promise<void>
   signOut: () => void
   updateUser: (updates: Partial<User>) => void
 }
@@ -30,20 +30,22 @@ const UserContext = createContext<UserContextType | undefined>(undefined)
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-
-  useEffect(() => {
-    // Check for saved user in localStorage after mount
-    const savedUser = localStorage.getItem("user")
-    //
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser))
-      } catch (error) {
-        console.error("Failed to parse saved user:", error)
-        localStorage.removeItem("user")
-      }
-    }
-  }, [])
+  // TODO: only use local_storage to info that dont need to be validaded by backend
+  // use local_storage when token for session is provided
+  // ========
+  // useEffect(() => {
+  //   // Check for saved user in localStorage after mount
+  //   const savedUser = localStorage.getItem("user")
+  //   //
+  //   if (savedUser) {
+  //     try {
+  //       setUser(JSON.parse(savedUser))
+  //     } catch (error) {
+  //       console.error("Failed to parse saved user:", error)
+  //       localStorage.removeItem("user")
+  //     }
+  //   }
+  // }, [])
 
   const signIn = async (email: string, password: string) => {
     // loginSchema.parse({ email, password })
@@ -55,19 +57,20 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     // persist session
     // change to jwt or order thing 
     setUser(user)
-    localStorage.setItem("user", JSON.stringify(user))
+    // localStorage.setItem("user", JSON.stringify(user))
   }
 
-  const signUp = async (form: UserSignUp) => {
+  const signUp = async (form: UserSignUpForm) => {
     const user = await api.post<User>('/api/user/', form)
     // debugger;
     setUser(user)
-    localStorage.setItem("user", JSON.stringify(user))
+    // localStorage.setItem("user", JSON.stringify(user))
+    // debugger;
   }
 
   const signOut = () => {
     setUser(null)
-    localStorage.removeItem("user")
+    // localStorage.removeItem("user")
   }
 
   const updateUser = (updates: Partial<User>) => {
@@ -75,7 +78,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     const updatedUser = { ...user, ...updates }
     setUser(updatedUser)
-    localStorage.setItem("user", JSON.stringify(updatedUser))
+    // localStorage.setItem("user", JSON.stringify(updatedUser))
   }
 
   return (

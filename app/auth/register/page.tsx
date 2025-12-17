@@ -96,12 +96,7 @@ export default function RegisterPage() {
       }
 
       // Call signUp with validated data
-      await signUp({...formData,
-        challenge_progress: [],
-        xp: 0,
-        rankingPosition: 0,
-        friends: []
-       })
+      await signUp(formData)
        //
       router.push("/dashboard")
     } catch (err) {
@@ -145,7 +140,7 @@ export default function RegisterPage() {
             )}
 
             <FormField
-              label="Nome de usuário"
+              label="Nome do usuário"
               type="text"
               placeholder="nome_do_detetive"
               value={formData.username}
@@ -153,6 +148,18 @@ export default function RegisterPage() {
               onBlur={handleFieldBlur("username")}
               error={fieldErrors.username}
               helperText="Este será seu nome de detetive público"
+              required
+            />
+
+            <FormField
+              label="Apelido"
+              type="text"
+              placeholder="apelido_do_detetive"
+              value={formData.nick}
+              onChange={handleFieldChange("nick")}
+              onBlur={handleFieldBlur("nick")}
+              error={fieldErrors.username}
+              helperText="Este será seu apelido de detetive público"
               required
             />
 

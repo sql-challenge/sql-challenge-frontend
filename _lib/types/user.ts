@@ -19,7 +19,7 @@ export interface User {
     username: string;
     nick: string;
     email: string;
-    password?: string;
+    // password?: string;
     imagePerfil: string; // mudei para opcional, thing
     createdAt: Date;
     lastLogin: Date;

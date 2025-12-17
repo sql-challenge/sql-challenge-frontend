@@ -59,7 +59,8 @@ class ApiClient {
             const response = await fetch(`${this.baseUrl}${path}`, config)
 
             // Parse response
-            let data: ApiResponse<T>
+            let data: ApiResponse<T> 
+            //
             try {
                 data = await response.json()
                 // debugger;
