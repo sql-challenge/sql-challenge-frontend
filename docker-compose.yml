@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports: 
+      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    depends_on: 
+      - frontend
+      - backend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  backend:
+    build: 
+      context: ./sql-challenge-backend
+      dockerfile: Dockerfile
+    expose:
+      - "8000"
+    env_file:
+      - ./sql-challenge-backend/.env
+    environment:
+      - PORT=8000
+      - FRONTEND_URL="http://frontend"
+      - FRONTEND_PORT=3000
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - app-network
+    # healthcheck:
+    #   test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 40s
+
+  frontend:  
+    build: 
+      context: ./sql-challenge-frontend
+      dockerfile: Dockerfile
+    expose:  
+      - "3000"
+    env_file:
+      - ./sql-challenge-frontend/.env
+    environment:
+      - PORT=3000
+      - NEXT_PUBLIC_API_BASE_URL="http://backend"
+      - NEXT_PUBLIC_API_PORT=8000
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  # postgres: 
+  #   image: postgres:16-alpine
+  #   expose:
+  #     - "5432"
+  #   environment:  
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
+  #     - POSTGRES_DB=sqlchallenge
+  #   volumes:   
+  #     - postgres_data:/var/lib/postgresql/data
+  #   restart: unless-stopped
+  #   networks:
+  #     - app-network
+  #   healthcheck:
+  #     test:  ["CMD-SHELL", "pg_isready -U postgres"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes: 
+  postgres_data:  
+
+networks:
+  app-network:  
+    driver: bridge
