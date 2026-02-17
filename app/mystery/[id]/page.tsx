@@ -27,6 +27,11 @@ export default function MysteryEditorPage() {
   const [activeTab, setActiveTab] = useState<"story" | "database" | "hints">("story");
   const [loadError, setLoadError] = useState<string | null>(null);
 
+  // Victory condition states
+  const [isVictorious, setIsVictorious] = useState(false);
+  const [score, setScore] = useState(0);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
   // Initialize SQL database
   const {
     executeQuery,
@@ -57,6 +62,82 @@ export default function MysteryEditorPage() {
     loadMystery();
   }, [mysteryId]);
 
+  // Victory condition checker
+  const checkVictoryCondition = (userResults: QueryResult): boolean => {
+    if (!mystery) return false;
+
+    const expected = mystery.expectedOutput;
+
+    // Check if columns match (order-independent, case-insensitive)
+    const userColumnsSet = new Set(
+      userResults.columns.map((c) => c.toLowerCase())
+    );
+    const expectedColumnsSet = new Set(
+      expected.columns.map((c) => c.toLowerCase())
+    );
+
+    if (userColumnsSet.size !== expectedColumnsSet.size) {
+      setFeedback("❌ As colunas retornadas não correspondem às esperadas.");
+      return false;
+    }
+
+    for (const col of expectedColumnsSet) {
+      if (!userColumnsSet.has(col)) {
+        setFeedback("❌ As colunas retornadas não correspondem às esperadas.");
+        return false;
+      }
+    }
+
+    // Check if row count matches
+    if (userResults.rows.length !== expected.rows.length) {
+      setFeedback(
+        `❌ Número de linhas incorreto. Esperado: ${expected.rows.length}, Obtido: ${userResults.rows.length}`
+      );
+      return false;
+    }
+
+    // Normalize and compare rows (order-independent)
+    const normalizeValue = (val: unknown) => {
+      if (val === null || val === undefined) return "null";
+      if (typeof val === "number") return val.toFixed(2); // Handle float precision
+      return String(val).toLowerCase().trim();
+    };
+
+    const normalizeRow = (row: Record<string, unknown>) => {
+      return expected.columns
+        .map((col) => normalizeValue(row[col]))
+        .sort()
+        .join("|");
+    };
+
+    const userRowsSet = new Set(userResults.rows.map(normalizeRow));
+    const expectedRowsSet = new Set(expected.rows.map(normalizeRow));
+
+    if (userRowsSet.size !== expectedRowsSet.size) {
+      setFeedback("❌ Os dados retornados não correspondem aos esperados.");
+      return false;
+    }
+
+    for (const expectedRow of expectedRowsSet) {
+      if (!userRowsSet.has(expectedRow)) {
+        setFeedback("❌ Os dados retornados não correspondem aos esperados.");
+        return false;
+      }
+    }
+
+    // Calculate score (base XP - hint penalties)
+    const hintsUsedPenalty = hintsRevealed.reduce((total, hintId) => {
+      const hint = mystery.hints.find((h) => h.id === hintId);
+      return total + (hint?.xpPenalty || 0);
+    }, 0);
+
+    const finalScore = Math.max(0, mystery.xpReward - hintsUsedPenalty);
+    setScore(finalScore);
+    setFeedback("🎉 Parabéns! Você resolveu o mistério!");
+
+    return true;
+  };
+
   const handleRunQuery = async () => {
     if (!query.trim()) {
       setError("Por favor, escreva uma query SQL");
@@ -73,11 +154,16 @@ export default function MysteryEditorPage() {
 
     try {
       const queryResults = executeQuery(query);
-      // debugger;
       setResults(queryResults);
+
+      // Check victory condition
+      const victory = checkVictoryCondition(queryResults);
+      setIsVictorious(victory);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao executar query");
       setResults(null);
+      setIsVictorious(false);
+      setFeedback(null);
     } finally {
       setIsRunning(false);
     }
@@ -86,8 +172,62 @@ export default function MysteryEditorPage() {
   const handleRevealHint = (hintId: string) => {
     if (!hintsRevealed.includes(hintId)) {
       setHintsRevealed([...hintsRevealed, hintId]);
-      // TODO: Deduct XP penalty
     }
+  };
+
+  // Victory Banner Component
+  const VictoryBanner = () => {
+    if (!isVictorious) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-card border-2 border-green-500 rounded-xl p-8 max-w-md w-full shadow-2xl animate-scale-in">
+          <div className="text-center space-y-4">
+            <div className="text-6xl animate-bounce">🎉</div>
+            <h2 className="text-3xl font-bold text-green-500">
+              Mistério Resolvido!
+            </h2>
+            <p className="text-muted-foreground">{feedback}</p>
+
+            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+              <p className="text-sm text-muted-foreground mb-1">XP Ganho</p>
+              <p className="text-4xl font-bold text-green-500">+{score} XP</p>
+              {hintsRevealed.length > 0 && (
+                <p className="text-xs text-yellow-500 mt-2">
+                  ({hintsRevealed.length} dica(s) usada(s))
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={() => router.push("/mystery")}
+                className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
+              >
+                Próximo Mistério
+              </button>
+              <button
+                onClick={() => setIsVictorious(false)}
+                className="px-4 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+              >
+                Revisar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Feedback Banner Component
+  const FeedbackBanner = () => {
+    if (!feedback || isVictorious) return null;
+
+    return (
+      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-4">
+        <p className="text-sm text-red-500">{feedback}</p>
+      </div>
+    );
   };
 
   if (loadError) {
@@ -229,12 +369,18 @@ export default function MysteryEditorPage() {
             <SqlEditor value={query} onChange={setQuery} />
           </div>
 
+          {/* Feedback Banner */}
+          <FeedbackBanner />
+
           {/* Results Panel */}
           <div className="bg-card border border-border rounded-lg flex-1 min-h-[250px]">
             <ResultsPanel results={results} error={error} isRunning={isRunning} />
           </div>
         </div>
       </div>
+
+      {/* Victory Modal */}
+      <VictoryBanner />
     </div>
   );
 }

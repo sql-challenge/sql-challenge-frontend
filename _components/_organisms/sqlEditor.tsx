@@ -13,7 +13,7 @@ interface SqlEditorProps {
 export function SqlEditor({ value, onChange, readOnly = false }: SqlEditorProps) {
   const {theme} = useTheme()
   return (
-    <div className="flex-1 relative border border-border rounded-lg overflow-hidden">
+    <div className="flex-1 relative border border-border overflow-hidden">
       <CodeMirror
         value={value}
         height="300px"
