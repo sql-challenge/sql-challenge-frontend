@@ -1,31 +1,48 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import CodeMirror from "@uiw/react-codemirror";
+import { sql, SQLite } from "@codemirror/lang-sql";
+import { useTheme } from "@/_context/themeProvider";
 
 interface SqlEditorProps {
   value: string;
   onChange: (value: string) => void;
+  readOnly?: boolean;
 }
 
-export function SqlEditor({ value, onChange }: SqlEditorProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [value]);
-
+export function SqlEditor({ value, onChange, readOnly = false }: SqlEditorProps) {
+  const {theme} = useTheme()
   return (
-    <div className="flex-1 relative">
-      <textarea
-        ref={textareaRef}
+    <div className="flex-1 relative border border-border rounded-lg overflow-hidden">
+      <CodeMirror
         value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="-- Digite sua query SQL aqui&#10;SELECT * FROM tabela WHERE condicao = 'valor';"
-        className="w-full h-full min-h-[200px] p-4 bg-background border-0 focus:outline-none focus:ring-0 font-mono text-sm text-foreground resize-none"
-        spellCheck={false}
+        height="300px"
+        extensions={[sql({ dialect: SQLite })]}
+        theme={theme ?? "dark"}
+        onChange={onChange}
+        basicSetup={{
+          lineNumbers: true,
+          highlightActiveLineGutter: true,
+          highlightSpecialChars: true,
+          foldGutter: true,
+          drawSelection: true,
+          dropCursor: true,
+          allowMultipleSelections: true,
+          indentOnInput: true,
+          bracketMatching: true,
+          closeBrackets: true,
+          autocompletion: true,
+          rectangularSelection: true,
+          crosshairCursor: true,
+          highlightActiveLine: true,
+          highlightSelectionMatches: true,
+          closeBracketsKeymap: true,
+          searchKeymap: true,
+          foldKeymap: true,
+          completionKeymap: true,
+          lintKeymap: true,
+        }}
+        editable={!readOnly}
       />
     </div>
   );

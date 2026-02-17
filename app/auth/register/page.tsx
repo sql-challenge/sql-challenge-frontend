@@ -98,7 +98,8 @@ export default function RegisterPage() {
       // Call signUp with validated data
       await signUp(formData)
        //
-      router.push("/dashboard")
+      // router.push("/dashboard")
+      router.push("/mystery")
     } catch (err) {
       // Handle API errors
       if (err instanceof ApiError) {

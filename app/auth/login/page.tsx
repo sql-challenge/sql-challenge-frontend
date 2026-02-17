@@ -61,7 +61,8 @@ export default function LoginPage() {
       //
       await signIn(validatedData.email, validatedData.password)
       // change to deashbpard when finish
-      router.push("/dashboard")
+      // router.push("/dashboard")
+      router.push("/mystery")
     } catch (err: any) {
       // Handle Zod validation errors
       if (err instanceof ZodError) {
@@ -130,9 +131,9 @@ export default function LoginPage() {
                 <input type="checkbox" className="h-4 w-4 rounded border-border bg-input accent-primary" />
                 <span className="text-muted-foreground">Lembrar de mim</span>
               </label>
-              <Link href="/auth/forgot-password" className="text-primary hover:underline">
+              {/* <Link href="/auth/forgot-password" className="text-primary hover:underline">
                 Esqueceu a senha?
-              </Link>
+              </Link> */}
             </div>
 
             <div className="mb-2 text-sm">

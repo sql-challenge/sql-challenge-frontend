@@ -1,7 +1,22 @@
-import type { NextConfig } from "next";
+import { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  /* config options here */
+/** @type {import('next').NextConfig} */
+const nextConfig:NextConfig = {
+  // webpack: (config, { isServer }) => {
+  //   // Handle WASM files
+  //   config.experiments = {
+  //     ...config.experiments,
+  //     asyncWebAssembly: true,
+  //   };
+
+  //   // Add rule for .wasm files
+  //   config.module.rules.push({
+  //     test: /\.wasm$/,
+  //     type: "asset/resource",
+  //   });
+
+  //   return config;
+  // },
 };
 
-export default nextConfig;
+module.exports = nextConfig;
