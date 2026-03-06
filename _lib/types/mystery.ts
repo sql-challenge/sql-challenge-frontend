@@ -1,6 +1,6 @@
 export type DifficultyLevel = "beginner" | "intermediate" | "advanced" | "expert";
 
-export type MysteryStatus = "locked" | "available" | "in_progress" | "completed";
+export type MysteryStatus = "finished" | "available"; // can change!
 
 export interface Mystery {
   id: string;
@@ -9,9 +9,9 @@ export interface Mystery {
   difficulty: DifficultyLevel;
   category: string;
   xpReward: number;
-  estimatedTime: string;
-  status: MysteryStatus;
-  completionRate: number; // percentage of users who completed
+  estimatedTime: string; // will change! (time in seconds)
+  status: MysteryStatus; // can change!
+  completionRate: number; // will change! (process on backend)
   icon: string;
   tags: string[];
   createdAt: string;
@@ -22,7 +22,7 @@ export interface MysteryDetail extends Mystery {
   storyIntro: string;
   storyContext: string;
   objectives: string[];
-  hints: Hint[];
+  hints: Hint[]; // will change!
   database: DatabaseSchema;
   expectedOutput: QueryResult;
   testCases: TestCase[];
@@ -35,7 +35,7 @@ export interface Hint {
   xpPenalty: number;
 }
 
-export interface DatabaseSchema {
+export interface DatabaseSchema { // adapt on management of database schemas
   tables: Table[];
   relationships: Relationship[];
 }

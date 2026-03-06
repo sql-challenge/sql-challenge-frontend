@@ -8,18 +8,21 @@ import type { Mystery, DifficultyLevel } from "@/_lib/types/mystery";
 import { mockMysteries } from "@/_lib/mock/mystery";
 
 export default function MysteriesPage() {
+  // This type matches the backend:
+  // status: "available" | "finished"
   const [mysteries, setMysteries] = useState<Mystery[]>(mockMysteries);
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | "all">("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
   const filteredMysteries = mysteries.filter((mystery) => {
-    const matchesDifficulty = selectedDifficulty === "all" || mystery.difficulty === selectedDifficulty;
+    const matchesDifficulty =
+      selectedDifficulty === "all" || mystery.difficulty === selectedDifficulty;
     const matchesCategory = selectedCategory === "all" || mystery.category === selectedCategory;
-    const matchesSearch = 
+    const matchesSearch =
       mystery.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       mystery.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     return matchesDifficulty && matchesCategory && matchesSearch;
   });
 
@@ -64,15 +67,15 @@ export default function MysteriesPage() {
             </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-1">Em Progresso</p>
-            <p className="text-2xl font-bold text-accent">
-              {mysteries.filter((m) => m.status === "in_progress").length}
+            <p className="text-sm text-muted-foreground mb-1">Finalizados</p>
+            <p className="text-2xl font-bold text-success">
+              {mysteries.filter((m) => m.status === "finished").length}
             </p>
           </div>
           <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-1">Completados</p>
-            <p className="text-2xl font-bold text-success">
-              {mysteries.filter((m) => m.status === "completed").length}
+            <p className="text-sm text-muted-foreground mb-1">Abertos</p>
+            <p className="text-2xl font-bold text-accent">
+              {mysteries.filter((m) => m.status === "available").length}
             </p>
           </div>
         </div>
