@@ -12,6 +12,7 @@ interface SqlEditorProps {
 
 export function SqlEditor({ value, onChange, readOnly = false }: SqlEditorProps) {
   const {theme} = useTheme()
+  //
   return (
     <div className="flex-1 relative border border-border overflow-hidden">
       <CodeMirror
@@ -21,7 +22,7 @@ export function SqlEditor({ value, onChange, readOnly = false }: SqlEditorProps)
         theme={theme ?? "dark"}
         onChange={onChange}
         basicSetup={{
-          lineNumbers: true,
+        lineNumbers: true,
           highlightActiveLineGutter: true,
           highlightSpecialChars: true,
           foldGutter: true,

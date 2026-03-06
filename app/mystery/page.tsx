@@ -1,248 +1,95 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
 import { Header } from "@/_components/_organisms/header";
-import { SqlEditor } from "@/_components/_organisms/sqlEditor";
-import { ResultsPanel } from "@/_components/_organisms/resultsPanel";
-import { MysteryStory } from "@/_components/_organisms/mysteryStory";
-import { DatabaseExplorer } from "@/_components/_organisms/databaseExplorer";
-import { HintsPanel } from "@/_components/_organisms/hintsPanel";
-import type { MysteryDetail, QueryResult } from "@/_lib/types/mystery";
-import { LoadingScreen } from "@/_components/_organisms/loadingScreen";
-import { useSqlDatabase } from "@/_context/sqlContext";
-import { MysteryService } from "@/_lib/services/mystery";
+import { MysteryCard } from "@/_components/_molecules/misteryCard";
+import { MysteryFilters } from "@/_components/_molecules/misteryFilters";
+import type { Mystery, DifficultyLevel } from "@/_lib/types/mystery";
+import { mockMysteries } from "@/_lib/mock/mystery";
 
-export default function MysteryEditorPage() {
-  const params = useParams();
-  const router = useRouter();
-  const mysteryId = params.id as string;
+export default function MysteriesPage() {
+  const [mysteries, setMysteries] = useState<Mystery[]>(mockMysteries);
+  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | "all">("all");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const [mystery, setMystery] = useState<MysteryDetail | null>(null);
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<QueryResult | null>(null);
-  const [isRunning, setIsRunning] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hintsRevealed, setHintsRevealed] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState<"story" | "database" | "hints">("story");
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const filteredMysteries = mysteries.filter((mystery) => {
+    const matchesDifficulty = selectedDifficulty === "all" || mystery.difficulty === selectedDifficulty;
+    const matchesCategory = selectedCategory === "all" || mystery.category === selectedCategory;
+    const matchesSearch = 
+      mystery.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      mystery.description.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    return matchesDifficulty && matchesCategory && matchesSearch;
+  });
 
-  // Load mystery data first
-  useEffect(() => {
-    const loadMystery = async () => {
-      try {
-        setLoadError(null);
-        // console.log("Loading mystery:", mysteryId);
-        const mysteryData = await MysteryService.getMysteryDetail(mysteryId);
-        
-        if (!mysteryData) {
-          setLoadError("Mistério não encontrado");
-          return;
-        }
-        
-        // console.log("Mystery loaded:", mysteryData.title);
-        setMystery(mysteryData);
-      } catch (err) {
-        console.error("Error loading mystery:", err);
-        setLoadError("Erro ao carregar mistério");
-      }
-    };
-
-    loadMystery();
-  }, [mysteryId]);
-
-  // Initialize SQL database after mystery is loaded
-  const {
-    executeQuery,
-    isLoading: isDbLoading,
-    error: dbError,
-    isReady,
-  } = useSqlDatabase(mystery?.database || null);
-
-  const handleRunQuery = async () => {
-    if (!query.trim()) {
-      setError("Por favor, escreva uma query SQL");
-      return;
-    }
-
-    if (!isReady) {
-      setError("Banco de dados ainda não está pronto. Aguarde...");
-      return;
-    }
-
-    setIsRunning(true);
-    setError(null);
-    setResults(null);
-
-    try {
-      // console.log("Running query from UI:", query);
-      const queryResults = executeQuery(query);
-      // console.log("Query completed, setting results:", queryResults);
-      setResults(queryResults);
-    } catch (err) {
-      console.error("Query error:", err);
-      setError(err instanceof Error ? err.message : "Erro ao executar query");
-      setResults(null);
-    } finally {
-      setIsRunning(false);
-    }
-  };
-
-  const handleRevealHint = (hintId: string) => {
-    if (!hintsRevealed.includes(hintId)) {
-      setHintsRevealed([...hintsRevealed, hintId]);
-    }
-  };
-
-  if (loadError) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-destructive mb-2">{loadError}</h2>
-          <button
-            onClick={() => router.push("/mystery")}
-            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md"
-          >
-            Voltar para Mistérios
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!mystery || isDbLoading) {
-    return <LoadingScreen />;
-  }
-
-  if (dbError) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-destructive mb-2">
-            Erro ao carregar banco de dados
-          </h2>
-          <p className="text-muted-foreground mb-4">{dbError}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
-          >
-            Recarregar
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const categories = Array.from(new Set(mysteries.map((m) => m.category)));
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background">
       <Header />
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4">
-        {/* Left Panel - Mystery Info & Database */}
-        <div className="lg:w-1/3 flex flex-col gap-4">
-          {/* Mystery Header */}
-          <div className="bg-card border border-border rounded-lg p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground mb-2">
-                  {mystery.icon} {mystery.title}
-                </h1>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium">
-                    {mystery.difficulty}
-                  </span>
-                  <span className="px-2 py-1 rounded-md bg-accent/10 text-accent text-xs font-medium">
-                    {mystery.category}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    ⏱️ {mystery.estimatedTime}
-                  </span>
-                  {isReady && (
-                    <span className="px-2 py-1 rounded-md bg-green-500/10 text-green-500 text-xs font-medium">
-                      ✓ DB Pronto
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Recompensa</p>
-                <p className="text-xl font-bold text-primary">{mystery.xpReward} XP</p>
-              </div>
-            </div>
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-foreground mb-3">
+            Mistérios SQL
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            Escolha um mistério e use suas habilidades SQL para desvendar o caso
+          </p>
+        </div>
+
+        {/* Filters */}
+        <MysteryFilters
+          selectedDifficulty={selectedDifficulty}
+          onDifficultyChange={setSelectedDifficulty}
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          categories={categories}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
+
+        {/* Stats Summary */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-card border border-border rounded-lg p-4">
+            <p className="text-sm text-muted-foreground mb-1">Total</p>
+            <p className="text-2xl font-bold text-foreground">{mysteries.length}</p>
           </div>
-
-          {/* Tabs */}
-          <div className="bg-card border border-border rounded-lg flex-1 flex flex-col">
-            <div className="flex border-b border-border">
-              <button
-                onClick={() => setActiveTab("story")}
-                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === "story"
-                    ? "text-primary border-b-2 border-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                História
-              </button>
-              <button
-                onClick={() => setActiveTab("database")}
-                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === "database"
-                    ? "text-primary border-b-2 border-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Banco de Dados
-              </button>
-              <button
-                onClick={() => setActiveTab("hints")}
-                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === "hints"
-                    ? "text-primary border-b-2 border-primary"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                Dicas ({hintsRevealed.length}/{mystery.hints.length})
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-auto p-4">
-              {activeTab === "story" && <MysteryStory mystery={mystery} />}
-              {activeTab === "database" && (
-                <DatabaseExplorer database={mystery.database} />
-              )}
-              {activeTab === "hints" && (
-                <HintsPanel
-                  hints={mystery.hints}
-                  revealedHints={hintsRevealed}
-                  onRevealHint={handleRevealHint}
-                />
-              )}
-            </div>
+          <div className="bg-card border border-border rounded-lg p-4">
+            <p className="text-sm text-muted-foreground mb-1">Disponíveis</p>
+            <p className="text-2xl font-bold text-primary">
+              {mysteries.filter((m) => m.status === "available").length}
+            </p>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-4">
+            <p className="text-sm text-muted-foreground mb-1">Em Progresso</p>
+            <p className="text-2xl font-bold text-accent">
+              {mysteries.filter((m) => m.status === "in_progress").length}
+            </p>
+          </div>
+          <div className="bg-card border border-border rounded-lg p-4">
+            <p className="text-sm text-muted-foreground mb-1">Completados</p>
+            <p className="text-2xl font-bold text-success">
+              {mysteries.filter((m) => m.status === "completed").length}
+            </p>
           </div>
         </div>
 
-        {/* Right Panel - Editor & Results */}
-        <div className="lg:w-2/3 flex flex-col gap-4">
-          {/* SQL Editor */}
-          <div className="bg-card border border-border rounded-lg flex-1 flex flex-col min-h-[300px]">
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <h2 className="text-sm font-semibold text-foreground">Editor SQL</h2>
-              <button
-                onClick={handleRunQuery}
-                disabled={isRunning || !isReady}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isRunning ? "Executando..." : "▶ Executar Query"}
-              </button>
+        {/* Mystery Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredMysteries.length > 0 ? (
+            filteredMysteries.map((mystery) => (
+              <MysteryCard key={mystery.id} mystery={mystery} />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground text-lg">
+                Nenhum mistério encontrado com os filtros selecionados
+              </p>
             </div>
-            <SqlEditor value={query} onChange={setQuery} />
-          </div>
-
-          {/* Results Panel */}
-          <div className="bg-card border border-border rounded-lg flex-1 min-h-[250px]">
-            <ResultsPanel results={results} error={error} isRunning={isRunning} />
-          </div>
+          )}
         </div>
       </div>
     </div>

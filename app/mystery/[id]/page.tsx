@@ -77,13 +77,13 @@ export default function MysteryEditorPage() {
     );
 
     if (userColumnsSet.size !== expectedColumnsSet.size) {
-      setFeedback("❌ As colunas retornadas não correspondem às esperadas.");
+      setFeedback("As colunas retornadas não correspondem às esperadas.");
       return false;
     }
 
     for (const col of expectedColumnsSet) {
       if (!userColumnsSet.has(col)) {
-        setFeedback("❌ As colunas retornadas não correspondem às esperadas.");
+        setFeedback("As colunas retornadas não correspondem às esperadas.");
         return false;
       }
     }
@@ -91,7 +91,7 @@ export default function MysteryEditorPage() {
     // Check if row count matches
     if (userResults.rows.length !== expected.rows.length) {
       setFeedback(
-        `❌ Número de linhas incorreto. Esperado: ${expected.rows.length}, Obtido: ${userResults.rows.length}`
+        `Número de linhas incorreto. Esperado: ${expected.rows.length}, Obtido: ${userResults.rows.length}`
       );
       return false;
     }
@@ -114,13 +114,13 @@ export default function MysteryEditorPage() {
     const expectedRowsSet = new Set(expected.rows.map(normalizeRow));
 
     if (userRowsSet.size !== expectedRowsSet.size) {
-      setFeedback("❌ Os dados retornados não correspondem aos esperados.");
+      setFeedback("Os dados retornados não correspondem aos esperados.");
       return false;
     }
 
     for (const expectedRow of expectedRowsSet) {
       if (!userRowsSet.has(expectedRow)) {
-        setFeedback("❌ Os dados retornados não correspondem aos esperados.");
+        setFeedback("Os dados retornados não correspondem aos esperados.");
         return false;
       }
     }
@@ -133,7 +133,7 @@ export default function MysteryEditorPage() {
 
     const finalScore = Math.max(0, mystery.xpReward - hintsUsedPenalty);
     setScore(finalScore);
-    setFeedback("🎉 Parabéns! Você resolveu o mistério!");
+    setFeedback("Parabéns! Você resolveu o mistério!");
 
     return true;
   };
