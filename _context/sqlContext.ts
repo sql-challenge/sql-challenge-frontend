@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SqlDatabase, resetDatabase } from "@/_lib/services/sql";
-import type { DatabaseSchema, QueryResult } from "@/_lib/types/mystery";
+import type { DatabaseSchema, QueryResult } from "@/_lib/types/capitulo";
 
-export function useSqlDatabase(schema: DatabaseSchema | null) {
+export function useSqlDatabase(schemaArg: DatabaseSchema | null = null) {
+  const [schema, setSchema] = useState<DatabaseSchema | null>(schemaArg);
   const [database, setDatabase] = useState<SqlDatabase | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -15,7 +16,7 @@ export function useSqlDatabase(schema: DatabaseSchema | null) {
   useEffect(() => {
     if (!schema) {
       console.log("No schema provided");
-      setIsLoading(false);
+      setIsLoading(true);
       return;
     }
 
@@ -45,7 +46,7 @@ export function useSqlDatabase(schema: DatabaseSchema | null) {
         console.log("Database initialized and schema loaded");
         
         // Test query to verify data
-        const testResult = db.executeQuery("SELECT COUNT(*) as count FROM " + schema.tables[0].name);
+        const testResult = db.executeQuery("SELECT COUNT(*) as count FROM " + schema.visaoTabelas[0].nome);
         // console.log("Test query result:", testResult);
         
         setDatabase(db);
@@ -84,6 +85,13 @@ export function useSqlDatabase(schema: DatabaseSchema | null) {
     executeQuery,
     isLoading,
     error,
+    setSchema: (newSchema: DatabaseSchema) => {
+      if (schemaRef.current === newSchema) {
+        console.log("setSchema called with same schema, ignoring");
+        return;
+      }
+      setSchema(newSchema);
+    },
     isReady: database?.isReady() || false,
   };
 }

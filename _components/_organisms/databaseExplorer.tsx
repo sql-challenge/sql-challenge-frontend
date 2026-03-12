@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Badge } from "@/_components/_atoms/badge";
 import { Divider } from "@/_components/_atoms/divider";
-import type { DatabaseSchema, Table } from "@/_lib/types/mystery";
+import { DatabaseSchema, VisaoTabela } from "@/_lib/types/capitulo";
 import { ChevronDown, ChevronRight, Database } from "feather-icons-react";
 
 interface DatabaseExplorerProps {
@@ -39,18 +39,18 @@ export function DatabaseExplorer({ database }: DatabaseExplorerProps) {
 
       {/* Tables List */}
       <div className="space-y-3">
-        {database.tables.map((table) => (
+        {database.visaoTabelas.map((table) => (
           <TableCard
-            key={table.name}
+            key={table.nome}
             table={table}
-            isExpanded={expandedTables.includes(table.name)}
-            onToggle={() => toggleTable(table.name)}
+            isExpanded={expandedTables.includes(table.nome)}
+            onToggle={() => toggleTable(table.nome)}
           />
         ))}
       </div>
 
       {/* Relationships */}
-      {database.relationships.length > 0 && (
+      {database.visaoRelacionamentos.length > 0 && (
         <>
           <Divider />
           <div className="space-y-3">
@@ -61,18 +61,18 @@ export function DatabaseExplorer({ database }: DatabaseExplorerProps) {
               </h4>
             </div>
             <div className="space-y-2">
-              {database. relationships.map((rel, index) => (
+              {database.visaoRelacionamentos.map((rel, index) => (
                 <div
                   key={index}
                   className="bg-secondary/50 rounded-lg p-3 text-xs font-mono"
                 >
-                  <span className="text-primary">{rel.fromTable}</span>
-                  <span className="text-muted-foreground">. {rel.fromColumn}</span>
+                  <span className="text-primary">{rel.tabela_origem}</span>
+                  <span className="text-muted-foreground">. {rel.coluna_origem}</span>
                   <span className="text-accent mx-2">→</span>
-                  <span className="text-primary">{rel.toTable}</span>
-                  <span className="text-muted-foreground">.{rel.toColumn}</span>
+                  <span className="text-primary">{rel.tabela_destino}</span>
+                  <span className="text-muted-foreground">.{rel.coluna_destino}</span>
                   <Badge variant="outline" className="ml-2 text-[10px]">
-                    {rel.type}
+                    {rel.tipo}
                   </Badge>
                 </div>
               ))}
@@ -85,7 +85,7 @@ export function DatabaseExplorer({ database }: DatabaseExplorerProps) {
 }
 
 interface TableCardProps {
-  table: Table;
+  table: VisaoTabela;
   isExpanded: boolean;
   onToggle: () => void;
 }
@@ -105,18 +105,18 @@ function TableCard({ table, isExpanded, onToggle }: TableCardProps) {
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
           )}
           <span className="font-mono text-sm font-semibold text-primary">
-            {table.name}
+            {table.nome}
           </span>
           <Badge variant="outline" className="text-xs">
-            {table. columns.length} colunas
+            {table.colunas.length} colunas
           </Badge>
         </div>
       </button>
 
       {/* Table Description */}
-      {table.description && (
+      {table.descricao && (
         <div className="px-3 pb-2">
-          <p className="text-xs text-muted-foreground">{table.description}</p>
+          <p className="text-xs text-muted-foreground">{table.descricao}</p>
         </div>
       )}
 
@@ -139,41 +139,41 @@ function TableCard({ table, isExpanded, onToggle }: TableCardProps) {
                 </tr>
               </thead>
               <tbody>
-                {table.columns.map((column) => (
+                {table.colunas.map((column) => (
                   <tr
-                    key={column.name}
+                    key={column.nome}
                     className="border-t border-border/50 hover:bg-secondary/30"
                   >
                     <td className="p-2">
                       <div className="flex flex-col gap-1">
                         <span className="font-mono text-foreground font-medium">
-                          {column.name}
+                          {column.nome}
                         </span>
-                        {column.description && (
+                        {column.descricao && (
                           <span className="text-muted-foreground text-[10px]">
-                            {column.description}
+                            {column.descricao}
                           </span>
                         )}
                       </div>
                     </td>
                     <td className="p-2">
                       <code className="text-accent text-[11px]">
-                        {column.type}
+                        {column.tipo}
                       </code>
                     </td>
                     <td className="p-2">
                       <div className="flex gap-1 flex-wrap">
-                        {column.primaryKey && (
+                        {column.chave_primaria && (
                           <Badge variant="primary" className="text-[9px] px-1. 5 py-0.5">
                             PK
                           </Badge>
                         )}
-                        {column.foreignKey && (
+                        {column.fk_tabela && (
                           <Badge variant="success" className="text-[9px] px-1.5 py-0.5">
                             FK
                           </Badge>
                         )}
-                        {! column.nullable && (
+                        {! column.nulavel && (
                           <Badge variant="warning" className="text-[9px] px-1.5 py-0.5">
                             NOT NULL
                           </Badge>
@@ -187,7 +187,7 @@ function TableCard({ table, isExpanded, onToggle }: TableCardProps) {
           </div>
 
           {/* Sample Data */}
-          {table.sampleData && table.sampleData.length > 0 && (
+          {table.exemplos && table.exemplos.length > 0 && (
             <div className="border-t border-border p-3 bg-muted/20">
               <p className="text-xs font-semibold text-foreground mb-2">
                 📊 Dados de Exemplo:
@@ -196,25 +196,25 @@ function TableCard({ table, isExpanded, onToggle }: TableCardProps) {
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="bg-secondary/50">
-                      {table.columns.map((column) => (
+                      {table.colunas.map((column) => (
                         <th
-                          key={column.name}
+                          key={column.nome}
                           className="text-left p-2 font-mono text-[10px] font-semibold text-foreground"
                         >
-                          {column.name}
+                          {column.nome}
                         </th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
-                    {table.sampleData.slice(0, 3).map((row, rowIndex) => (
+                    {table.exemplos.slice(0, 3).map((row, rowIndex) => (
                       <tr key={rowIndex} className="border-t border-border/30">
-                        {table.columns.map((column) => (
+                        {table.colunas.map((column) => (
                           <td
-                            key={column.name}
+                            key={column.nome}
                             className="p-2 font-mono text-[10px] text-muted-foreground"
                           >
-                            {String(row[column.name] ??  "NULL")}
+                            {String(row.dados || "NULL")}
                           </td>
                         ))}
                       </tr>
@@ -222,9 +222,9 @@ function TableCard({ table, isExpanded, onToggle }: TableCardProps) {
                   </tbody>
                 </table>
               </div>
-              {table.sampleData.length > 3 && (
+              {table.exemplos.length > 3 && (
                 <p className="text-[10px] text-muted-foreground mt-2 italic">
-                  ...  e mais {table.sampleData.length - 3} linhas
+                  ...  e mais {table.exemplos.length - 3} linhas
                 </p>
               )}
             </div>

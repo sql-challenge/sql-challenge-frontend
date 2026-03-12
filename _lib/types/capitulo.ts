@@ -1,4 +1,10 @@
 // --- CapituloView & DatabaseSchema types ---
+
+export interface QueryResult {
+  columns: string[];
+  rows: Record<string, unknown>[];
+}
+
 export class Desafio {
     constructor(
         public id: number,

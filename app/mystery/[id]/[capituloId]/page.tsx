@@ -17,7 +17,7 @@ export default function CapituloEditorPage() {
   const params = useParams();
   const router = useRouter();
   const desafioId = params.id as string;
-  const capituloId = params.capitulo as string;
+  const capituloId = params.capituloId as string;
 
   const [capituloView, setCapituloView] = useState<CapituloView | null>(null);
   const [query, setQuery] = useState("");
@@ -39,12 +39,34 @@ export default function CapituloEditorPage() {
     isLoading: isDbLoading,
     error: dbError,
     isReady,
-  } = useSqlDatabase(capituloView.schema);
+    setSchema,
+  } = useSqlDatabase();
 
   // Load capitulo data (mock or async fetch)
   useEffect(() => {
-    
-  }, [desafioId, capituloId]);
+    if (!desafioId || !capituloId) {
+      return;
+    }
+
+    const loadCapituloData = async () => {
+      try {
+        // Replace this with your actual API call
+        const capituloData = await api.get<CapituloView>(`/api/capitulo/view/${capituloId}`);
+        debugger;
+        setCapituloView(capituloData);
+        setSchema(capituloData.schema);
+      } catch (err) {
+        console.error("Failed to load capitulo data:", err);
+        setLoadError("Failed to load capitulo data");
+      }
+    };
+
+    loadCapituloData();
+
+    return () => {
+      // Cleanup if needed when component unmounts or params change
+    }
+  }, [capituloId, desafioId]);
 
   // Success check
   const checkVictoryCondition = (userResults: any): boolean => {

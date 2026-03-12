@@ -1,6 +1,6 @@
 "use client"
 import initSqlJs, { Database } from "sql.js";
-import type { DatabaseSchema, QueryResult } from "@/_lib/types/mystery";
+import type { DatabaseSchema, QueryResult } from "@/_lib/types/capitulo";
 
 let SQL: any = null;
 
@@ -27,7 +27,7 @@ export class SqlDatabase {
   private db: Database | null = null;
   private isInitialized: boolean = false;
 
-  constructor() {}
+  constructor() { }
 
   async initialize(): Promise<void> {
     try {
@@ -46,8 +46,7 @@ export class SqlDatabase {
     } catch (error) {
       console.error("Failed to initialize database:", error);
       throw new Error(
-        `Database initialization failed: ${
-          error instanceof Error ? error.message : "Unknown error"
+        `Database initialization failed: ${error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }
@@ -58,29 +57,46 @@ export class SqlDatabase {
       throw new Error("Database not initialized. Call initialize() first.");
     }
 
+    const normalizeType = (tipo: string): string =>
+      tipo.toUpperCase()
+        .replace("BIGSERIAL", "INTEGER")
+        .replace("SERIAL", "INTEGER")
+        .replace("BIGINT", "INTEGER")
+        .replace("BOOLEAN", "INTEGER")
+        .replace("JSONB", "TEXT")
+        .replace("TIMESTAMP", "TEXT")
+        .replace("DATE", "TEXT")
+        .replace(/VARCHAR(\(\d+\))?/, "TEXT")
+        .replace(/DECIMAL(\(\d+,\d+\))?/, "REAL");
+
     try {
-      for (const table of schema.tables) {
-        const columns = table.columns.map((col) => {
-          let def = `${col.name} ${col.type}`;
-          if (col.primaryKey) def += " PRIMARY KEY";
-          if (!col.nullable) def += " NOT NULL";
+      for (const table of schema.visaoTabelas) {
+        const columns = table.colunas.map((col) => {
+          let def = `${col.nome} ${normalizeType(col.tipo)}`;
+          if (col.chave_primaria) def += " PRIMARY KEY";
+          else if (!col.nulavel) def += " NOT NULL";
           return def;
         });
 
-        const createTableSQL = `CREATE TABLE ${table.name} (${columns.join(", ")});`;
+        const createTableSQL = `CREATE TABLE ${table.nome} (${columns.join(", ")});`;
         console.log("Creating table:", createTableSQL);
         this.db.run(createTableSQL);
 
-        if (table.sampleData && table.sampleData.length > 0) {
-          for (const row of table.sampleData) {
+        if (table.exemplos && table.exemplos.length > 0) {
+          for (const exemplo of table.exemplos) {
+            const row = exemplo.dados; // 👈 unwrap .dados, not the wrapper object
+
             const columnNames = Object.keys(row);
-            const values = Object.values(row).map((val) =>
-              typeof val === "string" ? `'${val.replace(/'/g, "''")}'` : val
-            );
-            const insertSQL = `INSERT INTO ${table.name} (${columnNames.join(
-              ", "
-            )}) VALUES (${values.join(", ")});`;
-            // console.log("Inserting data:", insertSQL);
+            const values = columnNames.map((key) => {
+              const val = row[key];
+              if (val === null || val === undefined) return "NULL";
+              if (typeof val === "boolean") return val ? "1" : "0";
+              if (typeof val === "string") return `'${val.replace(/'/g, "''")}'`;
+              return val;
+            });
+
+            const insertSQL = `INSERT INTO ${table.nome} (${columnNames.join(", ")}) VALUES (${values.join(", ")});`;
+            console.log("Inserting:", insertSQL);
             this.db.run(insertSQL);
           }
         }
@@ -88,11 +104,10 @@ export class SqlDatabase {
 
       const tables = this.getTables();
       console.log(`Schema loaded successfully. Tables: ${tables.join(", ")}`);
-      
-      // Verify data was inserted
-      for (const table of schema.tables) {
-        const countResult = this.db.exec(`SELECT COUNT(*) as count FROM ${table.name}`);
-        console.log(`Table ${table.name} has ${countResult[0]?.values[0]?.[0]} rows`);
+
+      for (const table of schema.visaoTabelas) {
+        const countResult = this.db.exec(`SELECT COUNT(*) as count FROM ${table.nome}`);
+        console.log(`Table ${table.nome} has ${countResult[0]?.values[0]?.[0]} rows`);
       }
     } catch (error) {
       console.error("Error loading schema:", error);
@@ -108,7 +123,7 @@ export class SqlDatabase {
 
     try {
       const cleanQuery = query.trim();
-      
+
       if (!cleanQuery) {
         throw new Error("Empty query");
       }
@@ -150,11 +165,11 @@ export class SqlDatabase {
 
       // Handle SELECT queries with results
       const result = results[0];
-      
+
       // SQL.js can return either 'columns' or 'lc' (lowercase columns)
       const columns = result.columns || (result as any).lc || [];
       const values = result.values || [];
-      
+
       if (!columns || columns.length === 0) {
         console.warn("Result missing columns:", result);
         return {
@@ -228,7 +243,7 @@ export class SqlDatabase {
     if (!this.db || !this.isInitialized) {
       return 0;
     }
-    
+
     try {
       const result = this.db.exec(`SELECT COUNT(*) FROM ${tableName}`);
       return result[0]?.values[0]?.[0] as number || 0;
@@ -244,12 +259,12 @@ const databaseInstances = new Map<string, SqlDatabase>();
 
 export function getDatabase(mysteryId?: string): SqlDatabase {
   const key = mysteryId || "default";
-  
+
   if (!databaseInstances.has(key)) {
     console.log(`Creating new database instance for: ${key}`);
     databaseInstances.set(key, new SqlDatabase());
   }
-  
+
   return databaseInstances.get(key)!;
 }
 
@@ -260,14 +275,14 @@ export async function resetDatabase(
   const db = getDatabase(mysteryId);
   await db.initialize();
   await db.loadSchema(schema);
-  
+
   // Verify data was loaded
-  const firstTable = schema.tables[0]?.name;
+  const firstTable = schema.visaoTabelas[0]?.nome;
   if (firstTable) {
     const rowCount = db.verifyData(firstTable);
     console.log(`Verification: Table ${firstTable} has ${rowCount} rows`);
   }
-  
+
   return db;
 }
 
