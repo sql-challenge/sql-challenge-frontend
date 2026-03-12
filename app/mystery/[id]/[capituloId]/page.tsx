@@ -5,136 +5,92 @@ import { useParams, useRouter } from "next/navigation";
 import { Header } from "@/_components/_organisms/header";
 import { SqlEditor } from "@/_components/_organisms/sqlEditor";
 import { ResultsPanel } from "@/_components/_organisms/resultsPanel";
-import { MysteryStory } from "@/_components/_organisms/mysteryStory";
 import { DatabaseExplorer } from "@/_components/_organisms/databaseExplorer";
 import { HintsPanel } from "@/_components/_organisms/hintsPanel";
-import type { MysteryDetail, QueryResult } from "@/_lib/types/mystery";
 import { LoadingScreen } from "@/_components/_organisms/loadingScreen";
 import { useSqlDatabase } from "@/_context/sqlContext";
-import { MysteryService } from "@/_lib/services/mystery";
+// import { CapituloService } from "@/_lib/services/capitulo"; // Use your own service if available
+import { type CapituloView, type Consulta, type Dica } from "@/_lib/types/capitulo";
+import { api } from "@/_lib/api";
 
-export default function MysteryEditorPage() {
+export default function CapituloEditorPage() {
   const params = useParams();
   const router = useRouter();
-  const mysteryId = params.id as string;
+  const desafioId = params.id as string;
+  const capituloId = params.capitulo as string;
 
-  const [mystery, setMystery] = useState<MysteryDetail | null>(null);
+  const [capituloView, setCapituloView] = useState<CapituloView | null>(null);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<QueryResult | null>(null);
+  const [results, setResults] = useState<any | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hintsRevealed, setHintsRevealed] = useState<string[]>([]);
+  const [hintsRevealed, setHintsRevealed] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState<"story" | "database" | "hints">("story");
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Victory condition states
+  // Success
   const [isVictorious, setIsVictorious] = useState(false);
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  // Initialize SQL database
+  // Setup DB for this capitulo
   const {
     executeQuery,
     isLoading: isDbLoading,
     error: dbError,
     isReady,
-  } = useSqlDatabase(mystery?.database || null);
+  } = useSqlDatabase(capituloView.schema);
 
-  // Load mystery data
+  // Load capitulo data (mock or async fetch)
   useEffect(() => {
-    const loadMystery = async () => {
-      try {
-        setLoadError(null);
-        const mysteryData = await MysteryService.getMysteryDetail(mysteryId);
-        
-        if (!mysteryData) {
-          setLoadError("Mistério não encontrado");
-          return;
-        }
-        
-        setMystery(mysteryData);
-      } catch (err) {
-        console.error("Error loading mystery:", err);
-        setLoadError("Erro ao carregar mistério");
-      }
-    };
+    
+  }, [desafioId, capituloId]);
 
-    loadMystery();
-  }, [mysteryId]);
+  // Success check
+  const checkVictoryCondition = (userResults: any): boolean => {
+    if (!capituloView) return false;
+    const expected: Consulta = capituloView.consultaSolucao;
 
-  // Victory condition checker
-  const checkVictoryCondition = (userResults: QueryResult): boolean => {
-    if (!mystery) return false;
-
-    const expected = mystery.expectedOutput;
-
-    // Check if columns match (order-independent, case-insensitive)
-    const userColumnsSet = new Set(
-      userResults.columns.map((c) => c.toLowerCase())
-    );
-    const expectedColumnsSet = new Set(
-      expected.columns.map((c) => c.toLowerCase())
-    );
-
-    if (userColumnsSet.size !== expectedColumnsSet.size) {
+    // Columns, order-insensitive, lowercase
+    const userCols = new Set(userResults.columns.map((c: string) => c.toLowerCase()));
+    const expectedCols = new Set(expected.colunas.map((c) => c.toLowerCase()));
+    if (userCols.size !== expectedCols.size ||
+        [...expectedCols].some(col => !userCols.has(col))) {
       setFeedback("As colunas retornadas não correspondem às esperadas.");
       return false;
     }
 
-    for (const col of expectedColumnsSet) {
-      if (!userColumnsSet.has(col)) {
-        setFeedback("As colunas retornadas não correspondem às esperadas.");
-        return false;
-      }
-    }
-
-    // Check if row count matches
-    if (userResults.rows.length !== expected.rows.length) {
+    // Rows
+    if (userResults.rows.length !== expected.resultado.length) {
       setFeedback(
-        `Número de linhas incorreto. Esperado: ${expected.rows.length}, Obtido: ${userResults.rows.length}`
+        `Número de linhas incorreto. Esperado: ${expected.resultado.length}, Obtido: ${userResults.rows.length}`
       );
       return false;
     }
 
-    // Normalize and compare rows (order-independent)
-    const normalizeValue = (val: unknown) => {
-      if (val === null || val === undefined) return "null";
-      if (typeof val === "number") return val.toFixed(2); // Handle float precision
-      return String(val).toLowerCase().trim();
-    };
+    // Normalize rows for order-insensitive comparison
+    const normVal = (val: unknown) =>
+      val == null ? "null" : typeof val === "number" ? val.toFixed(2) : String(val).toLowerCase().trim();
 
-    const normalizeRow = (row: Record<string, unknown>) => {
-      return expected.columns
-        .map((col) => normalizeValue(row[col]))
-        .sort()
-        .join("|");
-    };
+    const normRow = (row: Record<string, unknown>) =>
+      expected.colunas.map((col) => normVal(row[col])).sort().join("|");
 
-    const userRowsSet = new Set(userResults.rows.map(normalizeRow));
-    const expectedRowsSet = new Set(expected.rows.map(normalizeRow));
-
-    if (userRowsSet.size !== expectedRowsSet.size) {
+    const uSet = new Set(userResults.rows.map(normRow));
+    const eSet = new Set(expected.resultado.map(normRow));
+    if (uSet.size !== eSet.size || [...eSet].some(r => !uSet.has(r))) {
       setFeedback("Os dados retornados não correspondem aos esperados.");
       return false;
     }
 
-    for (const expectedRow of expectedRowsSet) {
-      if (!userRowsSet.has(expectedRow)) {
-        setFeedback("Os dados retornados não correspondem aos esperados.");
-        return false;
-      }
-    }
+    // Score: base - hints penalty
+    const capitulo = capituloView.capitulo;
+    const totalPenalty = hintsRevealed
+      .map(id => capituloView.dicas.find((d) => d.id === id)?.penalidadeXp || 0)
+      .reduce((a, b) => a + b, 0);
 
-    // Calculate score (base XP - hint penalties)
-    const hintsUsedPenalty = hintsRevealed.reduce((total, hintId) => {
-      const hint = mystery.hints.find((h) => h.id === hintId);
-      return total + (hint?.xpPenalty || 0);
-    }, 0);
-
-    const finalScore = Math.max(0, mystery.xpReward - hintsUsedPenalty);
-    setScore(finalScore);
+    const baseXp = capitulo.xp_recompensa;
+    setScore(Math.max(0, baseXp - totalPenalty));
     setFeedback("Parabéns! Você resolveu o mistério!");
-
     return true;
   };
 
@@ -143,12 +99,10 @@ export default function MysteryEditorPage() {
       setError("Por favor, escreva uma query SQL");
       return;
     }
-
     if (!isReady) {
       setError("Banco de dados ainda não está pronto. Aguarde...");
       return;
     }
-
     setIsRunning(true);
     setError(null);
 
@@ -156,7 +110,7 @@ export default function MysteryEditorPage() {
       const queryResults = executeQuery(query);
       setResults(queryResults);
 
-      // Check victory condition
+      // Check victory
       const victory = checkVictoryCondition(queryResults);
       setIsVictorious(victory);
     } catch (err) {
@@ -169,26 +123,22 @@ export default function MysteryEditorPage() {
     }
   };
 
-  const handleRevealHint = (hintId: string) => {
+  const handleRevealHint = (hintId: number) => {
     if (!hintsRevealed.includes(hintId)) {
       setHintsRevealed([...hintsRevealed, hintId]);
     }
   };
 
-  // Victory Banner Component
-  const VictoryBanner = () => {
-    if (!isVictorious) return null;
-
-    return (
+  const VictoryBanner = () => (
+    !isVictorious ? null : (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-card border-2 border-green-500 rounded-xl p-8 max-w-md w-full shadow-2xl animate-scale-in">
           <div className="text-center space-y-4">
             <div className="text-6xl animate-bounce">🎉</div>
             <h2 className="text-3xl font-bold text-green-500">
-              Mistério Resolvido!
+              Capítulo Resolvido!
             </h2>
             <p className="text-muted-foreground">{feedback}</p>
-
             <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
               <p className="text-sm text-muted-foreground mb-1">XP Ganho</p>
               <p className="text-4xl font-bold text-green-500">+{score} XP</p>
@@ -198,13 +148,12 @@ export default function MysteryEditorPage() {
                 </p>
               )}
             </div>
-
             <div className="flex gap-2 mt-6">
               <button
-                onClick={() => router.push("/mystery")}
+                onClick={() => router.push(`/mystery/${desafioId}`)}
                 className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
               >
-                Próximo Mistério
+                Próximo Capítulo
               </button>
               <button
                 onClick={() => setIsVictorious(false)}
@@ -216,19 +165,17 @@ export default function MysteryEditorPage() {
           </div>
         </div>
       </div>
-    );
-  };
+    )
+  );
 
-  // Feedback Banner Component
-  const FeedbackBanner = () => {
-    if (!feedback || isVictorious) return null;
-
-    return (
-      <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-4">
-        <p className="text-sm text-red-500">{feedback}</p>
-      </div>
-    );
-  };
+  const FeedbackBanner = () =>
+    !feedback || isVictorious
+      ? null
+      : (
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-4">
+          <p className="text-sm text-red-500">{feedback}</p>
+        </div>
+      );
 
   if (loadError) {
     return (
@@ -246,7 +193,7 @@ export default function MysteryEditorPage() {
     );
   }
 
-  if (!mystery || isDbLoading) {
+  if (!capituloView || isDbLoading) {
     return <LoadingScreen />;
   }
 
@@ -263,44 +210,36 @@ export default function MysteryEditorPage() {
     );
   }
 
+  const capitulo = capituloView.capitulo;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Header />
-
       <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4">
-        {/* Left Panel - Mystery Info & Database */}
+        {/* LEFT: Info and navigation */}
         <div className="lg:w-1/3 flex flex-col gap-4">
-          {/* Mystery Header */}
           <div className="bg-card border border-border rounded-lg p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h1 className="text-2xl font-bold text-foreground mb-2">
-                  {mystery.icon} {mystery.title}
-                </h1>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium">
-                    {mystery.difficulty}
-                  </span>
-                  <span className="px-2 py-1 rounded-md bg-accent/10 text-accent text-xs font-medium">
-                    {mystery.category}
-                  </span>
-                  <span className="text-sm text-muted-foreground">
-                    ⏱️ {mystery.estimatedTime}
-                  </span>
-                  {isReady && (
-                    <span className="px-2 py-1 rounded-md bg-green-500/10 text-green-500 text-xs font-medium">
-                      ✓ DB Pronto
-                    </span>
-                  )}
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Recompensa</p>
-                <p className="text-xl font-bold text-primary">{mystery.xpReward} XP</p>
-              </div>
+            <h1 className="text-2xl font-bold text-foreground mb-2">
+              {/* Icon/commented fields can be added here */}
+              Capítulo {capitulo.numero}: {capitulo.introHistoria}
+            </h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Uncomment if you add more fields */}
+              {/* <span className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium">
+                {capitulo.difficulty}
+              </span>
+              <span className="px-2 py-1 rounded-md bg-accent/10 text-accent text-xs font-medium">
+                {capitulo.category}
+              </span> */}
+              {/* <span className="text-sm text-muted-foreground">
+                ⏱️ {capitulo.tempoEstimado}
+              </span> */}
+            </div>
+            <div className="text-right mt-2">
+              <p className="text-sm text-muted-foreground">Recompensa</p>
+              <p className="text-xl font-bold text-primary">{capitulo.xp_recompensa} XP</p>
             </div>
           </div>
-
           {/* Tabs */}
           <div className="bg-card border border-border rounded-lg flex-1 flex flex-col">
             <div className="flex border-b border-border">
@@ -332,27 +271,37 @@ export default function MysteryEditorPage() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                Dicas ({hintsRevealed.length}/{mystery.hints.length})
+                Dicas ({hintsRevealed.length}/{capituloView.dicas.length})
               </button>
             </div>
-
             <div className="flex-1 overflow-auto p-4">
-              {activeTab === "story" && <MysteryStory mystery={mystery} />}
+              {activeTab === "story" && (
+                <div>
+                  <h2 className="font-semibold mb-2">Contexto:</h2>
+                  <p className="mb-4">{capitulo.contextoHistoria}</p>
+                  <h3 className="font-semibold mb-1">Objetivos:</h3>
+                  <ul className="list-disc pl-5">
+                    {capituloView.objetivos.map((obj) => (
+                      <li key={obj.id}>{obj.descricao}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               {activeTab === "database" && (
-                <DatabaseExplorer database={mystery.database} />
+                <DatabaseExplorer database={capituloView.schema} />
               )}
               {activeTab === "hints" && (
                 <HintsPanel
-                  hints={mystery.hints}
-                  revealedHints={hintsRevealed}
-                  onRevealHint={handleRevealHint}
+                  dicas={capituloView.dicas}
+                  revealedDicas={hintsRevealed}
+                  onRevealDica={handleRevealHint}
                 />
               )}
             </div>
           </div>
         </div>
 
-        {/* Right Panel - Editor & Results */}
+        {/* RIGHT: SQL Editor and Result */}
         <div className="lg:w-2/3 flex flex-col gap-4">
           {/* SQL Editor */}
           <div className="bg-card border border-border rounded-lg flex-1 flex flex-col min-h-[300px]">
@@ -369,17 +318,13 @@ export default function MysteryEditorPage() {
             <SqlEditor value={query} onChange={setQuery} />
           </div>
 
-          {/* Feedback Banner */}
           <FeedbackBanner />
 
-          {/* Results Panel */}
           <div className="bg-card border border-border rounded-lg flex-1 min-h-[250px]">
             <ResultsPanel results={results} error={error} isRunning={isRunning} />
           </div>
         </div>
       </div>
-
-      {/* Victory Modal */}
       <VictoryBanner />
     </div>
   );

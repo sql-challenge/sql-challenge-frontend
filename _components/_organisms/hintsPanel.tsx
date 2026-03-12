@@ -4,39 +4,39 @@ import { useState } from "react";
 import { Button } from "@/_components/_atoms/button";
 import { Badge } from "@/_components/_atoms/badge";
 import { Divider } from "@/_components/_atoms/divider";
-import type { Hint } from "@/_lib/types/mystery";
+import type { Dica } from "@/_lib/types/capitulo";
 import { AlertCircle, Eye, Lock } from "feather-icons-react";
 
 interface HintsPanelProps {
-  hints: Hint[];
-  revealedHints: string[];
-  onRevealHint: (hintId: string) => void;
+  dicas: Dica[];
+  revealedDicas: number[];
+  onRevealDica: (dicaId: number) => void;
 }
 
 export function HintsPanel({
-  hints,
-  revealedHints,
-  onRevealHint,
+  dicas,
+  revealedDicas,
+  onRevealDica,
 }: HintsPanelProps) {
-  const [confirmingHintId, setConfirmingHintId] = useState<string | null>(null);
+  const [confirmingDicaId, setConfirmingDicaId] = useState<number | null>(null);
 
-  const sortedHints = [...hints].sort((a, b) => a.order - b.order);
+  const sortedDicas = [...dicas].sort((a, b) => a.ordem - b.ordem);
 
-  const handleRevealClick = (hintId: string) => {
-    setConfirmingHintId(hintId);
+  const handleRevealClick = (dicaId: number) => {
+    setConfirmingDicaId(dicaId);
   };
 
-  const handleConfirmReveal = (hintId: string) => {
-    onRevealHint(hintId);
-    setConfirmingHintId(null);
+  const handleConfirmReveal = (dicaId: number) => {
+    onRevealDica(dicaId);
+    setConfirmingDicaId(null);
   };
 
   const handleCancelReveal = () => {
-    setConfirmingHintId(null);
+    setConfirmingDicaId(null);
   };
 
-  const totalRevealed = revealedHints.length;
-  const totalHints = hints. length;
+  const totalRevealed = revealedDicas.length;
+  const totalDicas = dicas.length;
 
   return (
     <div className="space-y-4">
@@ -48,7 +48,7 @@ export function HintsPanel({
             <h3 className="text-lg font-bold text-foreground">Dicas</h3>
           </div>
           <Badge variant={totalRevealed > 0 ? "warning" : "default"}>
-            {totalRevealed}/{totalHints} reveladas
+            {totalRevealed}/{totalDicas} reveladas
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground">
@@ -62,30 +62,30 @@ export function HintsPanel({
           <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
           <p className="text-xs text-warning">
             Você já revelou {totalRevealed}{" "}
-            {totalRevealed === 1 ? "dica" : "dicas"}.  Cada dica reduz sua
-            pontuação final. 
+            {totalRevealed === 1 ? "dica" : "dicas"}. Cada dica reduz sua
+            pontuação final.
           </p>
         </div>
       )}
 
       <Divider />
 
-      {/* Hints List */}
+      {/* Dicas List */}
       <div className="space-y-3">
-        {sortedHints.length === 0 ? (
+        {sortedDicas.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-sm text-muted-foreground">
-              Nenhuma dica disponível para este mistério.
+              Nenhuma dica disponível para este capítulo.
             </p>
           </div>
         ) : (
-          sortedHints.map((hint) => {
-            const isRevealed = revealedHints.includes(hint.id);
-            const isConfirming = confirmingHintId === hint.id;
+          sortedDicas.map((dica) => {
+            const isRevealed = revealedDicas.includes(dica.id);
+            const isConfirming = confirmingDicaId === dica.id;
 
             return (
               <div
-                key={hint.id}
+                key={dica.id}
                 className={`border rounded-lg p-4 transition-all ${
                   isRevealed
                     ? "border-primary/50 bg-primary/5"
@@ -100,22 +100,22 @@ export function HintsPanel({
                       <Lock className="h-4 w-4 text-muted-foreground" />
                     )}
                     <span className="text-sm font-semibold text-foreground">
-                      Dica #{hint.order}
+                      Dica #{dica.ordem}
                     </span>
                   </div>
-                  {hint.xpPenalty > 0 && (
+                  {dica.penalidadeXp > 0 && (
                     <Badge
                       variant={isRevealed ? "warning" : "outline"}
                       className="text-xs"
                     >
-                      -{hint.xpPenalty} XP
+                      -{dica.penalidadeXp} XP
                     </Badge>
                   )}
                 </div>
 
-                {isRevealed ?  (
+                {isRevealed ? (
                   <p className="text-sm text-foreground leading-relaxed bg-background/50 rounded-md p-3 border border-border">
-                    {hint.content}
+                    {dica.conteudo}
                   </p>
                 ) : isConfirming ? (
                   <div className="space-y-3">
@@ -124,15 +124,14 @@ export function HintsPanel({
                         Tem certeza que deseja revelar esta dica?
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Você perderá {hint.xpPenalty} XP da sua pontuação
-                        final.
+                        Você perderá {dica.penalidadeXp} XP da sua pontuação final.
                       </p>
                     </div>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
                         variant="destructive"
-                        onClick={() => handleConfirmReveal(hint. id)}
+                        onClick={() => handleConfirmReveal(dica.id)}
                         className="flex-1"
                       >
                         Sim, revelar
@@ -156,11 +155,11 @@ export function HintsPanel({
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => handleRevealClick(hint.id)}
+                      onClick={() => handleRevealClick(dica.id)}
                       className="w-full"
                     >
                       <Lock className="h-3 w-3 mr-2" />
-                      Revelar Dica (-{hint.xpPenalty} XP)
+                      Revelar Dica (-{dica.penalidadeXp} XP)
                     </Button>
                   </div>
                 )}

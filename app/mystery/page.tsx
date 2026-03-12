@@ -2,31 +2,45 @@
 
 import { useState } from "react";
 import { Header } from "@/_components/_organisms/header";
-import { MysteryCard } from "@/_components/_molecules/misteryCard";
-import { MysteryFilters } from "@/_components/_molecules/misteryFilters";
-import type { Mystery, DifficultyLevel } from "@/_lib/types/mystery";
-import { mockMysteries } from "@/_lib/mock/mystery";
+// import { MysteryFilters } from "@/_components/_molecules/misteryFilters"; // hold for future extension
+import Link from "next/link";
+import { Desafio } from "@/_lib/types/capitulo";
+
+// ---- INLINE MOCK FOR COMPATIBILITY ----
+const mockDesafios: Desafio[] = [
+  {
+    id: 1,
+    titulo: "O banco fantasma",
+    descricao: "Desvende o mistério do banco com dados desaparecidos.",
+    tempoEstimado: "30min",
+    taxaConclusao: 73,
+    criadoEm: "2024-05-01T12:00:00Z",
+    atualizadoEm: "2024-05-01T12:00:00Z"
+  },
+  {
+    id: 2,
+    titulo: "Senha perdida do gerente",
+    descricao: "Recupere o acesso do gerente usando SQL.",
+    tempoEstimado: "25min",
+    taxaConclusao: 86,
+    criadoEm: "2024-05-06T12:00:00Z",
+    atualizadoEm: "2024-05-06T12:00:00Z"
+  }
+];
+// ---- END MOCK ----
 
 export default function MysteriesPage() {
-  // This type matches the backend:
-  // status: "available" | "finished"
-  const [mysteries, setMysteries] = useState<Mystery[]>(mockMysteries);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | "all">("all");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [desafios] = useState<Desafio[]>(mockDesafios);
+  // const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all"); // unused for now
+  // const [selectedCategory, setSelectedCategory] = useState<string>("all"); // unused for now
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredMysteries = mysteries.filter((mystery) => {
-    const matchesDifficulty =
-      selectedDifficulty === "all" || mystery.difficulty === selectedDifficulty;
-    const matchesCategory = selectedCategory === "all" || mystery.category === selectedCategory;
-    const matchesSearch =
-      mystery.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      mystery.description.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredDesafios = desafios.filter((d) =>
+    d.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    d.descricao.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-    return matchesDifficulty && matchesCategory && matchesSearch;
-  });
-
-  const categories = Array.from(new Set(mysteries.map((m) => m.category)));
+  // const categories = Array.from(new Set(desafios.map((d) => d.category).filter(Boolean))); // if/when present
 
   return (
     <div className="min-h-screen bg-background">
@@ -43,7 +57,8 @@ export default function MysteriesPage() {
           </p>
         </div>
 
-        {/* Filters */}
+        {/* Filters - Uncomment when category/difficulty are present */}
+        {/*
         <MysteryFilters
           selectedDifficulty={selectedDifficulty}
           onDifficultyChange={setSelectedDifficulty}
@@ -53,38 +68,53 @@ export default function MysteriesPage() {
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />
+        */}
 
-        {/* Stats Summary */}
+        {/* Simple Search */}
+        <div className="mb-6">
+          <input
+            type="text"
+            placeholder="Buscar mistério..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="w-full px-3 py-2 border rounded-lg"
+          />
+        </div>
+
+        {/* Stats - Uncomment and extend when you have compatible stats fields */}
+        {/*
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-card border border-border rounded-lg p-4">
             <p className="text-sm text-muted-foreground mb-1">Total</p>
-            <p className="text-2xl font-bold text-foreground">{mysteries.length}</p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-1">Disponíveis</p>
-            <p className="text-2xl font-bold text-primary">
-              {mysteries.filter((m) => m.status === "available").length}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-1">Finalizados</p>
-            <p className="text-2xl font-bold text-success">
-              {mysteries.filter((m) => m.status === "finished").length}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-lg p-4">
-            <p className="text-sm text-muted-foreground mb-1">Abertos</p>
-            <p className="text-2xl font-bold text-accent">
-              {mysteries.filter((m) => m.status === "available").length}
-            </p>
+            <p className="text-2xl font-bold text-foreground">{desafios.length}</p>
           </div>
         </div>
+        */}
 
-        {/* Mystery Grid */}
+        {/* Card Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMysteries.length > 0 ? (
-            filteredMysteries.map((mystery) => (
-              <MysteryCard key={mystery.id} mystery={mystery} />
+          {filteredDesafios.length > 0 ? (
+            filteredDesafios.map((d) => (
+              <Link
+                key={d.id}
+                href={`/mystery/${d.id}/1`}
+                className="block group"
+              >
+                <div className="bg-card border border-border rounded-lg p-6 h-full hover:border-primary/50 transition-all hover:shadow-lg">
+                  <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
+                    {d.titulo}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
+                    {d.descricao}
+                  </p>
+                  <div className="flex items-center justify-between pt-4 border-t border-border">
+                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <span>⏱️ {d.tempoEstimado}</span>
+                      <span>🎯 {d.taxaConclusao}%</span>
+                    </div>
+                  </div>
+                </div>
+              </Link>
             ))
           ) : (
             <div className="col-span-full text-center py-12">
