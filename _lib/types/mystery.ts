@@ -1,3 +1,8 @@
+export interface QueryResult {
+  columns: string[];
+  rows: Record<string, unknown>[];
+}
+
 export type DifficultyLevel = "beginner" | "intermediate" | "advanced" | "expert";
 
 export type MysteryStatus = "available" | "completed" | "locked";
