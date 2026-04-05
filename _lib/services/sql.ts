@@ -1,8 +1,10 @@
 "use client"
-import initSqlJs, { Database } from "sql.js";
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const initSqlJs = require("sql.js");
 import type { DatabaseSchema, QueryResult } from "@/_lib/types/capitulo";
 
-let SQL: SqlJs.SqlJsStatic | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let SQL: any = null;
 
 // Alternative initialization with CDN
 export async function initializeSqlJs() {
@@ -10,13 +12,13 @@ export async function initializeSqlJs() {
     try {
       // Try local first
       SQL = await initSqlJs({
-        locateFile: (file) => `/sql-wasm.wasm`,
+        locateFile: () => `/sql-wasm.wasm`,
       });
     } catch (error) {
       console.warn("Failed to load local sql.js, trying CDN...", error);
       // Fallback to CDN
       SQL = await initSqlJs({
-        locateFile: (file) => `https://sql.js.org/dist/${file}`,
+        locateFile: (f: string) => `https://sql.js.org/dist/${f}`,
       });
     }
   }
@@ -24,7 +26,8 @@ export async function initializeSqlJs() {
 }
 
 export class SqlDatabase {
-  private db: Database | null = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private db: any = null;
   private isInitialized: boolean = false;
 
   constructor() { }
@@ -187,9 +190,11 @@ export class SqlDatabase {
       }
 
       // Convert array of arrays to array of objects
-      const rows = values.map((row) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const rows = values.map((row: any) => {
         const rowObj: Record<string, unknown> = {};
-        columns.forEach((col, index) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        columns.forEach((col: any, index: any) => {
           rowObj[col] = row[index];
         });
         return rowObj;
@@ -218,7 +223,8 @@ export class SqlDatabase {
 
       if (result.length === 0) return [];
 
-      return result[0].values.map((row) => row[0] as string);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return result[0].values.map((row: any) => row[0] as string);
     } catch (error) {
       console.error("Error getting tables:", error);
       return [];

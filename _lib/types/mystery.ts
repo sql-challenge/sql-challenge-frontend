@@ -23,14 +23,22 @@ export interface Mystery {
   updatedAt: string;
 }
 
+export interface TestCase {
+  id: string;
+  description: string;
+  expectedResult: QueryResult;
+  weight: number;
+}
+
 export interface MysteryDetail extends Mystery {
   storyIntro: string;
   storyContext: string;
   objectives: string[];
   hints: MysteryHint[];
   database: MysteryDatabase;
-  solution: MysterySolution;
+  solution?: MysterySolution;
   expectedOutput: QueryResult;
+  testCases: TestCase[];
 }
 
 export interface MysteryHint {
@@ -58,6 +66,10 @@ export interface MysteryColumn {
   nullable: boolean;
   primaryKey: boolean;
   description: string;
+  foreignKey?: {
+    table: string;
+    column: string;
+  };
 }
 
 export interface MysteryRelationship {
