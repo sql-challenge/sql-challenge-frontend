@@ -30,6 +30,7 @@ export interface MysteryDetail extends Mystery {
   hints: MysteryHint[];
   database: MysteryDatabase;
   solution: MysterySolution;
+  expectedOutput: QueryResult;
 }
 
 export interface MysteryHint {
