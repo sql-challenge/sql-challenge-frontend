@@ -18,7 +18,7 @@ export default function MysteriesPage() {
         if (!response.ok) throw new Error("Falha ao carregar desafios");
         const data: Desafio[] = await response.json();
         setDesafios(data);
-      } catch (err) {
+      } catch {
         setError("Não foi possível carregar os desafios.");
       } finally {
         setIsLoading(false);

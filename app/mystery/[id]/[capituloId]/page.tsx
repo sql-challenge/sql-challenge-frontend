@@ -10,7 +10,7 @@ import { HintsPanel } from "@/_components/_organisms/hintsPanel";
 import { LoadingScreen } from "@/_components/_organisms/loadingScreen";
 import { useSqlDatabase } from "@/_context/sqlContext";
 // import { CapituloService } from "@/_lib/services/capitulo"; // Use your own service if available
-import { type CapituloView, type Consulta, type Dica } from "@/_lib/types/capitulo";
+import { type CapituloView, type Consulta } from "@/_lib/types/capitulo";
 import { api } from "@/_lib/api";
 
 export default function CapituloEditorPage() {
@@ -21,7 +21,7 @@ export default function CapituloEditorPage() {
 
   const [capituloView, setCapituloView] = useState<CapituloView | null>(null);
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<any | null>(null);
+  const [results, setResults] = useState<Record<string, unknown> | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hintsRevealed, setHintsRevealed] = useState<number[]>([]);
@@ -65,10 +65,10 @@ export default function CapituloEditorPage() {
     return () => {
       // Cleanup if needed when component unmounts or params change
     }
-  }, [capituloId, desafioId]);
+  }, [capituloId, desafioId, setSchema]);
 
   // Success check
-  const checkVictoryCondition = (userResults: any): boolean => {
+  const checkVictoryCondition = (userResults: { columns: string[]; rows: Record<string, unknown>[] }): boolean => {
     if (!capituloView) return false;
     const expected: Consulta = capituloView.consultaSolucao;
 
