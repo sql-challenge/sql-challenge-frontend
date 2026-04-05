@@ -1,0 +1,58 @@
+name: CD
+
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  deploy-preview:
+    name: Deploy to Vercel (development)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy preview
+        run: vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Notificar falha por email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "❌ CD dev falhou — ${{ github.repository }} (${{ github.ref_name }})"
+          to: ${{ secrets.MAIL_USERNAME }}
+          from: SQL Challenge CI <${{ secrets.MAIL_USERNAME }}>
+          body: |
+            O pipeline de CD (dev) do frontend falhou.
+
+            Repositório : ${{ github.repository }}
+            Branch      : ${{ github.ref_name }}
+            Commit      : ${{ github.sha }}
+            Autor       : ${{ github.actor }}
+
+            Veja os detalhes em:
+            ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
