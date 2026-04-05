@@ -1,12 +1,10 @@
 "use client"
-import { config } from "@/_utils"
 import { ApiError } from "../errors"
-// import '@/_lib/env'
 
 
 type RequestOptions = {
     method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
-    body?: any
+    body?: unknown
     headers?: Record<string, string>
     token?: string
 }
@@ -110,21 +108,21 @@ class ApiClient {
     /**
      * POST request
      */
-    async post<T>(path: string, body?: any, token?: string): Promise<T> {
+    async post<T>(path: string, body?: unknown, token?: string): Promise<T> {
         return this.request<T>(path, { method: "POST", body, token })
     }
 
     /**
      * PUT request
      */
-    async put<T>(path: string, body?: any, token?: string): Promise<T> {
+    async put<T>(path: string, body?: unknown, token?: string): Promise<T> {
         return this.request<T>(path, { method: "PUT", body, token })
     }
 
     /**
      * PATCH request
      */
-    async patch<T>(path: string, body?: any, token?: string): Promise<T> {
+    async patch<T>(path: string, body?: unknown, token?: string): Promise<T> {
         return this.request<T>(path, { method: "PATCH", body, token })
     }
 

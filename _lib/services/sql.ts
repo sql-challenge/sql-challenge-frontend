@@ -2,7 +2,7 @@
 import initSqlJs, { Database } from "sql.js";
 import type { DatabaseSchema, QueryResult } from "@/_lib/types/capitulo";
 
-let SQL: any = null;
+let SQL: SqlJs.SqlJsStatic | null = null;
 
 // Alternative initialization with CDN
 export async function initializeSqlJs() {
@@ -167,7 +167,7 @@ export class SqlDatabase {
       const result = results[0];
 
       // SQL.js can return either 'columns' or 'lc' (lowercase columns)
-      const columns = result.columns || (result as any).lc || [];
+      const columns = result.columns || (result as { lc?: string[] }).lc || [];
       const values = result.values || [];
 
       if (!columns || columns.length === 0) {
