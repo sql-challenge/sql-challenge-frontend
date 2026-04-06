@@ -36,7 +36,7 @@ export function useChapterSession(
 
   // Tick do cronômetro local (conta apenas o tempo da sessão atual)
   const localSecondsRef = useRef(0);
-  const sessionStartRef = useRef<number>(Date.now());
+  const sessionStartRef = useRef<number>(0);
 
   // Ref para o estado mais recente — usada pelos listeners de evento
   const stateRef = useRef<SessionState>({
@@ -79,6 +79,7 @@ export function useChapterSession(
   // Carrega sessão salva ao montar
   useEffect(() => {
     if (!uid) {
+      sessionStartRef.current = Date.now();
       setSessionLoaded(true);
       return;
     }
@@ -86,7 +87,7 @@ export function useChapterSession(
     api
       .get<{ data: SessionResponse }>(`/api/sessions/${uid}/${desafioId}/${capituloId}`)
       .then((res) => {
-        const s = (res as any).data as SessionResponse;
+        const s = (res as { data: SessionResponse }).data;
         setTotalSeconds(s.totalSeconds ?? 0);
 
         const restoredState: SessionState = {

@@ -244,7 +244,6 @@ export default function CapituloEditorPage() {
       {objetivos.map((obj, idx) => {
         const isDone = completedObjetivos.includes(obj.id);
         const isCurrent = idx === currentObjetivoIndex && !isVictorious;
-        const isLocked = idx > currentObjetivoIndex && !isVictorious;
 
         return (
           <li
