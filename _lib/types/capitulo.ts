@@ -23,7 +23,7 @@ export class Capitulo {
     public id: number,
     public idDesafio: number,
     public introHistoria: string,
-    public xp_recompensa: number,
+    public xpRecompensa: number,
     public contextoHistoria: string,
     public numero: number
   ) {}
