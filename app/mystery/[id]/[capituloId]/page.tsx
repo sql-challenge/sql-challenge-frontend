@@ -11,12 +11,15 @@ import { LoadingScreen } from "@/_components/_organisms/loadingScreen";
 import { useSqlDatabase } from "@/_context/sqlContext";
 import { type CapituloView, type ObjetivoComConsulta, type QueryResult } from "@/_lib/types/capitulo";
 import { api } from "@/_lib/api";
+import { useChapterSession, formatSeconds } from "@/_hooks/useChapterSession";
+import { useUser } from "@/_context/userContext";
 
 export default function CapituloEditorPage() {
   const params = useParams();
   const router = useRouter();
   const desafioId = params.id as string;
   const capituloId = params.capituloId as string;
+  const { user } = useUser();
 
   const [capituloView, setCapituloView] = useState<CapituloView | null>(null);
   const [query, setQuery] = useState("");
@@ -31,11 +34,19 @@ export default function CapituloEditorPage() {
   const [currentObjetivoIndex, setCurrentObjetivoIndex] = useState(0);
   const [completedObjetivos, setCompletedObjetivos] = useState<number[]>([]);
   const [objetivoFeedback, setObjetivoFeedback] = useState<string | null>(null);
+  const [sessionRestored, setSessionRestored] = useState(false);
 
   // Vitória do capítulo
   const [isVictorious, setIsVictorious] = useState(false);
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  // Sessão de tempo
+  const { totalSeconds, sessionLoaded, restored, saveProgress } = useChapterSession(
+    user?.uid,
+    desafioId,
+    capituloId
+  );
 
   const {
     executeQuery,
@@ -44,6 +55,17 @@ export default function CapituloEditorPage() {
     isReady,
     setSchema,
   } = useSqlDatabase();
+
+  // Restaura estado salvo da sessão quando disponível
+  useEffect(() => {
+    if (!sessionLoaded || sessionRestored) return;
+    if (restored) {
+      setCurrentObjetivoIndex(restored.currentObjetivoIndex);
+      setCompletedObjetivos(restored.completedObjetivos);
+      setHintsRevealed(restored.hintsRevealed);
+    }
+    setSessionRestored(true);
+  }, [sessionLoaded, restored, sessionRestored]);
 
   useEffect(() => {
     if (!desafioId || !capituloId) return;
@@ -143,17 +165,26 @@ export default function CapituloEditorPage() {
         const isLastObjetivo = currentObjetivoIndex >= capituloView.objetivos.length - 1;
 
         if (isLastObjetivo) {
-          // Capítulo completo
+          // Capítulo completo — salva sessão como fechada
           const totalPenalty = hintsRevealed
             .map((id) => capituloView.dicas.find((d) => d.id === id)?.penalidadeXp ?? 0)
             .reduce((a, b) => a + b, 0);
           setScore(Math.max(0, capituloView.capitulo.xpRecompensa - totalPenalty));
           setFeedback("Você desvendou todos os mistérios deste capítulo!");
           setIsVictorious(true);
+          saveProgress(
+            { currentObjetivoIndex, completedObjetivos: newCompleted, hintsRevealed },
+            true
+          );
         } else {
-          setCurrentObjetivoIndex(currentObjetivoIndex + 1);
+          const nextIndex = currentObjetivoIndex + 1;
+          setCurrentObjetivoIndex(nextIndex);
           setQuery("");
           setResults(null);
+          saveProgress(
+            { currentObjetivoIndex: nextIndex, completedObjetivos: newCompleted, hintsRevealed },
+            false
+          );
         }
       }
     } catch (err) {
@@ -291,9 +322,12 @@ export default function CapituloEditorPage() {
                   {completedObjetivos.length}/{totalObjetivos}
                 </span>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground text-right">Recompensa</p>
-                <p className="text-xl font-bold text-primary text-right">
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">
+                  ⏱ {formatSeconds(totalSeconds)}
+                </p>
+                <p className="text-sm text-muted-foreground">Recompensa</p>
+                <p className="text-xl font-bold text-primary">
                   {capitulo.xpRecompensa} XP
                 </p>
               </div>
