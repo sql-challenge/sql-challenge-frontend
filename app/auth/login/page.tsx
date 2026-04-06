@@ -31,8 +31,8 @@ export default function LoginPage() {
       loginSchema.shape[field].parse(value)
       setFieldErrors((prev) => ({ ...prev, [field]: undefined }))
     } catch (err) {
-      if (err instanceof ZodError && err.errors?.[0]?.message) {
-        setFieldErrors((prev) => ({ ...prev, [field]: err.errors[0].message }))
+      if (err instanceof ZodError && err.issues?.[0]?.message) {
+        setFieldErrors((prev) => ({ ...prev, [field]: err.issues[0].message }))
       }
     }
   }
