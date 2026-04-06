@@ -9,8 +9,7 @@ import { DatabaseExplorer } from "@/_components/_organisms/databaseExplorer";
 import { HintsPanel } from "@/_components/_organisms/hintsPanel";
 import { LoadingScreen } from "@/_components/_organisms/loadingScreen";
 import { useSqlDatabase } from "@/_context/sqlContext";
-// import { CapituloService } from "@/_lib/services/capitulo"; // Use your own service if available
-import { type CapituloView, type Consulta, type QueryResult } from "@/_lib/types/capitulo";
+import { type CapituloView, type ObjetivoComConsulta, type QueryResult } from "@/_lib/types/capitulo";
 import { api } from "@/_lib/api";
 
 export default function CapituloEditorPage() {
@@ -28,12 +27,16 @@ export default function CapituloEditorPage() {
   const [activeTab, setActiveTab] = useState<"story" | "database" | "hints">("story");
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Success
+  // Progresso por objetivo
+  const [currentObjetivoIndex, setCurrentObjetivoIndex] = useState(0);
+  const [completedObjetivos, setCompletedObjetivos] = useState<number[]>([]);
+  const [objetivoFeedback, setObjetivoFeedback] = useState<string | null>(null);
+
+  // Vitória do capítulo
   const [isVictorious, setIsVictorious] = useState(false);
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  // Setup DB for this capitulo
   const {
     executeQuery,
     isLoading: isDbLoading,
@@ -42,68 +45,58 @@ export default function CapituloEditorPage() {
     setSchema,
   } = useSqlDatabase();
 
-  // Load capitulo data (mock or async fetch)
   useEffect(() => {
-    if (!desafioId || !capituloId) {
-      return;
-    }
+    if (!desafioId || !capituloId) return;
 
     const loadCapituloData = async () => {
       try {
-        // Replace this with your actual API call
         const capituloData = await api.get<CapituloView>(`/api/capitulo/view/${capituloId}`);
         setCapituloView(capituloData);
         setSchema(capituloData.schema);
       } catch (err) {
         console.error("Failed to load capitulo data:", err);
-        setLoadError("Failed to load capitulo data");
+        setLoadError("Falha ao carregar o capítulo. Tente novamente.");
       }
     };
 
     loadCapituloData();
-
-    return () => {
-      // Cleanup if needed when component unmounts or params change
-    }
   }, [capituloId, desafioId, setSchema]);
 
-  // Success check
-  const checkVictoryCondition = (userResults: QueryResult): boolean => {
-    if (!capituloView) return false;
-    const expected: Consulta = capituloView.consultaSolucao;
+  const checkObjetivoCondition = (
+    userResults: QueryResult,
+    objetivo: ObjetivoComConsulta
+  ): boolean => {
+    const expected = objetivo.consulta;
 
-    // Column check (order-insensitive)
+    // Verifica colunas (sem considerar ordem)
     const userCols = new Set(userResults.columns.map((c: string) => c.toLowerCase()));
     const expectedCols = new Set(expected.colunas.map((c) => c.toLowerCase()));
-    if (userCols.size !== expectedCols.size ||
-        [...expectedCols].some(col => !userCols.has(col))) {
-      setFeedback("As colunas retornadas não correspondem às esperadas.");
+    if (
+      userCols.size !== expectedCols.size ||
+      [...expectedCols].some((col) => !userCols.has(col))
+    ) {
+      setObjetivoFeedback("As colunas retornadas não correspondem às esperadas.");
       return false;
     }
 
-    // Run expected query against local SQLite to get the ground-truth rows
+    // Executa a query esperada no SQLite local para obter as linhas de referência
     let expectedRows: QueryResult["rows"] = [];
     try {
       const expectedResult = executeQuery(expected.query);
       expectedRows = expectedResult.rows;
     } catch {
-      // If expected query fails in SQLite, only column check was possible
-      setFeedback("Parabéns! Você resolveu o mistério!");
-      const totalPenalty = hintsRevealed
-        .map(id => capituloView.dicas.find((d) => d.id === id)?.penalidadeXp || 0)
-        .reduce((a, b) => a + b, 0);
-      setScore(Math.max(0, capituloView.capitulo.xpRecompensa - totalPenalty));
+      // Query esperada não roda em SQLite (ex.: EXTRACT, ENCODE) → aceita pelo check de colunas
+      setObjetivoFeedback(null);
       return true;
     }
 
     if (userResults.rows.length !== expectedRows.length) {
-      setFeedback(
-        `Número de linhas incorreto. Esperado: ${expectedRows.length}, Obtido: ${userResults.rows.length}`
+      setObjetivoFeedback(
+        `Número de linhas incorreto. Esperado: ${expectedRows.length}, obtido: ${userResults.rows.length}.`
       );
       return false;
     }
 
-    // Normalize rows for order-insensitive comparison
     const normVal = (val: unknown) =>
       val == null ? "null" : typeof val === "number" ? val.toFixed(2) : String(val).toLowerCase().trim();
 
@@ -112,43 +105,60 @@ export default function CapituloEditorPage() {
 
     const uSet = new Set(userResults.rows.map(normRow));
     const eSet = new Set(expectedRows.map(normRow));
-    if (uSet.size !== eSet.size || [...eSet].some(r => !uSet.has(r))) {
-      setFeedback("Os dados retornados não correspondem aos esperados.");
+    if (uSet.size !== eSet.size || [...eSet].some((r) => !uSet.has(r))) {
+      setObjetivoFeedback("Os dados retornados não correspondem aos esperados.");
       return false;
     }
 
-    const totalPenalty = hintsRevealed
-      .map(id => capituloView.dicas.find((d) => d.id === id)?.penalidadeXp || 0)
-      .reduce((a, b) => a + b, 0);
-    setScore(Math.max(0, capituloView.capitulo.xpRecompensa - totalPenalty));
-    setFeedback("Parabéns! Você resolveu o mistério!");
+    setObjetivoFeedback(null);
     return true;
   };
 
   const handleRunQuery = async () => {
     if (!query.trim()) {
-      setError("Por favor, escreva uma query SQL");
+      setError("Por favor, escreva uma query SQL.");
       return;
     }
     if (!isReady) {
       setError("Banco de dados ainda não está pronto. Aguarde...");
       return;
     }
+    if (!capituloView) return;
+
     setIsRunning(true);
     setError(null);
+    setObjetivoFeedback(null);
 
     try {
       const queryResults = executeQuery(query);
       setResults(queryResults);
 
-      // Check victory
-      const victory = checkVictoryCondition(queryResults);
-      setIsVictorious(victory);
+      const objetivo = capituloView.objetivos[currentObjetivoIndex];
+      const correct = checkObjetivoCondition(queryResults, objetivo);
+
+      if (correct) {
+        const newCompleted = [...completedObjetivos, objetivo.id];
+        setCompletedObjetivos(newCompleted);
+
+        const isLastObjetivo = currentObjetivoIndex >= capituloView.objetivos.length - 1;
+
+        if (isLastObjetivo) {
+          // Capítulo completo
+          const totalPenalty = hintsRevealed
+            .map((id) => capituloView.dicas.find((d) => d.id === id)?.penalidadeXp ?? 0)
+            .reduce((a, b) => a + b, 0);
+          setScore(Math.max(0, capituloView.capitulo.xpRecompensa - totalPenalty));
+          setFeedback("Você desvendou todos os mistérios deste capítulo!");
+          setIsVictorious(true);
+        } else {
+          setCurrentObjetivoIndex(currentObjetivoIndex + 1);
+          setQuery("");
+          setResults(null);
+        }
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao executar query");
       setResults(null);
-      setIsVictorious(false);
-      setFeedback(null);
     } finally {
       setIsRunning(false);
     }
@@ -160,15 +170,13 @@ export default function CapituloEditorPage() {
     }
   };
 
-  const VictoryBanner = () => (
+  const VictoryBanner = () =>
     !isVictorious ? null : (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
         <div className="bg-card border-2 border-green-500 rounded-xl p-8 max-w-md w-full shadow-2xl animate-scale-in">
           <div className="text-center space-y-4">
             <div className="text-6xl animate-bounce">🎉</div>
-            <h2 className="text-3xl font-bold text-green-500">
-              Capítulo Resolvido!
-            </h2>
+            <h2 className="text-3xl font-bold text-green-500">Capítulo Resolvido!</h2>
             <p className="text-muted-foreground">{feedback}</p>
             <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
               <p className="text-sm text-muted-foreground mb-1">XP Ganho</p>
@@ -181,7 +189,9 @@ export default function CapituloEditorPage() {
             </div>
             <div className="flex gap-2 mt-6">
               <button
-                onClick={() => router.push(`/mystery/${desafioId}/${Number(capituloId) + 1}`)}
+                onClick={() =>
+                  router.push(`/mystery/${desafioId}/${Number(capituloId) + 1}`)
+                }
                 className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
               >
                 Próximo Capítulo
@@ -196,17 +206,38 @@ export default function CapituloEditorPage() {
           </div>
         </div>
       </div>
-    )
-  );
+    );
 
-  const FeedbackBanner = () =>
-    !feedback || isVictorious
-      ? null
-      : (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4 mb-4">
-          <p className="text-sm text-red-500">{feedback}</p>
-        </div>
-      );
+  const ObjetivosPanel = ({ objetivos }: { objetivos: CapituloView["objetivos"] }) => (
+    <ul className="space-y-2">
+      {objetivos.map((obj, idx) => {
+        const isDone = completedObjetivos.includes(obj.id);
+        const isCurrent = idx === currentObjetivoIndex && !isVictorious;
+        const isLocked = idx > currentObjetivoIndex && !isVictorious;
+
+        return (
+          <li
+            key={obj.id}
+            className={`flex items-start gap-2 rounded-lg p-3 text-sm transition-colors ${
+              isDone
+                ? "bg-green-500/10 border border-green-500/20 text-green-400"
+                : isCurrent
+                ? "bg-primary/10 border border-primary/30 text-foreground font-medium"
+                : "border border-border/40 text-muted-foreground opacity-50"
+            }`}
+          >
+            <span className="mt-0.5 shrink-0 text-base">
+              {isDone ? "✅" : isCurrent ? "▶" : "🔒"}
+            </span>
+            <span>
+              <span className="font-semibold mr-1">{obj.ordem}.</span>
+              {obj.descricao}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  );
 
   if (loadError) {
     return (
@@ -224,9 +255,7 @@ export default function CapituloEditorPage() {
     );
   }
 
-  if (!capituloView || isDbLoading) {
-    return <LoadingScreen />;
-  }
+  if (!capituloView || isDbLoading) return <LoadingScreen />;
 
   if (dbError) {
     return (
@@ -242,35 +271,42 @@ export default function CapituloEditorPage() {
   }
 
   const capitulo = capituloView.capitulo;
+  const totalObjetivos = capituloView.objetivos.length;
+  const currentObjetivo = capituloView.objetivos[currentObjetivoIndex];
 
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       <Header />
       <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 overflow-hidden min-h-0">
-        {/* LEFT: Info and navigation */}
+        {/* LEFT: Info */}
         <div className="lg:w-1/3 flex flex-col gap-4 overflow-hidden min-h-0">
           <div className="bg-card border border-border rounded-lg p-6">
             <h1 className="text-2xl font-bold text-foreground mb-2">
-              {/* Icon/commented fields can be added here */}
               Capítulo {capitulo.numero}: {capitulo.introHistoria}
             </h1>
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Uncomment if you add more fields */}
-              {/* <span className="px-2 py-1 rounded-md bg-primary/10 text-primary text-xs font-medium">
-                {capitulo.difficulty}
-              </span>
-              <span className="px-2 py-1 rounded-md bg-accent/10 text-accent text-xs font-medium">
-                {capitulo.category}
-              </span> */}
-              {/* <span className="text-sm text-muted-foreground">
-                ⏱️ {capitulo.tempoEstimado}
-              </span> */}
+            <div className="flex items-center justify-between mt-2">
+              <div className="text-sm text-muted-foreground">
+                Progresso:{" "}
+                <span className="font-semibold text-foreground">
+                  {completedObjetivos.length}/{totalObjetivos}
+                </span>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground text-right">Recompensa</p>
+                <p className="text-xl font-bold text-primary text-right">
+                  {capitulo.xpRecompensa} XP
+                </p>
+              </div>
             </div>
-            <div className="text-right mt-2">
-              <p className="text-sm text-muted-foreground">Recompensa</p>
-              <p className="text-xl font-bold text-primary">{capitulo.xpRecompensa} XP</p>
+            {/* Barra de progresso */}
+            <div className="mt-3 h-2 bg-secondary rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary transition-all duration-500"
+                style={{ width: `${(completedObjetivos.length / totalObjetivos) * 100}%` }}
+              />
             </div>
           </div>
+
           {/* Tabs */}
           <div className="bg-card border border-border rounded-lg flex-1 flex flex-col min-h-0">
             <div className="flex border-b border-border">
@@ -282,7 +318,7 @@ export default function CapituloEditorPage() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                História
+                Objetivos
               </button>
               <button
                 onClick={() => setActiveTab("database")}
@@ -308,14 +344,10 @@ export default function CapituloEditorPage() {
             <div className="flex-1 overflow-auto p-4">
               {activeTab === "story" && (
                 <div>
-                  <h2 className="font-semibold mb-2">Contexto:</h2>
-                  <p className="mb-4">{capitulo.contextoHistoria}</p>
-                  <h3 className="font-semibold mb-1">Objetivos:</h3>
-                  <ul className="list-disc pl-5">
-                    {capituloView.objetivos.map((obj) => (
-                      <li key={obj.id}>{obj.descricao}</li>
-                    ))}
-                  </ul>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {capitulo.contextoHistoria}
+                  </p>
+                  <ObjetivosPanel objetivos={capituloView.objetivos} />
                 </div>
               )}
               {activeTab === "database" && (
@@ -332,15 +364,37 @@ export default function CapituloEditorPage() {
           </div>
         </div>
 
-        {/* RIGHT: SQL Editor and Result */}
+        {/* RIGHT: Editor */}
         <div className="lg:w-2/3 flex flex-col gap-4 min-h-0">
-          {/* SQL Editor */}
-          <div className="bg-card border border-border rounded-lg flex flex-col" style={{height: "45%"}}>
+          {/* Objetivo atual */}
+          {!isVictorious && currentObjetivo && (
+            <div className="bg-primary/10 border border-primary/30 rounded-lg px-4 py-3">
+              <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
+                Objetivo {currentObjetivoIndex + 1} de {totalObjetivos}
+              </p>
+              <p className="text-sm font-medium text-foreground">
+                {currentObjetivo.descricao}
+              </p>
+            </div>
+          )}
+
+          {/* Feedback de erro no objetivo atual */}
+          {objetivoFeedback && !isVictorious && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
+              <p className="text-sm text-red-400">{objetivoFeedback}</p>
+            </div>
+          )}
+
+          {/* Editor SQL */}
+          <div
+            className="bg-card border border-border rounded-lg flex flex-col"
+            style={{ height: "42%" }}
+          >
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <h2 className="text-sm font-semibold text-foreground">Editor SQL</h2>
               <button
                 onClick={handleRunQuery}
-                disabled={isRunning || !isReady}
+                disabled={isRunning || !isReady || isVictorious}
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isRunning ? "Executando..." : "▶ Executar Query"}
@@ -349,10 +403,14 @@ export default function CapituloEditorPage() {
             <SqlEditor value={query} onChange={setQuery} />
           </div>
 
-          <FeedbackBanner />
+          {error && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
+              <p className="text-sm text-red-400">{error}</p>
+            </div>
+          )}
 
           <div className="bg-card border border-border rounded-lg flex-1 min-h-0 overflow-hidden">
-            <ResultsPanel results={results} error={error} isRunning={isRunning} />
+            <ResultsPanel results={results} error={null} isRunning={isRunning} />
           </div>
         </div>
       </div>

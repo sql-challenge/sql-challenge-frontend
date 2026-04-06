@@ -34,6 +34,11 @@ export interface Objetivo {
   idCapitulo: number;
   descricao: string;
   ordem: number;
+  nivel: number;
+}
+
+export interface ObjetivoComConsulta extends Objetivo {
+  consulta: Consulta;
 }
 
 export interface Dica {
@@ -94,12 +99,10 @@ export interface VisaoDadoExemplo {
   dados: Record<string, unknown>;
 }
 
-// Example CapituloView using the new DDL-matching names
 export interface CapituloView {
   capitulo: Capitulo;
-  objetivos: Objetivo[];
+  objetivos: ObjetivoComConsulta[];
   dicas: Dica[];
-  consultaSolucao: Consulta;
   schema: DatabaseSchema;
 }
 
