@@ -109,7 +109,7 @@ export default function CapituloEditorPage() {
       .map(id => capituloView.dicas.find((d) => d.id === id)?.penalidadeXp || 0)
       .reduce((a, b) => a + b, 0);
 
-    const baseXp = capitulo.xp_recompensa;
+    const baseXp = capitulo.xpRecompensa;
     setScore(Math.max(0, baseXp - totalPenalty));
     setFeedback("Parabéns! Você resolveu o mistério!");
     return true;
@@ -234,11 +234,11 @@ export default function CapituloEditorPage() {
   const capitulo = capituloView.capitulo;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       <Header />
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4">
+      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 overflow-hidden min-h-0">
         {/* LEFT: Info and navigation */}
-        <div className="lg:w-1/3 flex flex-col gap-4">
+        <div className="lg:w-1/3 flex flex-col gap-4 overflow-hidden min-h-0">
           <div className="bg-card border border-border rounded-lg p-6">
             <h1 className="text-2xl font-bold text-foreground mb-2">
               {/* Icon/commented fields can be added here */}
@@ -258,11 +258,11 @@ export default function CapituloEditorPage() {
             </div>
             <div className="text-right mt-2">
               <p className="text-sm text-muted-foreground">Recompensa</p>
-              <p className="text-xl font-bold text-primary">{capitulo.xp_recompensa} XP</p>
+              <p className="text-xl font-bold text-primary">{capitulo.xpRecompensa} XP</p>
             </div>
           </div>
           {/* Tabs */}
-          <div className="bg-card border border-border rounded-lg flex-1 flex flex-col">
+          <div className="bg-card border border-border rounded-lg flex-1 flex flex-col min-h-0">
             <div className="flex border-b border-border">
               <button
                 onClick={() => setActiveTab("story")}
@@ -323,9 +323,9 @@ export default function CapituloEditorPage() {
         </div>
 
         {/* RIGHT: SQL Editor and Result */}
-        <div className="lg:w-2/3 flex flex-col gap-4">
+        <div className="lg:w-2/3 flex flex-col gap-4 min-h-0">
           {/* SQL Editor */}
-          <div className="bg-card border border-border rounded-lg flex-1 flex flex-col min-h-[300px]">
+          <div className="bg-card border border-border rounded-lg flex flex-col" style={{height: "45%"}}>
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <h2 className="text-sm font-semibold text-foreground">Editor SQL</h2>
               <button
@@ -341,7 +341,7 @@ export default function CapituloEditorPage() {
 
           <FeedbackBanner />
 
-          <div className="bg-card border border-border rounded-lg flex-1 min-h-[250px]">
+          <div className="bg-card border border-border rounded-lg flex-1 min-h-0 overflow-hidden">
             <ResultsPanel results={results} error={error} isRunning={isRunning} />
           </div>
         </div>
