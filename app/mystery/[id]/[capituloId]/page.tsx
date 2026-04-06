@@ -72,7 +72,7 @@ export default function CapituloEditorPage() {
     if (!capituloView) return false;
     const expected: Consulta = capituloView.consultaSolucao;
 
-    // Columns, order-insensitive, lowercase
+    // Column check (order-insensitive)
     const userCols = new Set(userResults.columns.map((c: string) => c.toLowerCase()));
     const expectedCols = new Set(expected.colunas.map((c) => c.toLowerCase()));
     if (userCols.size !== expectedCols.size ||
@@ -81,10 +81,24 @@ export default function CapituloEditorPage() {
       return false;
     }
 
-    // Rows
-    if (userResults.rows.length !== expected.resultado.length) {
+    // Run expected query against local SQLite to get the ground-truth rows
+    let expectedRows: QueryResult["rows"] = [];
+    try {
+      const expectedResult = executeQuery(expected.query);
+      expectedRows = expectedResult.rows;
+    } catch {
+      // If expected query fails in SQLite, only column check was possible
+      setFeedback("Parabéns! Você resolveu o mistério!");
+      const totalPenalty = hintsRevealed
+        .map(id => capituloView.dicas.find((d) => d.id === id)?.penalidadeXp || 0)
+        .reduce((a, b) => a + b, 0);
+      setScore(Math.max(0, capituloView.capitulo.xpRecompensa - totalPenalty));
+      return true;
+    }
+
+    if (userResults.rows.length !== expectedRows.length) {
       setFeedback(
-        `Número de linhas incorreto. Esperado: ${expected.resultado.length}, Obtido: ${userResults.rows.length}`
+        `Número de linhas incorreto. Esperado: ${expectedRows.length}, Obtido: ${userResults.rows.length}`
       );
       return false;
     }
@@ -97,20 +111,16 @@ export default function CapituloEditorPage() {
       expected.colunas.map((col) => normVal(row[col])).sort().join("|");
 
     const uSet = new Set(userResults.rows.map(normRow));
-    const eSet = new Set(expected.resultado.map(normRow));
+    const eSet = new Set(expectedRows.map(normRow));
     if (uSet.size !== eSet.size || [...eSet].some(r => !uSet.has(r))) {
       setFeedback("Os dados retornados não correspondem aos esperados.");
       return false;
     }
 
-    // Score: base - hints penalty
-    const capitulo = capituloView.capitulo;
     const totalPenalty = hintsRevealed
       .map(id => capituloView.dicas.find((d) => d.id === id)?.penalidadeXp || 0)
       .reduce((a, b) => a + b, 0);
-
-    const baseXp = capitulo.xpRecompensa;
-    setScore(Math.max(0, baseXp - totalPenalty));
+    setScore(Math.max(0, capituloView.capitulo.xpRecompensa - totalPenalty));
     setFeedback("Parabéns! Você resolveu o mistério!");
     return true;
   };
