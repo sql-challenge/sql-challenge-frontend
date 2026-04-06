@@ -181,7 +181,7 @@ export default function CapituloEditorPage() {
             </div>
             <div className="flex gap-2 mt-6">
               <button
-                onClick={() => router.push(`/mystery/${desafioId}`)}
+                onClick={() => router.push(`/mystery/${desafioId}/${Number(capituloId) + 1}`)}
                 className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
               >
                 Próximo Capítulo
