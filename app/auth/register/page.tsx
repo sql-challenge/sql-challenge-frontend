@@ -47,7 +47,7 @@ export default function RegisterPage() {
       } else {
         setFieldErrors((prev) => ({ ...prev, [field]: undefined }))
       }
-    } catch (err:  any) {
+    } catch (err) {
       console.error("Validation error:", err)
     }
   }
