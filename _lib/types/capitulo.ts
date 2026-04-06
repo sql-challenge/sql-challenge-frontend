@@ -47,6 +47,7 @@ export interface Dica {
 export interface Consulta {
   id: number;
   idCapitulo: number;
+  query: string;
   colunas: string[];
   resultado: Record<string, unknown>[];
 }
