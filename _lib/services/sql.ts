@@ -73,46 +73,43 @@ export class SqlDatabase {
         .replace(/DECIMAL(\(\d+,\d+\))?/, "REAL");
 
     try {
+      this.db.run("BEGIN TRANSACTION;");
+
       for (const table of schema.visaoTabelas) {
         const columns = table.colunas.map((col) => {
-          let def = `${col.nome} ${normalizeType(col.tipo)}`;
+          let def = `"${col.nome}" ${normalizeType(col.tipo)}`;
           if (col.chave_primaria) def += " PRIMARY KEY";
           else if (!col.nulavel) def += " NOT NULL";
           return def;
         });
 
-        const createTableSQL = `CREATE TABLE ${table.nome} (${columns.join(", ")});`;
-        console.log("Creating table:", createTableSQL);
+        const createTableSQL = `CREATE TABLE "${table.nome}" (${columns.join(", ")});`;
         this.db.run(createTableSQL);
 
         if (table.exemplos && table.exemplos.length > 0) {
           for (const exemplo of table.exemplos) {
-            const row = exemplo.dados; // 👈 unwrap .dados, not the wrapper object
-
+            const row = exemplo.dados;
             const columnNames = Object.keys(row);
+            if (columnNames.length === 0) continue;
+
             const values = columnNames.map((key) => {
               const val = row[key];
               if (val === null || val === undefined) return "NULL";
               if (typeof val === "boolean") return val ? "1" : "0";
               if (typeof val === "string") return `'${val.replace(/'/g, "''")}'`;
-              return val;
+              return String(val);
             });
 
-            const insertSQL = `INSERT INTO ${table.nome} (${columnNames.join(", ")}) VALUES (${values.join(", ")});`;
-            console.log("Inserting:", insertSQL);
+            const colList = columnNames.map(c => `"${c}"`).join(", ");
+            const insertSQL = `INSERT INTO "${table.nome}" (${colList}) VALUES (${values.join(", ")});`;
             this.db.run(insertSQL);
           }
         }
       }
 
-      const tables = this.getTables();
-      console.log(`Schema loaded successfully. Tables: ${tables.join(", ")}`);
-
-      for (const table of schema.visaoTabelas) {
-        const countResult = this.db.exec(`SELECT COUNT(*) as count FROM ${table.nome}`);
-        console.log(`Table ${table.nome} has ${countResult[0]?.values[0]?.[0]} rows`);
-      }
+      this.db.run("COMMIT;");
     } catch (error) {
+      try { this.db.run("ROLLBACK;"); } catch { /* ignore */ }
       console.error("Error loading schema:", error);
       throw error;
     }
