@@ -30,8 +30,8 @@ export default function LoginPage() {
     try {
       loginSchema.shape[field].parse(value)
       setFieldErrors((prev) => ({ ...prev, [field]: undefined }))
-    } catch (err: any) {
-      if (err.errors?.[0]?.message) {
+    } catch (err) {
+      if (err instanceof ZodError && err.errors?.[0]?.message) {
         setFieldErrors((prev) => ({ ...prev, [field]: err.errors[0].message }))
       }
     }
@@ -63,7 +63,7 @@ export default function LoginPage() {
       // change to deashbpard when finish
       // router.push("/dashboard")
       router.push("/mystery")
-    } catch (err: any) {
+    } catch (err) {
       // Handle Zod validation errors
       if (err instanceof ZodError) {
         const errors: Partial<Record<keyof LoginFormData, string>> = {}
