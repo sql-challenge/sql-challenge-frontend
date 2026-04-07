@@ -14,7 +14,7 @@ if [ ! -d "sql-challenge-frontend" ]; then
   git clone https://github.com/sql-challenge/sql-challenge-frontend.git
 fi
 
-echo "=== 2. Criar .env.production no backend ==="
+echo "=== 2. Criar .env.production e .env.staging no backend ==="
 cat > /home/admin/sql-challenge-backend/.env.production << 'ENVEOF'
 POSTGRES_USER=challenge_user
 POSTGRES_PASSWORD=G7#kpL2!mZq9Xv
@@ -38,9 +38,13 @@ FRONTEND_PORT=3001
 ENVEOF
 chmod 600 /home/admin/sql-challenge-backend/.env.production
 
-echo "=== 3. Criar .env.production no frontend ==="
+cp /home/admin/sql-challenge-backend/.env.production /home/admin/sql-challenge-backend/.env.staging
+chmod 600 /home/admin/sql-challenge-backend/.env.staging
+
+echo "=== 3. Criar .env.production e .env.staging no frontend ==="
 cat > /home/admin/sql-challenge-frontend/.env.production << 'ENVEOF'
 NEXT_PUBLIC_API_BASE_URL=https://apihub-macedo.duckdns.org
+NEXT_PUBLIC_BASE_PATH=/sql-challenge
 NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyCjcUNiPRfL20Di5Yd6gRCcVPeOBpnG9IE
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=sqlmystery.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=sqlmystery
@@ -49,6 +53,9 @@ NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=813818123752
 NEXT_PUBLIC_FIREBASE_APP_ID=1:813818123752:web:355985fbe43bf1237d005d
 ENVEOF
 chmod 600 /home/admin/sql-challenge-frontend/.env.production
+
+cp /home/admin/sql-challenge-frontend/.env.production /home/admin/sql-challenge-frontend/.env.staging
+chmod 600 /home/admin/sql-challenge-frontend/.env.staging
 
 echo "=== 4. Adicionar chave SSH do GitHub Actions ==="
 mkdir -p ~/.ssh
@@ -65,4 +72,5 @@ echo ""
 echo "✅ Setup concluído!"
 echo "Próximos passos:"
 echo "  1. Adicione os secrets no GitHub (veja abaixo)"
-echo "  2. Faça push para main para disparar o deploy"
+echo "  2. Faça push para feat/* para disparar o deploy de staging"
+echo "  3. Faça push para main para disparar o deploy de production"
