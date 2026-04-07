@@ -17,7 +17,7 @@ type UserContextType = {
   signInWithGoogle: () => Promise<void>
   signInWithGithub: () => Promise<void>
   signOut: () => void
-  updateUser: (updates: Partial<User>) => void
+  updateUser: (updates: Partial<User>) => Promise<void>
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
@@ -78,8 +78,9 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem("user")
   }
 
-  const updateUser = (updates: Partial<User>) => {
+  const updateUser = async (updates: Partial<User>) => {
     if (!user) return
+    await api.put('/api/user/', { ...updates, uid: user.uid })
     const updatedUser = { ...user, ...updates }
     persist(updatedUser)
   }

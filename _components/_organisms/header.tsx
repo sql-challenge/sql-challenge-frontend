@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: "/mystery",    label: "Mistérios",  icon: "🔍" },
   { href: "/ranking",    label: "Ranking",    icon: "🏆" },
   { href: "/conquistas", label: "Conquistas", icon: "🎖️" },
+  { href: "/perfil",     label: "Perfil",     icon: "👤" },
 ]
 
 export function Header() {

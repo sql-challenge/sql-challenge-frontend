@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Header } from "@/_components/_organisms/header";
 import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import { useUser } from "@/_context/userContext";
+import { api } from "@/_lib/api";
 
 interface Achievement {
   id: string;
@@ -184,11 +186,43 @@ function buildAchievements(user: ReturnType<typeof useUser>["user"]): Achievemen
   ];
 }
 
+const RARITY_XP: Record<string, number> = {
+  comum: 50, raro: 150, épico: 300, lendário: 500,
+};
+
 export default function ConquistasPage() {
-  const { user } = useUser();
+  const { user, updateUser } = useUser();
   const achievements = buildAchievements(user);
   const unlocked = achievements.filter((a) => a.unlocked).length;
   const pct = Math.round((unlocked / achievements.length) * 100);
+  const [xpNotice, setXpNotice] = useState<string | null>(null);
+
+  // Detecta novas conquistas e concede XP bônus
+  useEffect(() => {
+    if (!user) return;
+    const awarded: string[] = (user as any).awardedAchievements ?? [];
+    const newOnes = achievements.filter(a => a.unlocked && !awarded.includes(a.id));
+    if (newOnes.length === 0) return;
+
+    let totalXpBonus = 0;
+    const promises = newOnes.map(a => {
+      const xp = RARITY_XP[a.rarity] ?? 50;
+      totalXpBonus += xp;
+      return api.post(`/api/user/${user.uid}/achievements/award`, { achievementId: a.id, xpBonus: xp })
+        .catch(() => {});
+    });
+
+    Promise.all(promises).then(() => {
+      if (totalXpBonus > 0) {
+        updateUser({
+          xp: (user.xp ?? 0) + totalXpBonus,
+          awardedAchievements: [...awarded, ...newOnes.map(a => a.id)],
+        } as any);
+        setXpNotice(`+${totalXpBonus} XP por ${newOnes.length} nova(s) conquista(s)!`);
+        setTimeout(() => setXpNotice(null), 4000);
+      }
+    });
+  }, [user?.uid]);
 
   const progress = user?.challenge_progress ?? [];
   const totalQueries = progress.reduce((acc, p) => acc + (p.totalQueries ?? 0), 0);
@@ -205,6 +239,13 @@ export default function ConquistasPage() {
     <ProtectedRoute>
     <div className="min-h-screen bg-background">
       <Header />
+
+      {/* XP Bonus Toast */}
+      {xpNotice && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-4 rounded-xl border border-yellow-500/40 bg-yellow-500/10 px-5 py-3 text-yellow-400 font-bold shadow-lg">
+          ⚡ {xpNotice}
+        </div>
+      )}
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}

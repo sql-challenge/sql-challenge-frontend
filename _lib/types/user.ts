@@ -1,6 +1,7 @@
 // Tipos auxiliares
 export type Friend = {
-    status: string;
+    uid: string;
+    status: "pending" | "accepted";
     username: string;
     nick: string;
     rankingPosition: number;
