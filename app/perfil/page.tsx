@@ -6,15 +6,196 @@ import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import { useUser } from "@/_context/userContext";
 import { api } from "@/_lib/api";
 import { Friend, User } from "@/_lib/types/user";
-import {
-  RadarChart, Radar, PolarGrid, PolarAngleAxis,
-  PolarRadiusAxis, ResponsiveContainer, Tooltip,
-} from "recharts";
 
 // ── XP por raridade de conquista ───────────────────────────
 const ACHIEVEMENT_XP: Record<string, number> = {
   comum: 50, raro: 150, épico: 300, lendário: 500,
 };
+
+// ── Spider Chart SVG customizado ──────────────────────────
+const AXES = [
+  { key: "value",  icon: "⌨️", label: "Queries"    },
+  { key: "value",  icon: "⏱️", label: "Tempo"      },
+  { key: "value",  icon: "⚡", label: "XP"         },
+  { key: "value",  icon: "📖", label: "Capítulos"  },
+  { key: "value",  icon: "💡", label: "Dicas"      },
+];
+const N = AXES.length;
+const SIZE   = 280;
+const CX     = SIZE / 2;
+const CY     = SIZE / 2;
+const RADIUS = 100;
+const LEVELS = 4;
+
+function polar(angle: number, r: number) {
+  const a = (angle - 90) * (Math.PI / 180);
+  return { x: CX + r * Math.cos(a), y: CY + r * Math.sin(a) };
+}
+
+function polyPoints(values: number[], maxR = RADIUS) {
+  return values.map((v, i) => {
+    const angle = (360 / N) * i;
+    const r = (v / 100) * maxR;
+    const p = polar(angle, r);
+    return `${p.x},${p.y}`;
+  }).join(" ");
+}
+
+interface SpiderChartProps {
+  data: ReturnType<typeof buildRadarData>;
+  compareUser: User | null;
+}
+
+function SpiderChart({ data, compareUser }: SpiderChartProps) {
+  const myValues    = data.map(d => d.value    ?? 0);
+  const friendValues= data.map((d: any) => d.friend ?? 0);
+  const rawValues   = data.map(d => d.raw);
+
+  const axisAngles = Array.from({ length: N }, (_, i) => (360 / N) * i);
+
+  return (
+    <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-background p-5 relative overflow-hidden">
+      {/* glow decorativo */}
+      <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
+
+      {/* header */}
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-sm font-bold text-foreground">Radar de Habilidades</h2>
+        {compareUser && (
+          <div className="flex items-center gap-3 text-xs">
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary inline-block" />Você</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block" />{compareUser.nick || compareUser.username}</span>
+          </div>
+        )}
+      </div>
+
+      <svg width="100%" viewBox={`0 0 ${SIZE} ${SIZE}`} className="overflow-visible">
+        <defs>
+          <radialGradient id="radarGradMe" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stopColor="hsl(var(--primary))" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.05" />
+          </radialGradient>
+          <radialGradient id="radarGradFriend" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stopColor="#60a5fa" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.05" />
+          </radialGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
+            <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+        </defs>
+
+        {/* grid concêntrico */}
+        {Array.from({ length: LEVELS }, (_, lvl) => {
+          const r = (RADIUS / LEVELS) * (lvl + 1);
+          const pts = Array.from({ length: N }, (__, i) => {
+            const p = polar((360 / N) * i, r);
+            return `${p.x},${p.y}`;
+          }).join(" ");
+          return (
+            <polygon
+              key={lvl}
+              points={pts}
+              fill="none"
+              stroke="hsl(var(--border))"
+              strokeWidth={lvl === LEVELS - 1 ? 0.8 : 0.5}
+              strokeOpacity={0.5}
+            />
+          );
+        })}
+
+        {/* eixos */}
+        {axisAngles.map((angle, i) => {
+          const outer = polar(angle, RADIUS);
+          return (
+            <line
+              key={i}
+              x1={CX} y1={CY}
+              x2={outer.x} y2={outer.y}
+              stroke="hsl(var(--border))"
+              strokeWidth={0.5}
+              strokeOpacity={0.5}
+            />
+          );
+        })}
+
+        {/* área do amigo (primeiro para ficar atrás) */}
+        {compareUser && (
+          <>
+            <polygon
+              points={polyPoints(friendValues)}
+              fill="url(#radarGradFriend)"
+              stroke="#60a5fa"
+              strokeWidth={1.5}
+              strokeOpacity={0.7}
+            />
+            {friendValues.map((v, i) => {
+              const p = polar((360 / N) * i, (v / 100) * RADIUS);
+              return (
+                <circle key={i} cx={p.x} cy={p.y} r={3}
+                  fill="#60a5fa" filter="url(#glow)" />
+              );
+            })}
+          </>
+        )}
+
+        {/* área do usuário */}
+        <polygon
+          points={polyPoints(myValues)}
+          fill="url(#radarGradMe)"
+          stroke="hsl(var(--primary))"
+          strokeWidth={2}
+          filter="url(#glow)"
+        />
+        {myValues.map((v, i) => {
+          const p = polar((360 / N) * i, (v / 100) * RADIUS);
+          return (
+            <circle key={i} cx={p.x} cy={p.y} r={4}
+              fill="hsl(var(--primary))"
+              stroke="hsl(var(--background))"
+              strokeWidth={1.5}
+              filter="url(#glow)"
+            />
+          );
+        })}
+
+        {/* labels dos eixos */}
+        {axisAngles.map((angle, i) => {
+          const LABEL_R = RADIUS + 22;
+          const p = polar(angle, LABEL_R);
+          return (
+            <text
+              key={i}
+              x={p.x}
+              y={p.y}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              fontSize={10}
+              fill="hsl(var(--muted-foreground))"
+              fontWeight="600"
+            >
+              {AXES[i].icon} {AXES[i].label}
+            </text>
+          );
+        })}
+      </svg>
+
+      {/* stats abaixo */}
+      <div className="grid grid-cols-5 gap-1 mt-1">
+        {data.map((d, i) => (
+          <div key={i} className="text-center">
+            <p className="text-[10px] text-muted-foreground">{AXES[i].label}</p>
+            <p className="text-xs font-black text-primary">{d.raw}</p>
+            {compareUser && (
+              <p className="text-[10px] text-blue-400">{(d as any).friend ?? 0}%</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 // ── Spider chart ──────────────────────────────────────────
 function buildRadarData(u: User | null, compare?: User | null) {
@@ -257,34 +438,7 @@ export default function PerfilPage() {
             </div>
 
             {/* Spider chart */}
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-1">Seu radar</h2>
-              {compareUser && (
-                <p className="text-xs text-muted-foreground mb-2">
-                  <span className="text-primary font-semibold">Você</span>
-                  {" vs "}
-                  <span className="text-blue-400 font-semibold">{compareUser.nick || compareUser.username}</span>
-                  {" — selecione um amigo na aba Amigos para comparar"}
-                </p>
-              )}
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={radarData}>
-                    <PolarGrid stroke="hsl(var(--border))" />
-                    <PolarAngleAxis dataKey="axis" tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                    <Radar name="Você" dataKey="value" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.25} />
-                    {compareUser && (
-                      <Radar name={compareUser.nick || compareUser.username} dataKey="friend" stroke="#60a5fa" fill="#60a5fa" fillOpacity={0.2} />
-                    )}
-                    <Tooltip
-                      formatter={(value: any, name: string, props: any) => [`${props.payload.raw}`, name]}
-                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
+            <SpiderChart data={radarData} compareUser={compareUser} />
           </div>
         )}
 
