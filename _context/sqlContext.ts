@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SqlDatabase, resetDatabase } from "@/_lib/services/sql";
 import type { DatabaseSchema, QueryResult } from "@/_lib/types/capitulo";
 
@@ -80,18 +80,19 @@ export function useSqlDatabase(schemaArg: DatabaseSchema | null = null) {
     return result;
   };
 
+  const setSchemaStable = useCallback((newSchema: DatabaseSchema) => {
+    if (schemaRef.current === newSchema) {
+      return;
+    }
+    setSchema(newSchema);
+  }, []);
+
   return {
     database,
     executeQuery,
     isLoading,
     error,
-    setSchema: (newSchema: DatabaseSchema) => {
-      if (schemaRef.current === newSchema) {
-        console.log("setSchema called with same schema, ignoring");
-        return;
-      }
-      setSchema(newSchema);
-    },
+    setSchema: setSchemaStable,
     isReady: database?.isReady() || false,
   };
 }
