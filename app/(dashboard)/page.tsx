@@ -157,7 +157,7 @@ export default function DashboardPage() {
                       🕵️
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm text-foreground truncate">{p.nameChallenge}</p>
+                      <p className="font-semibold text-sm text-foreground truncate">{p.nameChallange}</p>
                       <p className="text-xs text-muted-foreground">{p.capFinish ?? 0} cap{(p.capFinish ?? 0) !== 1 ? "ítulos" : "ítulo"} · {(p.xpObtido ?? 0).toLocaleString()} XP obtido</p>
                     </div>
                     <span className="text-xs font-bold text-primary shrink-0">+{(p.xpObtido ?? 0)} XP</span>
