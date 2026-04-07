@@ -11,8 +11,9 @@ export async function initializeSqlJs() {
   if (!SQL) {
     try {
       // Try local first
+      const base = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
       SQL = await initSqlJs({
-        locateFile: () => `/sql-wasm.wasm`,
+        locateFile: () => `${base}/sql-wasm.wasm`,
       });
     } catch (error) {
       console.warn("Failed to load local sql.js, trying CDN...", error);
