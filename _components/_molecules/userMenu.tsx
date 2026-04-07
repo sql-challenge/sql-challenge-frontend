@@ -35,17 +35,12 @@ export function UserMenu() {
                         <p className="text-xs text-muted-foreground">{user?.email || "convidado@mock.com"}</p>
                     </div>
                     <div className="p-1">
-                        {/* {user && (<>
-                            <button className="flex items-center gap-3 w-full px-3 py-2 text-sm text-foreground hover:bg-secondary rounded-md transition-colors">
+                        {user && (
+                            <Link href="/perfil" className="flex items-center gap-3 w-full px-3 py-2 text-sm text-foreground hover:bg-secondary rounded-md transition-colors">
                                 <UserIcon className="h-4 w-4" />
-                                Profile
-                            </button>
-                            <button className="flex items-center gap-3 w-full px-3 py-2 text-sm text-foreground hover:bg-secondary rounded-md transition-colors">
-                                <Settings className="h-4 w-4" />
-                                Settings
-                            </button>
-
-                        </>)} */}
+                                Perfil
+                            </Link>
+                        )}
                         <button
                             className={twMerge(
                                 "flex items-center gap-3 w-full px-3 py-2 text-sm rounded-md transition-colors cursor-pointer",

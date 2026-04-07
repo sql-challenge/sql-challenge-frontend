@@ -21,10 +21,10 @@ const AXES = [
   { key: "value",  icon: "💡", label: "Dicas"      },
 ];
 const N = AXES.length;
-const SIZE   = 280;
+const SIZE   = 220;
 const CX     = SIZE / 2;
 const CY     = SIZE / 2;
-const RADIUS = 100;
+const RADIUS = 76;
 const LEVELS = 4;
 
 function polar(angle: number, r: number) {
@@ -70,7 +70,7 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
         )}
       </div>
 
-      <svg width="100%" viewBox={`0 0 ${SIZE} ${SIZE}`} className="overflow-visible">
+      <svg width="100%" viewBox={`0 0 ${SIZE} ${SIZE}`} className="overflow-visible text-primary">
         <defs>
           <radialGradient id="radarGradMe" cx="50%" cy="50%" r="50%">
             <stop offset="0%"   stopColor="hsl(var(--primary))" stopOpacity="0.5" />
@@ -131,6 +131,7 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
               strokeOpacity={0.7}
             />
             {friendValues.map((v, i) => {
+              if (v <= 0) return null;
               const p = polar((360 / N) * i, (v / 100) * RADIUS);
               return (
                 <circle key={i} cx={p.x} cy={p.y} r={3}
@@ -149,6 +150,7 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
           filter="url(#glow)"
         />
         {myValues.map((v, i) => {
+          if (v <= 0) return null;
           const p = polar((360 / N) * i, (v / 100) * RADIUS);
           return (
             <circle key={i} cx={p.x} cy={p.y} r={4}
@@ -162,7 +164,7 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
 
         {/* labels dos eixos */}
         {axisAngles.map((angle, i) => {
-          const LABEL_R = RADIUS + 22;
+          const LABEL_R = RADIUS + 20;
           const p = polar(angle, LABEL_R);
           return (
             <text
@@ -171,9 +173,9 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
               y={p.y}
               textAnchor="middle"
               dominantBaseline="middle"
-              fontSize={10}
-              fill="hsl(var(--muted-foreground))"
-              fontWeight="600"
+              fontSize={9}
+              fontWeight="700"
+              fill="currentColor"
             >
               {AXES[i].icon} {AXES[i].label}
             </text>
@@ -269,11 +271,13 @@ export default function PerfilPage() {
     }
   }, [user]);
 
+  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+
   const loadFriends = async () => {
     if (!user) return;
     try {
       const data = await api.get<Friend[]>(`/api/user/${user.uid}/friends`);
-      setFriends(data);
+      setFriends(Array.isArray(data) ? data : []);
     } catch {}
   };
 
@@ -281,7 +285,7 @@ export default function PerfilPage() {
     if (!user) return;
     try {
       const data = await api.get<User[]>(`/api/user/${user.uid}/friends/ranking`);
-      setFriendRanking(data);
+      setFriendRanking(Array.isArray(data) ? data : []);
     } catch {}
   };
 
@@ -305,8 +309,10 @@ export default function PerfilPage() {
     if (!searchQuery.trim()) return;
     setSearching(true);
     try {
-      const results = await api.get<User[]>(`/api/user/name/${encodeURIComponent(searchQuery.trim())}`);
-      setSearchResults(results.filter(u => u.uid !== user?.uid));
+      const res  = await fetch(`${BASE}/api/user/name/${encodeURIComponent(searchQuery.trim().toLowerCase())}`);
+      const json = await res.json();
+      const list: User[] = Array.isArray(json) ? json : (json.data ?? []);
+      setSearchResults(list.filter(u => u.uid !== user?.uid));
     } catch {
       setSearchResults([]);
     } finally {
@@ -426,6 +432,29 @@ export default function PerfilPage() {
                   disabled
                   className="mt-1 w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground cursor-not-allowed"
                 />
+              </div>
+
+              {/* Notificações por e-mail */}
+              <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-foreground">Notificações por e-mail</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Receba um e-mail quando novas histórias forem adicionadas</p>
+                </div>
+                <button
+                  onClick={async () => {
+                    if (!user) return;
+                    const newVal = !((user as any).emailNotifications ?? false);
+                    await updateUser({ emailNotifications: newVal } as any);
+                  }}
+                  className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
+                    (user as any)?.emailNotifications ? "bg-primary" : "bg-muted"
+                  }`}
+                  aria-label="Toggle notificações"
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
+                    (user as any)?.emailNotifications ? "translate-x-5" : "translate-x-0"
+                  }`} />
+                </button>
               </div>
 
               <button
