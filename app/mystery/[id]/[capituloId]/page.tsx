@@ -13,6 +13,35 @@ import { type CapituloView, type ObjetivoComConsulta, type QueryResult } from "@
 import { api } from "@/_lib/api";
 import { useChapterSession, formatSeconds } from "@/_hooks/useChapterSession";
 import { useUser } from "@/_context/userContext";
+import { NARRATIVAS } from "@/_lib/narrativas";
+
+// Faixas de tempo por capítulo (em segundos)
+// Calibradas para refletir dificuldade crescente: SELECT → GROUP BY → JOIN → CTE → ENCODE
+const TIME_TIERS = [
+  { gold: 10 * 60, silver: 20 * 60, bronze: 35 * 60 },   // Cap 1 – SELECT / WHERE
+  { gold: 20 * 60, silver: 40 * 60, bronze: 65 * 60 },   // Cap 2 – GROUP BY / janela
+  { gold: 30 * 60, silver: 60 * 60, bronze: 90 * 60 },   // Cap 3 – JOINs
+  { gold: 40 * 60, silver: 80 * 60, bronze: 120 * 60 },  // Cap 4 – CTEs / subqueries
+  { gold: 50 * 60, silver: 90 * 60, bronze: 150 * 60 },  // Cap 5 – ENCODE / complexo
+];
+
+type TierKey = "gold" | "silver" | "bronze" | "none";
+interface Tier {
+  tier: TierKey;
+  label: string;
+  multiplier: number;
+  icon: string;
+  timerColor: string;
+  badgeClass: string;
+}
+
+function getTimeTier(seconds: number, capituloNumero: number): Tier {
+  const t = TIME_TIERS[Math.min(capituloNumero - 1, TIME_TIERS.length - 1)];
+  if (seconds <= t.gold)   return { tier: "gold",   label: "Ouro",      multiplier: 1.5,  icon: "🥇", timerColor: "text-yellow-400", badgeClass: "bg-yellow-400/10 border-yellow-400/40 text-yellow-400" };
+  if (seconds <= t.silver) return { tier: "silver", label: "Prata",     multiplier: 1.25, icon: "🥈", timerColor: "text-slate-300",  badgeClass: "bg-slate-300/10  border-slate-300/40  text-slate-300"  };
+  if (seconds <= t.bronze) return { tier: "bronze", label: "Bronze",    multiplier: 1.0,  icon: "🥉", timerColor: "text-amber-600", badgeClass: "bg-amber-600/10  border-amber-600/40  text-amber-600"  };
+  return                         { tier: "none",   label: "Sem bônus", multiplier: 1.0,  icon: "⏰", timerColor: "text-red-500",   badgeClass: "bg-red-500/10    border-red-500/40    text-red-500"    };
+}
 
 export default function CapituloEditorPage() {
   const params = useParams();
@@ -40,6 +69,8 @@ export default function CapituloEditorPage() {
   const [isVictorious, setIsVictorious] = useState(false);
   const [score, setScore] = useState(0);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [earnedTier, setEarnedTier] = useState<Tier | null>(null);
+  const [narrativa, setNarrativa] = useState<string | null>(null);
 
   // Sessão de tempo
   const { totalSeconds, sessionLoaded, restored, saveProgress } = useChapterSession(
@@ -90,7 +121,7 @@ export default function CapituloEditorPage() {
   ): boolean => {
     const expected = objetivo.consulta;
 
-    // Verifica colunas (sem considerar ordem)
+    // 1. Verifica colunas (sem considerar ordem)
     const userCols = new Set(userResults.columns.map((c: string) => c.toLowerCase()));
     const expectedCols = new Set(expected.colunas.map((c) => c.toLowerCase()));
     if (
@@ -101,17 +132,33 @@ export default function CapituloEditorPage() {
       return false;
     }
 
-    // Executa a query esperada no SQLite local para obter as linhas de referência
+    // 2. Garante que o usuário retornou pelo menos 1 linha
+    if (userResults.rows.length === 0) {
+      setObjetivoFeedback("A query não retornou nenhum resultado.");
+      return false;
+    }
+
+    // 3. Tenta rodar a query esperada no SQLite local para comparar linhas
+    //    O SQLite tem apenas dados de amostra (≤100 linhas por tabela).
+    //    Se retornar 0 linhas, os dados de amostra são insuficientes para validar
+    //    contagem → aceita com base apenas nas colunas.
     let expectedRows: QueryResult["rows"] = [];
     try {
       const expectedResult = executeQuery(expected.query);
       expectedRows = expectedResult.rows;
     } catch {
-      // Query esperada não roda em SQLite (ex.: EXTRACT, ENCODE) → aceita pelo check de colunas
+      // Query não roda em SQLite (EXTRACT, ENCODE, etc.) → aceita pelas colunas
       setObjetivoFeedback(null);
       return true;
     }
 
+    if (expectedRows.length === 0) {
+      // Amostra SQLite insuficiente — aceita pelas colunas + resultado não vazio
+      setObjetivoFeedback(null);
+      return true;
+    }
+
+    // 4. Compara contagem e conteúdo quando SQLite tem dados de referência
     if (userResults.rows.length !== expectedRows.length) {
       setObjetivoFeedback(
         `Número de linhas incorreto. Esperado: ${expectedRows.length}, obtido: ${userResults.rows.length}.`
@@ -162,25 +209,46 @@ export default function CapituloEditorPage() {
         const newCompleted = [...completedObjetivos, objetivo.id];
         setCompletedObjetivos(newCompleted);
 
+        // Mostra interpretação narrativa do objetivo concluído
+        setNarrativa(NARRATIVAS[objetivo.id] ?? null);
+
         const isLastObjetivo = currentObjetivoIndex >= capituloView.objetivos.length - 1;
 
         if (isLastObjetivo) {
-          // Capítulo completo — salva sessão como fechada
+          // Capítulo completo — calcula XP com bônus de tempo e penalidade de dicas
           const totalPenalty = hintsRevealed
             .map((id) => capituloView.dicas.find((d) => d.id === id)?.penalidadeXp ?? 0)
             .reduce((a, b) => a + b, 0);
-          setScore(Math.max(0, capituloView.capitulo.xpRecompensa - totalPenalty));
+          const baseXp = Math.max(0, capituloView.capitulo.xpRecompensa - totalPenalty);
+          const tier = getTimeTier(totalSeconds, capituloView.capitulo.numero);
+          setEarnedTier(tier);
+          setScore(Math.round(baseXp * tier.multiplier));
           setFeedback("Você desvendou todos os mistérios deste capítulo!");
-          setIsVictorious(true);
+          // Pequeno delay para o jogador ler a narrativa antes do banner de vitória
+          setTimeout(() => setIsVictorious(true), 10000);
           saveProgress(
             { currentObjetivoIndex, completedObjetivos: newCompleted, hintsRevealed },
             true
           );
+          if (user?.uid) {
+            const finalXp = Math.round(baseXp * tier.multiplier);
+            api.post(`/api/user/${user.uid}/progress`, {
+              desafioId,
+              nameChallenge: desafioId,
+              capFinish: capituloView.capitulo.numero,
+              xpObtido: finalXp,
+              tempoSegundos: totalSeconds,
+            }).catch((err) => console.error("Erro ao salvar progresso:", err));
+          }
         } else {
           const nextIndex = currentObjetivoIndex + 1;
-          setCurrentObjetivoIndex(nextIndex);
-          setQuery("");
-          setResults(null);
+          // Avança após o jogador ter tempo de ler a narrativa
+          setTimeout(() => {
+            setCurrentObjetivoIndex(nextIndex);
+            setQuery("");
+            setResults(null);
+            setNarrativa(null);
+          }, 10000);
           saveProgress(
             { currentObjetivoIndex: nextIndex, completedObjetivos: newCompleted, hintsRevealed },
             false
@@ -204,20 +272,33 @@ export default function CapituloEditorPage() {
   const VictoryBanner = () =>
     !isVictorious ? null : (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-card border-2 border-green-500 rounded-xl p-8 max-w-md w-full shadow-2xl animate-scale-in">
+        <div className="bg-card border-2 border-green-500 rounded-xl p-8 max-w-md w-full shadow-2xl">
           <div className="text-center space-y-4">
-            <div className="text-6xl animate-bounce">🎉</div>
+            <div className="text-6xl animate-bounce">{earnedTier?.tier === "gold" ? "🏆" : "🎉"}</div>
             <h2 className="text-3xl font-bold text-green-500">Capítulo Resolvido!</h2>
             <p className="text-muted-foreground">{feedback}</p>
+
+            {/* Tier conquistada */}
+            {earnedTier && (
+              <div className={`rounded-lg border px-4 py-2 text-sm font-semibold ${earnedTier.badgeClass}`}>
+                {earnedTier.icon} Classificação: {earnedTier.label}
+                {earnedTier.multiplier > 1 && (
+                  <span className="ml-2 opacity-80">(×{earnedTier.multiplier} de bônus!)</span>
+                )}
+              </div>
+            )}
+
             <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
               <p className="text-sm text-muted-foreground mb-1">XP Ganho</p>
               <p className="text-4xl font-bold text-green-500">+{score} XP</p>
+              <p className="text-xs text-muted-foreground mt-1">⏱ Tempo: {formatSeconds(totalSeconds)}</p>
               {hintsRevealed.length > 0 && (
-                <p className="text-xs text-yellow-500 mt-2">
-                  ({hintsRevealed.length} dica(s) usada(s))
+                <p className="text-xs text-yellow-500 mt-1">
+                  {hintsRevealed.length} dica(s) usada(s)
                 </p>
               )}
             </div>
+
             <div className="flex gap-2 mt-6">
               <button
                 onClick={() =>
@@ -310,35 +391,66 @@ export default function CapituloEditorPage() {
       <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 overflow-hidden min-h-0">
         {/* LEFT: Info */}
         <div className="lg:w-1/3 flex flex-col gap-4 overflow-hidden min-h-0">
-          <div className="bg-card border border-border rounded-lg p-6">
-            <h1 className="text-2xl font-bold text-foreground mb-2">
-              Capítulo {capitulo.numero}: {capitulo.introHistoria}
-            </h1>
-            <div className="flex items-center justify-between mt-2">
-              <div className="text-sm text-muted-foreground">
-                Progresso:{" "}
-                <span className="font-semibold text-foreground">
-                  {completedObjetivos.length}/{totalObjetivos}
-                </span>
+          {(() => {
+            const currentTier = capituloView ? getTimeTier(totalSeconds, capituloView.capitulo.numero) : null;
+            const tiers = capituloView ? TIME_TIERS[Math.min(capituloView.capitulo.numero - 1, TIME_TIERS.length - 1)] : null;
+            const xpBase = capituloView?.capitulo.xpRecompensa ?? 0;
+            return (
+              <div className="bg-card border border-border rounded-lg p-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-0.5">Capítulo {capitulo.numero}</p>
+                <h1 className="text-sm font-semibold text-foreground mb-3 line-clamp-1">
+                  {capitulo.introHistoria.split(/[.!?]/)[0].trim()}
+                </h1>
+
+                {/* Timer em destaque */}
+                <div className={`flex items-center justify-between rounded-lg border px-4 py-3 mb-3 ${currentTier?.badgeClass ?? ""}`}>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-widest opacity-70">Tempo</p>
+                    <p className={`text-3xl font-mono font-bold tabular-nums leading-none ${currentTier?.timerColor}`}>
+                      {formatSeconds(totalSeconds)}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl leading-none">{currentTier?.icon}</p>
+                    <p className={`text-sm font-bold mt-1 ${currentTier?.timerColor}`}>{currentTier?.label}</p>
+                  </div>
+                </div>
+
+                {/* Faixas de XP por tempo */}
+                {tiers && (
+                  <div className="grid grid-cols-3 gap-1 mb-3 text-xs">
+                    {[
+                      { key: "gold",   icon: "🥇", label: "Ouro",   limit: tiers.gold,   mult: 1.5  },
+                      { key: "silver", icon: "🥈", label: "Prata",  limit: tiers.silver, mult: 1.25 },
+                      { key: "bronze", icon: "🥉", label: "Bronze", limit: tiers.bronze, mult: 1.0  },
+                    ].map(({ key, icon, label, limit, mult }) => {
+                      const active = currentTier?.tier === key;
+                      return (
+                        <div key={key} className={`rounded-md border px-2 py-1.5 text-center transition-all ${active ? "border-primary/50 bg-primary/10 font-bold scale-105" : "border-border opacity-60"}`}>
+                          <span className="text-base">{icon}</span>
+                          <p className="font-semibold">{label}</p>
+                          <p className="text-muted-foreground">{"< "}{formatSeconds(limit)}</p>
+                          <p className="font-bold text-primary">{Math.round(xpBase * mult)} XP</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Progresso */}
+                <div className="flex items-center justify-between text-sm text-muted-foreground mb-1">
+                  <span>Progresso</span>
+                  <span className="font-semibold text-foreground">{completedObjetivos.length}/{totalObjetivos}</span>
+                </div>
+                <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all duration-500"
+                    style={{ width: `${(completedObjetivos.length / totalObjetivos) * 100}%` }}
+                  />
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-muted-foreground">
-                  ⏱ {formatSeconds(totalSeconds)}
-                </p>
-                <p className="text-sm text-muted-foreground">Recompensa</p>
-                <p className="text-xl font-bold text-primary">
-                  {capitulo.xpRecompensa} XP
-                </p>
-              </div>
-            </div>
-            {/* Barra de progresso */}
-            <div className="mt-3 h-2 bg-secondary rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary transition-all duration-500"
-                style={{ width: `${(completedObjetivos.length / totalObjetivos) * 100}%` }}
-              />
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Tabs */}
           <div className="bg-card border border-border rounded-lg flex-1 flex flex-col min-h-0">
@@ -439,6 +551,22 @@ export default function CapituloEditorPage() {
           {error && (
             <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
               <p className="text-sm text-red-400">{error}</p>
+            </div>
+          )}
+
+          {/* Painel de interpretação narrativa */}
+          {narrativa && (
+            <div className="bg-emerald-950/60 border border-emerald-500/40 rounded-lg px-4 py-3 flex gap-3 items-start animate-pulse-once">
+              <span className="text-xl shrink-0 mt-0.5">🔍</span>
+              <div>
+                <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">Dedução do investigador</p>
+                <p className="text-sm text-emerald-100 leading-relaxed">{narrativa}</p>
+              </div>
+              <button
+                onClick={() => setNarrativa(null)}
+                className="shrink-0 text-emerald-500 hover:text-emerald-300 text-lg leading-none ml-auto"
+                aria-label="Fechar"
+              >×</button>
             </div>
           )}
 

@@ -3,25 +3,19 @@
 import { api } from "@/_lib/api"
 import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
-import { User, UserSignUp, UserSignUpForm } from '@/_lib/types/user'
-// export type User = {
-//   id: string
-//   name: string
-//   email: string
-//   avatar?: string
-//   level?: number
-//   xp?: number
-// }
-
-// export interface LoginUserResponse extends User {
-
-// }
+import { User, UserSignUpForm } from '@/_lib/types/user'
+import {
+  signInWithGoogle as firebaseSignInWithGoogle,
+  signInWithGithub as firebaseSignInWithGithub,
+  firebaseSignOut,
+} from "@/_lib/firebase/auth"
 
 type UserContextType = {
   user: User | null
-  // isLoading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (form: UserSignUpForm) => Promise<void>
+  signInWithGoogle: () => Promise<void>
+  signInWithGithub: () => Promise<void>
   signOut: () => void
   updateUser: (updates: Partial<User>) => void
 }
@@ -30,66 +24,69 @@ const UserContext = createContext<UserContextType | undefined>(undefined)
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  // TODO: only use local_storage to info that dont need to be validaded by backend
-  // use local_storage when token for session is provided
-  // ========
-  // useEffect(() => {
-  //   // Check for saved user in localStorage after mount
-  //   const savedUser = localStorage.getItem("user")
-  //   //
-  //   if (savedUser) {
-  //     try {
-  //       setUser(JSON.parse(savedUser))
-  //     } catch (error) {
-  //       console.error("Failed to parse saved user:", error)
-  //       localStorage.removeItem("user")
-  //     }
-  //   }
-  // }, [])
+
+  useEffect(() => {
+    const savedUser = localStorage.getItem("user")
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser))
+      } catch {
+        localStorage.removeItem("user")
+      }
+    }
+  }, [])
+
+  const persist = (u: User) => {
+    setUser(u)
+    localStorage.setItem("user", JSON.stringify(u))
+  }
 
   const signIn = async (email: string, password: string) => {
-    // loginSchema.parse({ email, password })
-    // TODO: Replace with actual API call
-    // Simulate API call
-    // await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    const user = await api.post<User | null>('/api/user/auth/', { email, password })
-    // persist session
-    // change to jwt or order thing 
-    setUser(user)
-    // localStorage.setItem("user", JSON.stringify(user))
+    const user = await api.post<User>('/api/user/auth/', { email, password })
+    persist(user)
   }
 
   const signUp = async (form: UserSignUpForm) => {
     const user = await api.post<User>('/api/user/', form)
-    // debugger;
-    setUser(user)
-    // localStorage.setItem("user", JSON.stringify(user))
-    // debugger;
+    persist(user)
   }
 
-  const signOut = () => {
+  /**
+   * Login/cadastro via Google.
+   * O Firebase (Google) autentica o usuário e retorna um ID token assinado.
+   * O backend verifica o token e cria o usuário no Firestore se for a primeira vez.
+   */
+  const signInWithGoogle = async () => {
+    const { idToken } = await firebaseSignInWithGoogle()
+    const user = await api.post<User>('/api/user/auth/oauth', { idToken })
+    persist(user)
+  }
+
+  /**
+   * Login/cadastro via GitHub.
+   * Mesmo fluxo do Google — Firebase verifica a identidade, backend cria/atualiza o registro.
+   */
+  const signInWithGithub = async () => {
+    const { idToken } = await firebaseSignInWithGithub()
+    const user = await api.post<User>('/api/user/auth/oauth', { idToken })
+    persist(user)
+  }
+
+  const signOut = async () => {
+    await firebaseSignOut().catch(() => {})
     setUser(null)
-    // localStorage.removeItem("user")
+    localStorage.removeItem("user")
   }
 
   const updateUser = (updates: Partial<User>) => {
     if (!user) return
-
     const updatedUser = { ...user, ...updates }
-    setUser(updatedUser)
-    // localStorage.setItem("user", JSON.stringify(updatedUser))
+    persist(updatedUser)
   }
 
   return (
     <UserContext.Provider
-      value={{
-        user,
-        signIn,
-        signUp,
-        signOut,
-        updateUser,
-      }}
+      value={{ user, signIn, signUp, signInWithGoogle, signInWithGithub, signOut, updateUser }}
     >
       {children}
     </UserContext.Provider>

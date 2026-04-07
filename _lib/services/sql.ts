@@ -76,6 +76,8 @@ export class SqlDatabase {
       this.db.run("BEGIN TRANSACTION;");
 
       for (const table of schema.visaoTabelas) {
+        if (!table.colunas || table.colunas.length === 0) continue;
+
         const columns = table.colunas.map((col) => {
           let def = `"${col.nome}" ${normalizeType(col.tipo)}`;
           if (col.chave_primaria) def += " PRIMARY KEY";
