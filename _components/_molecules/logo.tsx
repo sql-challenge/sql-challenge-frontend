@@ -1,4 +1,5 @@
 import Image from "next/image"
+import Link from "next/link"
 import { twMerge } from "tailwind-merge"
 
 interface LogoProps {
@@ -8,7 +9,7 @@ interface LogoProps {
 
 export function Logo({ className, size = "sm" }: LogoProps) {
   return (
-    <div className={twMerge("flex items-center gap-3", className)}>
+    <Link href="/" className={twMerge("flex items-center gap-3", className)}>
       <div
         className={twMerge("flex items-center justify-center rounded-lg bg-gradient-to-br from-primary to-accent",
            size === "sm" && "h-8 w-8",
@@ -51,6 +52,6 @@ export function Logo({ className, size = "sm" }: LogoProps) {
       >
         SQL Challenger
       </span>
-    </div>
+    </Link>
   )
 }

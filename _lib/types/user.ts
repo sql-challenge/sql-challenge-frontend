@@ -11,6 +11,9 @@ export type ChallengeProgress = {
     nameChallange: string;
     capFinish: number;
     xpObtido: number;
+    totalQueries?: number;
+    totalSeconds?: number;
+    totalHints?: number;
 };
 
 // Entidade User

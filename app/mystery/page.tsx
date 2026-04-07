@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Header } from "@/_components/_organisms/header";
+import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import Link from "next/link";
 import { Desafio } from "@/_lib/types/capitulo";
 
@@ -86,6 +87,7 @@ export default function MysteriesPage() {
   );
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-background">
       <Header />
 
@@ -224,5 +226,6 @@ export default function MysteriesPage() {
         )}
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

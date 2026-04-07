@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Header } from "@/_components/_organisms/header";
+import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import { useUser } from "@/_context/userContext";
 import { User } from "@/_lib/types/user";
 
@@ -40,6 +41,7 @@ export default function RankingPage() {
   const myPosition = players.findIndex((p) => p.uid === me?.uid) + 1;
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-background">
       <Header />
 
@@ -165,5 +167,6 @@ export default function RankingPage() {
         )}
       </div>
     </div>
+    </ProtectedRoute>
   );
 }

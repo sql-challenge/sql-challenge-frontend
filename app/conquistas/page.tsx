@@ -1,8 +1,8 @@
 "use client";
 
 import { Header } from "@/_components/_organisms/header";
+import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import { useUser } from "@/_context/userContext";
-import Link from "next/link";
 
 interface Achievement {
   id: string;
@@ -22,12 +22,16 @@ const RARITY_STYLE = {
 };
 
 function buildAchievements(user: ReturnType<typeof useUser>["user"]): Achievement[] {
-  const progress = (user as any)?.challenge_progress ?? [];
-  const totalCaps = progress.reduce((acc: number, p: any) => acc + (p.capFinish ?? 0), 0);
-  const totalXP = user?.xp ?? 0;
+  const progress = user?.challenge_progress ?? [];
+  const totalCaps    = progress.reduce((acc, p) => acc + (p.capFinish    ?? 0), 0);
+  const totalXP      = user?.xp ?? 0;
   const totalDesafios = progress.length;
+  const totalQueries = progress.reduce((acc, p) => acc + (p.totalQueries ?? 0), 0);
+  const totalMinutes = Math.floor(progress.reduce((acc, p) => acc + (p.totalSeconds ?? 0), 0) / 60);
+  const totalHints   = progress.reduce((acc, p) => acc + (p.totalHints   ?? 0), 0);
 
   return [
+    // ── Capítulos ──────────────────────────────────────────────
     {
       id: "first_blood",
       icon: "🩸",
@@ -52,6 +56,7 @@ function buildAchievements(user: ReturnType<typeof useUser>["user"]): Achievemen
       rarity: "raro",
       unlocked: totalCaps >= 10,
     },
+    // ── XP ────────────────────────────────────────────────────
     {
       id: "xp_500",
       icon: "⚡",
@@ -84,6 +89,7 @@ function buildAchievements(user: ReturnType<typeof useUser>["user"]): Achievemen
       rarity: "lendário",
       unlocked: totalXP >= 10000,
     },
+    // ── Casos ────────────────────────────────────────────────
     {
       id: "multi_case",
       icon: "🗂️",
@@ -100,21 +106,72 @@ function buildAchievements(user: ReturnType<typeof useUser>["user"]): Achievemen
       rarity: "épico",
       unlocked: totalDesafios >= 5,
     },
+    // ── Queries ──────────────────────────────────────────────
     {
-      id: "speedster",
-      icon: "🚀",
-      title: "Relâmpago",
-      desc: "Conquiste o bônus Ouro 🥇 em qualquer capítulo.",
-      rarity: "épico",
-      unlocked: false, // sem data de tier por enquanto
+      id: "queries_10",
+      icon: "⌨️",
+      title: "Digitador Curioso",
+      desc: "Execute 10 queries.",
+      rarity: "comum",
+      unlocked: totalQueries >= 10,
     },
+    {
+      id: "queries_100",
+      icon: "🖥️",
+      title: "Analista de Dados",
+      desc: "Execute 100 queries.",
+      rarity: "raro",
+      unlocked: totalQueries >= 100,
+    },
+    {
+      id: "queries_500",
+      icon: "🤖",
+      title: "Máquina de Consultas",
+      desc: "Execute 500 queries.",
+      rarity: "épico",
+      unlocked: totalQueries >= 500,
+    },
+    // ── Tempo ────────────────────────────────────────────────
+    {
+      id: "time_30",
+      icon: "⏱️",
+      title: "Detetive Dedicado",
+      desc: "Jogue por 30 minutos no total.",
+      rarity: "comum",
+      unlocked: totalMinutes >= 30,
+    },
+    {
+      id: "time_120",
+      icon: "🕵️",
+      title: "Mergulho Profundo",
+      desc: "Jogue por 2 horas no total.",
+      rarity: "raro",
+      unlocked: totalMinutes >= 120,
+    },
+    {
+      id: "time_600",
+      icon: "🏛️",
+      title: "Guardião do Arquivo",
+      desc: "Jogue por 10 horas no total.",
+      rarity: "épico",
+      unlocked: totalMinutes >= 600,
+    },
+    // ── Habilidade ───────────────────────────────────────────
     {
       id: "no_hints",
       icon: "🦅",
       title: "Voo Solo",
       desc: "Complete um capítulo sem usar nenhuma dica.",
       rarity: "raro",
-      unlocked: false,
+      unlocked: progress.some((p) => (p.totalHints ?? 0) === 0 && (p.capFinish ?? 0) > 0),
+    },
+    {
+      id: "hints_0_total",
+      icon: "🧠",
+      title: "Mente Pura",
+      desc: "Complete 5 capítulos sem usar nenhuma dica.",
+      rarity: "épico",
+      unlocked: totalHints === 0 && totalCaps >= 5,
     },
     {
       id: "sql_master",
@@ -133,26 +190,19 @@ export default function ConquistasPage() {
   const unlocked = achievements.filter((a) => a.unlocked).length;
   const pct = Math.round((unlocked / achievements.length) * 100);
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Header />
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center px-4">
-          <div className="text-5xl">🔒</div>
-          <h2 className="text-2xl font-bold text-foreground">Acesso restrito</h2>
-          <p className="text-muted-foreground">Faça login para ver suas conquistas.</p>
-          <Link
-            href="/auth/login"
-            className="px-5 py-2.5 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
-          >
-            Fazer Login
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const progress = user?.challenge_progress ?? [];
+  const totalQueries = progress.reduce((acc, p) => acc + (p.totalQueries ?? 0), 0);
+  const totalMinutes = Math.floor(progress.reduce((acc, p) => acc + (p.totalSeconds ?? 0), 0) / 60);
+  const totalHints   = progress.reduce((acc, p) => acc + (p.totalHints   ?? 0), 0);
+  const totalCaps    = progress.reduce((acc, p) => acc + (p.capFinish    ?? 0), 0);
+
+  const formatTime = (mins: number) => {
+    if (mins < 60) return `${mins}min`;
+    return `${Math.floor(mins / 60)}h ${mins % 60}min`;
+  };
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-background">
       <Header />
 
@@ -178,12 +228,14 @@ export default function ConquistasPage() {
         </div>
 
         {/* Stats rápidas */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
           {[
-            { icon: "⚡", label: "XP Total", value: (user.xp ?? 0).toLocaleString() },
-            { icon: "📋", label: "Casos Iniciados", value: ((user as any).challenge_progress?.length ?? 0) },
-            { icon: "📖", label: "Caps Completos", value: (user as any).challenge_progress?.reduce((a: number, p: any) => a + (p.capFinish ?? 0), 0) ?? 0 },
-            { icon: "🏅", label: "Posição", value: `#${user.rankingPosition || "—"}` },
+            { icon: "⚡", label: "XP Total",        value: (user?.xp ?? 0).toLocaleString() },
+            { icon: "📖", label: "Caps Completos",  value: totalCaps },
+            { icon: "📋", label: "Casos Iniciados", value: progress.length },
+            { icon: "⌨️", label: "Queries",         value: totalQueries.toLocaleString() },
+            { icon: "⏱️", label: "Tempo Jogado",    value: formatTime(totalMinutes) },
+            { icon: "💡", label: "Dicas Usadas",    value: totalHints },
           ].map(({ icon, label, value }) => (
             <div key={label} className="rounded-xl border border-border bg-card px-4 py-3 text-center">
               <div className="text-xl mb-1">{icon}</div>
@@ -229,5 +281,6 @@ export default function ConquistasPage() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
   );
 }
