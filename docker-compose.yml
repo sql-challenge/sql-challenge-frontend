@@ -7,6 +7,7 @@ services:
       target: runner
       args:
         NEXT_PUBLIC_API_BASE_URL:             ${NEXT_PUBLIC_API_BASE_URL}
+        BASE_PATH:                            ${BASE_PATH:-/sql-challenge}
         NEXT_PUBLIC_BASE_PATH:                ${NEXT_PUBLIC_BASE_PATH:-/sql-challenge}
         NEXT_PUBLIC_FIREBASE_API_KEY:         ${NEXT_PUBLIC_FIREBASE_API_KEY}
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:     ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
