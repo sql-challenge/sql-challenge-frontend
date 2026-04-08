@@ -39,6 +39,7 @@ ENV NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=$NEXT_PUBLIC_FIREBASE_MESSAGING_SEN
 ENV NEXT_PUBLIC_FIREBASE_APP_ID=$NEXT_PUBLIC_FIREBASE_APP_ID
 
 RUN node -e "require('fs').copyFileSync('node_modules/sql.js/dist/sql-wasm.wasm', 'public/sql-wasm.wasm')"
+RUN [ -n "$NEXT_PUBLIC_BASE_PATH" ] && mkdir -p "/app${NEXT_PUBLIC_BASE_PATH}" || true
 RUN npm run build
 
 # ═══════════════════════════════════════════════════════════════
