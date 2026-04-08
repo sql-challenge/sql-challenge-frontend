@@ -2,30 +2,29 @@ name: CI
 
 on:
   push:
-    branches: [dev, "feature/**"]
+    branches: ["feat/**"]
   pull_request:
     branches: [main, dev]
 
 jobs:
-  build-and-lint:
-    name: Build & Lint
+  lint-build:
+    name: Lint & Build
     runs-on: ubuntu-latest
 
     env:
       NEXT_PUBLIC_API_BASE_URL: http://localhost:3000
-      NEXT_PUBLIC_API_PORT: 3000
+      NEXT_PUBLIC_BASE_PATH:    /sql-challenge
+      NEXT_PUBLIC_API_PORT:     3000
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      - name: Install dependencies
+      - name: Instalar dependências
         run: npm ci
 
       - name: Lint
@@ -34,7 +33,7 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Notificar falha por email
+      - name: Notificar falha
         if: failure()
         uses: dawidd6/action-send-mail@v3
         with:
@@ -47,7 +46,7 @@ jobs:
           to: ${{ secrets.MAIL_USERNAME }}
           from: SQL Challenge CI <${{ secrets.MAIL_USERNAME }}>
           body: |
-            O pipeline de CI do frontend falhou.
+            O pipeline de CI (frontend) falhou.
 
             Repositório : ${{ github.repository }}
             Branch      : ${{ github.ref_name }}

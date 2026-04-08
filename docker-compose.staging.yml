@@ -1,5 +1,5 @@
 services:
-  # ─── Frontend (production) ────────────────────────────────────
+  # ─── Frontend (staging) ───────────────────────────────────────
   frontend:
     build:
       context: .
@@ -7,15 +7,15 @@ services:
       target: runner
       args:
         NEXT_PUBLIC_API_BASE_URL:             ${NEXT_PUBLIC_API_BASE_URL}
-        NEXT_PUBLIC_BASE_PATH:                ${NEXT_PUBLIC_BASE_PATH:-/sql-challenge}
+        NEXT_PUBLIC_BASE_PATH:                ${NEXT_PUBLIC_BASE_PATH:-/sql-challenge-staging}
         NEXT_PUBLIC_FIREBASE_API_KEY:         ${NEXT_PUBLIC_FIREBASE_API_KEY}
         NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN:     ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
         NEXT_PUBLIC_FIREBASE_PROJECT_ID:      ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
         NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET:  ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
         NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
         NEXT_PUBLIC_FIREBASE_APP_ID:          ${NEXT_PUBLIC_FIREBASE_APP_ID}
-    image: sql-challenge-frontend:${IMAGE_TAG:-latest}
-    container_name: sql-challenge-frontend-production
+    image: sql-challenge-frontend:staging
+    container_name: sql-challenge-frontend-staging
     ports:
-      - "3001:3001"
+      - "3011:3001"
     restart: unless-stopped
