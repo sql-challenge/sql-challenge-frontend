@@ -74,7 +74,7 @@ export default function RegisterPage() {
   }
 
   const handleFieldBlur = (field: keyof UserSignUpForm) => () => {
-    validateField(field, formData[field] || "")
+    validateField(field, String(formData[field] ?? ""))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
