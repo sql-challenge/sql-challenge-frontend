@@ -48,7 +48,7 @@ interface SpiderChartProps {
 
 function SpiderChart({ data, compareUser }: SpiderChartProps) {
   const myValues    = data.map(d => d.value    ?? 0);
-  const friendValues= data.map((d: { friend?: number; value?: number; raw: number }) => d.friend ?? 0);
+  const friendValues= data.map(d => ('friend' in d ? (d as { friend?: number }).friend ?? 0 : 0));
   const rawValues   = data.map(d => d.raw);
 
   const axisAngles = Array.from({ length: N }, (_, i) => (360 / N) * i);
@@ -190,7 +190,7 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
             <p className="text-[10px] text-muted-foreground">{AXES[i].label}</p>
             <p className="text-xs font-black text-primary">{d.raw}</p>
             {compareUser && (
-              <p className="text-[10px] text-blue-400">{(d as { friend?: number }).friend ?? 0}%</p>
+              <p className="text-[10px] text-blue-400">{('friend' in d ? (d as { friend?: number }).friend : 0) ?? 0}%</p>
             )}
           </div>
         ))}
