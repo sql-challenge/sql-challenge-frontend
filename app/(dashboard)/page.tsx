@@ -34,7 +34,7 @@ function buildQuickAchievements(user: ReturnType<typeof useUser>["user"]) {
   const totalXP      = user?.xp ?? 0
   const totalDesafios = progress.length
   const totalQueries = progress.reduce((a, p) => a + (p.totalQueries ?? 0), 0)
-  const awarded: string[] = (user as any)?.awardedAchievements ?? []
+  const awarded: string[] = user?.awardedAchievements ?? []
 
   return [
     { id: "first_blood", icon: "🩸", title: "Primeira Gota de Sangue", unlocked: totalCaps >= 1 },

@@ -200,7 +200,7 @@ export default function ConquistasPage() {
   // Detecta novas conquistas e concede XP bônus
   useEffect(() => {
     if (!user) return;
-    const awarded: string[] = (user as any).awardedAchievements ?? [];
+    const awarded: string[] = user.awardedAchievements ?? [];
     const newOnes = achievements.filter(a => a.unlocked && !awarded.includes(a.id));
     if (newOnes.length === 0) return;
 
@@ -217,7 +217,7 @@ export default function ConquistasPage() {
         updateUser({
           xp: (user.xp ?? 0) + totalXpBonus,
           awardedAchievements: [...awarded, ...newOnes.map(a => a.id)],
-        } as any);
+        });
         setXpNotice(`+${totalXpBonus} XP por ${newOnes.length} nova(s) conquista(s)!`);
         setTimeout(() => setXpNotice(null), 4000);
       }

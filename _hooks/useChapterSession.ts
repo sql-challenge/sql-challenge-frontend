@@ -80,6 +80,7 @@ export function useChapterSession(
   useEffect(() => {
     if (!uid) {
       sessionStartRef.current = Date.now();
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSessionLoaded(true);
       return;
     }

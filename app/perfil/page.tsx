@@ -48,7 +48,7 @@ interface SpiderChartProps {
 
 function SpiderChart({ data, compareUser }: SpiderChartProps) {
   const myValues    = data.map(d => d.value    ?? 0);
-  const friendValues= data.map((d: any) => d.friend ?? 0);
+  const friendValues= data.map((d: { friend?: number; value?: number; raw: number }) => d.friend ?? 0);
   const rawValues   = data.map(d => d.raw);
 
   const axisAngles = Array.from({ length: N }, (_, i) => (360 / N) * i);
@@ -190,7 +190,7 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
             <p className="text-[10px] text-muted-foreground">{AXES[i].label}</p>
             <p className="text-xs font-black text-primary">{d.raw}</p>
             {compareUser && (
-              <p className="text-[10px] text-blue-400">{(d as any).friend ?? 0}%</p>
+              <p className="text-[10px] text-blue-400">{(d as { friend?: number }).friend ?? 0}%</p>
             )}
           </div>
         ))}
@@ -327,8 +327,8 @@ export default function PerfilPage() {
       await loadFriends();
       setSearchResults([]);
       setSearchQuery("");
-    } catch (e: any) {
-      alert(e.message ?? "Erro ao adicionar amigo");
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : "Erro ao adicionar amigo");
     }
   };
 
@@ -443,16 +443,16 @@ export default function PerfilPage() {
                 <button
                   onClick={async () => {
                     if (!user) return;
-                    const newVal = !((user as any).emailNotifications ?? false);
-                    await updateUser({ emailNotifications: newVal } as any);
+                    const newVal = !(user.emailNotifications ?? false);
+                    await updateUser({ emailNotifications: newVal });
                   }}
                   className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
-                    (user as any)?.emailNotifications ? "bg-primary" : "bg-muted"
+                    user?.emailNotifications ? "bg-primary" : "bg-muted"
                   }`}
                   aria-label="Toggle notificações"
                 >
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${
-                    (user as any)?.emailNotifications ? "translate-x-5" : "translate-x-0"
+                    user?.emailNotifications ? "translate-x-5" : "translate-x-0"
                   }`} />
                 </button>
               </div>

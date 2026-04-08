@@ -31,6 +31,8 @@ export interface User {
     xp: number;
     friends: Friend[];
     challenge_progress: ChallengeProgress[];
+    awardedAchievements?: string[];
+    emailNotifications?: boolean;
 }
 export type UserSignUp = Omit<User,
     "uid" | "createdAt" | "lastLogin">

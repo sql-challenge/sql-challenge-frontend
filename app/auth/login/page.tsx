@@ -168,8 +168,8 @@ export default function LoginPage() {
                     setError("")
                     await signInWithGoogle()
                     router.push("/mystery")
-                  } catch (err: any) {
-                    setError(err?.message || "Erro ao entrar com Google.")
+                  } catch (err: unknown) {
+                    setError(err instanceof Error ? err.message : "Erro ao entrar com Google.")
                   } finally {
                     setIsLoading(false)
                   }
@@ -193,8 +193,8 @@ export default function LoginPage() {
                     setError("")
                     await signInWithGithub()
                     router.push("/mystery")
-                  } catch (err: any) {
-                    setError(err?.message || "Erro ao entrar com GitHub.")
+                  } catch (err: unknown) {
+                    setError(err instanceof Error ? err.message : "Erro ao entrar com GitHub.")
                   } finally {
                     setIsLoading(false)
                   }
