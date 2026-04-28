@@ -2,6 +2,7 @@ import {
   GoogleAuthProvider,
   GithubAuthProvider,
   signInWithPopup,
+  signInWithEmailAndPassword,
   signOut,
   type UserCredential,
 } from "firebase/auth";
@@ -25,6 +26,12 @@ export async function signInWithGoogle(): Promise<{ idToken: string; credential:
  */
 export async function signInWithGithub(): Promise<{ idToken: string; credential: UserCredential }> {
   const credential = await signInWithPopup(auth, githubProvider);
+  const idToken = await credential.user.getIdToken();
+  return { idToken, credential };
+}
+
+export async function signInWithEmailPassword(email: string, password: string): Promise<{ idToken: string; credential: UserCredential }> {
+  const credential = await signInWithEmailAndPassword(auth, email, password);
   const idToken = await credential.user.getIdToken();
   return { idToken, credential };
 }

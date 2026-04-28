@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Header } from "@/_components/_organisms/header";
 import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import { useUser } from "@/_context/userContext";
@@ -49,7 +49,6 @@ interface SpiderChartProps {
 function SpiderChart({ data, compareUser }: SpiderChartProps) {
   const myValues    = data.map(d => d.value    ?? 0);
   const friendValues= data.map(d => ('friend' in d ? (d as { friend?: number }).friend ?? 0 : 0));
-  const rawValues   = data.map(d => d.raw);
 
   const axisAngles = Array.from({ length: N }, (_, i) => (360 / N) * i);
 
@@ -70,21 +69,34 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
         )}
       </div>
 
-      <svg width="100%" viewBox={`0 0 ${SIZE} ${SIZE}`} className="overflow-visible text-primary">
+      <svg width="100%" viewBox={`0 0 ${SIZE} ${SIZE}`} className="overflow-visible text-blue-300">
         <defs>
           <radialGradient id="radarGradMe" cx="50%" cy="50%" r="50%">
-            <stop offset="0%"   stopColor="hsl(var(--primary))" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity="0.05" />
+            <stop offset="0%"   stopColor="#3b82f6" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
           </radialGradient>
           <radialGradient id="radarGradFriend" cx="50%" cy="50%" r="50%">
             <stop offset="0%"   stopColor="#60a5fa" stopOpacity="0.4" />
             <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.05" />
+          </radialGradient>
+          <radialGradient id="radarGridBg" cx="50%" cy="50%" r="60%">
+            <stop offset="0%"   stopColor="#60a5fa" stopOpacity="0.10" />
+            <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.02" />
           </radialGradient>
           <filter id="glow">
             <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
             <feMerge><feMergeNode in="coloredBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
+
+        <polygon
+          points={Array.from({ length: N }, (_, i) => {
+            const p = polar((360 / N) * i, RADIUS);
+            return `${p.x},${p.y}`;
+          }).join(" ")}
+          fill="url(#radarGridBg)"
+          stroke="none"
+        />
 
         {/* grid concêntrico */}
         {Array.from({ length: LEVELS }, (_, lvl) => {
@@ -97,10 +109,11 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
             <polygon
               key={lvl}
               points={pts}
-              fill="none"
-              stroke="hsl(var(--border))"
+              fill={lvl % 2 === 0 ? "#60a5fa" : "none"}
+              fillOpacity={lvl % 2 === 0 ? 0.04 : 0}
+              stroke="#60a5fa"
               strokeWidth={lvl === LEVELS - 1 ? 0.8 : 0.5}
-              strokeOpacity={0.5}
+              strokeOpacity={lvl === LEVELS - 1 ? 0.35 : 0.2}
             />
           );
         })}
@@ -113,9 +126,9 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
               key={i}
               x1={CX} y1={CY}
               x2={outer.x} y2={outer.y}
-              stroke="hsl(var(--border))"
+              stroke="#60a5fa"
               strokeWidth={0.5}
-              strokeOpacity={0.5}
+              strokeOpacity={0.22}
             />
           );
         })}
@@ -125,42 +138,27 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
           <>
             <polygon
               points={polyPoints(friendValues)}
-              fill="url(#radarGradFriend)"
+              fill="#60a5fa"
+              fillOpacity={0.12}
               stroke="#60a5fa"
-              strokeWidth={1.5}
-              strokeOpacity={0.7}
+              strokeWidth={1.6}
+              strokeOpacity={0.8}
+              strokeLinejoin="round"
             />
-            {friendValues.map((v, i) => {
-              if (v <= 0) return null;
-              const p = polar((360 / N) * i, (v / 100) * RADIUS);
-              return (
-                <circle key={i} cx={p.x} cy={p.y} r={3}
-                  fill="#60a5fa" filter="url(#glow)" />
-              );
-            })}
           </>
         )}
 
         {/* área do usuário */}
         <polygon
           points={polyPoints(myValues)}
-          fill="url(#radarGradMe)"
-          stroke="hsl(var(--primary))"
-          strokeWidth={2}
+          fill="#3b82f6"
+          fillOpacity={0.2}
+          stroke="#3b82f6"
+          strokeWidth={2.2}
+          strokeOpacity={0.95}
+          strokeLinejoin="round"
           filter="url(#glow)"
         />
-        {myValues.map((v, i) => {
-          if (v <= 0) return null;
-          const p = polar((360 / N) * i, (v / 100) * RADIUS);
-          return (
-            <circle key={i} cx={p.x} cy={p.y} r={4}
-              fill="hsl(var(--primary))"
-              stroke="hsl(var(--background))"
-              strokeWidth={1.5}
-              filter="url(#glow)"
-            />
-          );
-        })}
 
         {/* labels dos eixos */}
         {axisAngles.map((angle, i) => {
@@ -188,7 +186,7 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
         {data.map((d, i) => (
           <div key={i} className="text-center">
             <p className="text-[10px] text-muted-foreground">{AXES[i].label}</p>
-            <p className="text-xs font-black text-primary">{d.raw}</p>
+            <p className="text-xs font-black text-blue-400">{d.raw}</p>
             {compareUser && (
               <p className="text-[10px] text-blue-400">{('friend' in d ? (d as { friend?: number }).friend : 0) ?? 0}%</p>
             )}
@@ -281,17 +279,33 @@ export default function PerfilPage() {
     } catch {}
   };
 
-  const loadFriendRanking = async () => {
+  const loadFriendRanking = useCallback(async () => {
     if (!user) return;
     try {
       const data = await api.get<User[]>(`/api/user/${user.uid}/friends/ranking`);
       setFriendRanking(Array.isArray(data) ? data : []);
     } catch {}
-  };
+  }, [user]);
 
   useEffect(() => {
-    if (tab === "ranking") loadFriendRanking();
-  }, [tab]);
+    if (tab !== "ranking") return;
+
+    loadFriendRanking();
+    const interval = setInterval(() => loadFriendRanking(), 15_000);
+    const onFocus = () => loadFriendRanking();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") loadFriendRanking();
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [tab, loadFriendRanking, user?.xp]);
 
   const handleSave = async () => {
     if (!user) return;

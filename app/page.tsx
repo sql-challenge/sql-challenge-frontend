@@ -4,6 +4,7 @@ import { Button } from "@/_components/_atoms/button"
 import { Badge } from "@/_components/_atoms/badge"
 import ThreeScene from "@/_components/_organisms/three-path"
 import { Divider } from "@/_components/_atoms/divider"
+import { HeroCta } from "@/_components/_atoms/heroCta"
 
 export default function HomePage() {
   return (
@@ -31,11 +32,7 @@ export default function HomePage() {
   </p>
   
   <div className="flex items-center justify-center gap-4 flex-wrap">
-    <Link href="/auth/register">
-      <Button size="lg" className="cursor-pointer shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-shadow">
-        Resolver Primeiro Mistério
-      </Button>
-    </Link>
+    <HeroCta />
     <Link href="/auth/login">
       <Button size="lg" variant="outline" className="cursor-pointer">
         Já tenho conta

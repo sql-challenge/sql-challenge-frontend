@@ -124,7 +124,7 @@ export function Logo({ className, size = "sm" }: LogoProps) {
           backgroundClip: "text",
         }}
       >
-        SQL Challenger
+        SQL CHALLENGER
       </span>
     </Link>
   )

@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { Header } from "@/_components/_organisms/header";
 import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import Link from "next/link";
-import { Desafio } from "@/_lib/types/capitulo";
+import { Capitulo, Desafio } from "@/_lib/types/capitulo";
+import { useUser } from "@/_context/userContext";
 
 const RULES = [
   {
@@ -58,7 +59,9 @@ const DIFFICULTY_LABELS: Record<number, { label: string; color: string }> = {
 };
 
 export default function MysteriesPage() {
+  const { user } = useUser();
   const [desafios, setDesafios] = useState<Desafio[]>([]);
+  const [chaptersByChallenge, setChaptersByChallenge] = useState<Record<number, number>>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -67,10 +70,21 @@ export default function MysteriesPage() {
   useEffect(() => {
     const fetchDesafios = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/desafios/`);
-        if (!response.ok) throw new Error("Falha ao carregar desafios");
-        const data: Desafio[] = await response.json();
-        setDesafios(data);
+        const [desafiosRes, capitulosRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/desafios/`),
+          fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/capitulo/`),
+        ]);
+        if (!desafiosRes.ok || !capitulosRes.ok) throw new Error("Falha ao carregar desafios");
+
+        const desafiosData: Desafio[] = await desafiosRes.json();
+        const capitulosData: Capitulo[] = await capitulosRes.json();
+        const chapterTotals = capitulosData.reduce<Record<number, number>>((acc, cap) => {
+          acc[cap.idDesafio] = (acc[cap.idDesafio] ?? 0) + 1;
+          return acc;
+        }, {});
+
+        setDesafios(desafiosData);
+        setChaptersByChallenge(chapterTotals);
       } catch {
         setError("Não foi possível carregar os desafios.");
       } finally {
@@ -85,6 +99,23 @@ export default function MysteriesPage() {
       d.titulo.toLowerCase().includes(searchQuery.toLowerCase()) ||
       d.descricao.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const getResumeChapter = (desafioId: number) => {
+    const progress = user?.challenge_progress?.find(
+      (p) => p.nameChallange === String(desafioId)
+    );
+    return Math.max(1, (progress?.capFinish ?? 0) + 1);
+  };
+
+  const getPlayerProgress = (desafioId: number) => {
+    const progress = user?.challenge_progress?.find(
+      (p) => p.nameChallange === String(desafioId)
+    );
+    const completed = progress?.capFinish ?? 0;
+    const total = chaptersByChallenge[desafioId] ?? 0;
+    const pct = total > 0 ? Math.min(100, Math.round((completed / total) * 100)) : 0;
+    return { completed, total, pct };
+  };
 
   return (
     <ProtectedRoute>
@@ -186,28 +217,45 @@ export default function MysteriesPage() {
             {filtered.length > 0 ? (
               filtered.map((d, i) => {
                 const diff = DIFFICULTY_LABELS[Math.ceil(i / 2) + 1] ?? DIFFICULTY_LABELS[1];
+                const progress = getPlayerProgress(d.id);
                 return (
-                  <Link key={d.id} href={`/mystery/${d.id}/1`} className="block group">
-                    <div className="relative bg-card border border-border rounded-xl p-6 h-full hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-0.5">
+                  <Link key={d.id} href={`/mystery/${d.id}/${getResumeChapter(d.id)}`} className="block group">
+                    <div className="relative bg-card border border-border rounded-xl p-5 h-full hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300 hover:-translate-y-0.5">
                       {/* Glow accent */}
                       <div className="absolute top-0 left-0 right-0 h-0.5 rounded-t-xl bg-gradient-to-r from-primary/0 via-primary/60 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                      <div className="flex items-start justify-between mb-3">
-                        <span className="text-2xl">🕵️</span>
+                      <div className="flex items-start justify-between mb-2">
                         <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${diff.color}`}>
                           {diff.label}
                         </span>
+                        <span className="text-xs font-semibold text-primary/90">
+                          {progress.total > 0 ? `${progress.pct}%` : "0%"}
+                        </span>
                       </div>
 
-                      <h3 className="text-lg font-bold text-foreground mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                      <h3 className="text-lg font-bold text-foreground mb-1 group-hover:text-primary transition-colors line-clamp-2">
                         {d.titulo}
                       </h3>
                       <p className="text-sm text-muted-foreground mb-4 line-clamp-2">{d.descricao}</p>
 
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1">
+                          <span>Progresso no caso</span>
+                          <span className="font-semibold text-foreground">
+                            {progress.total > 0 ? `${progress.completed}/${progress.total} capítulos` : "0/0 capítulos"}
+                          </span>
+                        </div>
+                        <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary transition-all duration-500"
+                            style={{ width: `${progress.total > 0 ? progress.pct : 0}%` }}
+                          />
+                        </div>
+                      </div>
+
                       <div className="flex items-center justify-between pt-4 border-t border-border/60">
                         <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          <span>⏱️ {d.tempoEstimado}</span>
-                          <span>🎯 {d.taxaConclusao}%</span>
+                          <span>Tempo estimado: {d.tempoEstimado}</span>
                         </div>
                         <span className="text-xs font-semibold text-primary group-hover:gap-1 flex items-center gap-0.5 transition-all">
                           Investigar →

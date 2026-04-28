@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Header } from "@/_components/_organisms/header";
 import { SqlEditor } from "@/_components/_organisms/sqlEditor";
@@ -48,7 +48,7 @@ export default function CapituloEditorPage() {
   const router = useRouter();
   const desafioId = params.id as string;
   const capituloId = params.capituloId as string;
-  const { user } = useUser();
+  const { user, updateUserLocal } = useUser();
 
   const [capituloView, setCapituloView] = useState<CapituloView | null>(null);
   const [query, setQuery] = useState("");
@@ -71,12 +71,26 @@ export default function CapituloEditorPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [earnedTier, setEarnedTier] = useState<Tier | null>(null);
   const [narrativa, setNarrativa] = useState<string | null>(null);
+  const [pendingAdvance, setPendingAdvance] = useState<
+    { type: "next"; nextIndex: number } | { type: "victory"; finalXp: number } | null
+  >(null);
+  const [totalQueries, setTotalQueries] = useState(0);
 
-  // Sessão de tempo
+  // Delta refs — rastreiam quanto já foi enviado ao backend para evitar dupla contagem
+  const sentQueriesRef = useRef(0);
+  const sentHintsRef = useRef(0);
+  const sentSecondsRef = useRef(0);
+  const progressSyncRef = useRef<Promise<unknown> | null>(null);
+  const totalQueriesRef = useRef(0);
+  const totalSecondsRef = useRef(0);
+  const hintsCountRef = useRef(0);
+
+  // Sessão de tempo — congela o cronômetro enquanto o jogador lê a narrativa
   const { totalSeconds, sessionLoaded, restored, saveProgress } = useChapterSession(
     user?.uid,
     desafioId,
-    capituloId
+    capituloId,
+    !!pendingAdvance
   );
 
   const {
@@ -87,16 +101,66 @@ export default function CapituloEditorPage() {
     setSchema,
   } = useSqlDatabase();
 
+  useEffect(() => {
+    totalQueriesRef.current = totalQueries;
+  }, [totalQueries]);
+
+  useEffect(() => {
+    totalSecondsRef.current = totalSeconds;
+  }, [totalSeconds]);
+
+  useEffect(() => {
+    hintsCountRef.current = hintsRevealed.length;
+  }, [hintsRevealed.length]);
+
+  const syncProgressToBackend = useCallback(
+    (opts?: { capFinish?: number; xpObtido?: number }) => {
+      if (!user?.uid) return Promise.resolve();
+
+      const capFinish = opts?.capFinish ?? 0;
+      const xpObtido = opts?.xpObtido ?? 0;
+      const queriesDelta = Math.max(0, totalQueriesRef.current - sentQueriesRef.current);
+      const hintsDelta = Math.max(0, hintsCountRef.current - sentHintsRef.current);
+      const secondsDelta = Math.max(0, totalSecondsRef.current - sentSecondsRef.current);
+
+      if (queriesDelta === 0 && hintsDelta === 0 && secondsDelta === 0 && capFinish === 0 && xpObtido === 0) {
+        return Promise.resolve();
+      }
+
+      const syncPromise = api.post(`/api/user/${user.uid}/progress`, {
+        desafioId,
+        nameChallenge: desafioId,
+        capFinish,
+        xpObtido,
+        tempoSegundos: secondsDelta,
+        totalQueries: queriesDelta,
+        totalHints: hintsDelta,
+      }).then(() => {
+        sentQueriesRef.current += queriesDelta;
+        sentHintsRef.current += hintsDelta;
+        sentSecondsRef.current += secondsDelta;
+      }).catch((err) => console.error("Erro ao salvar progresso:", err));
+
+      progressSyncRef.current = syncPromise;
+      return syncPromise;
+    },
+    [user?.uid, desafioId]
+  );
+
+  useEffect(() => {
+    setSessionRestored(false);
+  }, [user?.uid, desafioId, capituloId]);
+
   // Restaura estado salvo da sessão quando disponível
   useEffect(() => {
-    if (!sessionLoaded || sessionRestored) return;
+    if (!user?.uid || !sessionLoaded || sessionRestored) return;
     if (restored) {
       setCurrentObjetivoIndex(restored.currentObjetivoIndex);
       setCompletedObjetivos(restored.completedObjetivos);
       setHintsRevealed(restored.hintsRevealed);
     }
     setSessionRestored(true);
-  }, [sessionLoaded, restored, sessionRestored]);
+  }, [user?.uid, sessionLoaded, restored, sessionRestored]);
 
   useEffect(() => {
     if (!desafioId || !capituloId) return;
@@ -201,6 +265,8 @@ export default function CapituloEditorPage() {
     try {
       const queryResults = executeQuery(query);
       setResults(queryResults);
+      setTotalQueries((prev) => prev + 1);
+      totalQueriesRef.current = totalQueries + 1;
 
       const objetivo = capituloView.objetivos[currentObjetivoIndex];
       const correct = checkObjetivoCondition(queryResults, objetivo);
@@ -208,51 +274,34 @@ export default function CapituloEditorPage() {
       if (correct) {
         const newCompleted = [...completedObjetivos, objetivo.id];
         setCompletedObjetivos(newCompleted);
-
-        // Mostra interpretação narrativa do objetivo concluído
         setNarrativa(NARRATIVAS[objetivo.id] ?? null);
 
         const isLastObjetivo = currentObjetivoIndex >= capituloView.objetivos.length - 1;
 
         if (isLastObjetivo) {
-          // Capítulo completo — calcula XP com bônus de tempo e penalidade de dicas
           const totalPenalty = hintsRevealed
             .map((id) => capituloView.dicas.find((d) => d.id === id)?.penalidadeXp ?? 0)
             .reduce((a, b) => a + b, 0);
           const baseXp = Math.max(0, capituloView.capitulo.xpRecompensa - totalPenalty);
           const tier = getTimeTier(totalSeconds, capituloView.capitulo.numero);
           setEarnedTier(tier);
-          setScore(Math.round(baseXp * tier.multiplier));
+          const finalXp = Math.round(baseXp * tier.multiplier);
+          setScore(finalXp);
           setFeedback("Você desvendou todos os mistérios deste capítulo!");
-          // Pequeno delay para o jogador ler a narrativa antes do banner de vitória
-          setTimeout(() => setIsVictorious(true), 10000);
+          setPendingAdvance({ type: "victory", finalXp });
           saveProgress(
             { currentObjetivoIndex, completedObjetivos: newCompleted, hintsRevealed },
             true
           );
-          if (user?.uid) {
-            const finalXp = Math.round(baseXp * tier.multiplier);
-            api.post(`/api/user/${user.uid}/progress`, {
-              desafioId,
-              nameChallenge: desafioId,
-              capFinish: capituloView.capitulo.numero,
-              xpObtido: finalXp,
-              tempoSegundos: totalSeconds,
-            }).catch((err) => console.error("Erro ao salvar progresso:", err));
-          }
+          syncProgressToBackend({ capFinish: capituloView.capitulo.numero, xpObtido: finalXp });
         } else {
           const nextIndex = currentObjetivoIndex + 1;
-          // Avança após o jogador ter tempo de ler a narrativa
-          setTimeout(() => {
-            setCurrentObjetivoIndex(nextIndex);
-            setQuery("");
-            setResults(null);
-            setNarrativa(null);
-          }, 10000);
+          setPendingAdvance({ type: "next", nextIndex });
           saveProgress(
             { currentObjetivoIndex: nextIndex, completedObjetivos: newCompleted, hintsRevealed },
             false
           );
+          syncProgressToBackend();
         }
       }
     } catch (err) {
@@ -267,6 +316,41 @@ export default function CapituloEditorPage() {
     if (!hintsRevealed.includes(hintId)) {
       setHintsRevealed([...hintsRevealed, hintId]);
     }
+  };
+
+  useEffect(() => {
+    if (!user?.uid || !sessionLoaded) return;
+    const interval = setInterval(() => {
+      syncProgressToBackend();
+    }, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [user?.uid, sessionLoaded, syncProgressToBackend]);
+
+  const handleContinue = async () => {
+    if (!pendingAdvance) return;
+    if (pendingAdvance.type === "next") {
+      setCurrentObjetivoIndex(pendingAdvance.nextIndex);
+      setQuery("");
+      setResults(null);
+    } else {
+      if (progressSyncRef.current) {
+        await progressSyncRef.current;
+        progressSyncRef.current = null;
+      }
+      if (user?.uid) {
+        try {
+          const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/uid/${user.uid}`);
+          if (response.ok) {
+            const payload = await response.json();
+            const freshUser = (payload?.data ?? payload) as typeof user;
+            if (freshUser?.uid) updateUserLocal(freshUser);
+          }
+        } catch {}
+      }
+      setIsVictorious(true);
+    }
+    setNarrativa(null);
+    setPendingAdvance(null);
   };
 
   const VictoryBanner = () =>
@@ -366,7 +450,7 @@ export default function CapituloEditorPage() {
     );
   }
 
-  if (!capituloView || isDbLoading) return <LoadingScreen />;
+  if (!capituloView || isDbLoading || !sessionRestored) return <LoadingScreen />;
 
   if (dbError) {
     return (
@@ -398,39 +482,46 @@ export default function CapituloEditorPage() {
             return (
               <div className="bg-card border border-border rounded-lg p-4">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-0.5">Capítulo {capitulo.numero}</p>
-                <h1 className="text-sm font-semibold text-foreground mb-3 line-clamp-1">
-                  {capitulo.introHistoria.split(/[.!?]/)[0].trim()}
-                </h1>
 
                 {/* Timer em destaque */}
-                <div className={`flex items-center justify-between rounded-lg border px-4 py-3 mb-3 ${currentTier?.badgeClass ?? ""}`}>
+                <div className={`flex items-center justify-between rounded-lg border px-4 py-2.5 mb-3 ${currentTier?.badgeClass ?? ""}`}>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-widest opacity-70">Tempo</p>
-                    <p className={`text-3xl font-mono font-bold tabular-nums leading-none ${currentTier?.timerColor}`}>
+                    <p className={`text-2xl font-mono font-bold tabular-nums leading-none ${currentTier?.timerColor}`}>
                       {formatSeconds(totalSeconds)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl leading-none">{currentTier?.icon}</p>
-                    <p className={`text-sm font-bold mt-1 ${currentTier?.timerColor}`}>{currentTier?.label}</p>
+                    <p className="text-xl leading-none">{currentTier?.icon}</p>
+                    <p className={`text-xs font-bold mt-1 ${currentTier?.timerColor}`}>{currentTier?.label}</p>
                   </div>
                 </div>
 
                 {/* Faixas de XP por tempo */}
                 {tiers && (
-                  <div className="grid grid-cols-3 gap-1 mb-3 text-xs">
+                  <div className="space-y-1.5 mb-3 text-xs">
                     {[
                       { key: "gold",   icon: "🥇", label: "Ouro",   limit: tiers.gold,   mult: 1.5  },
                       { key: "silver", icon: "🥈", label: "Prata",  limit: tiers.silver, mult: 1.25 },
                       { key: "bronze", icon: "🥉", label: "Bronze", limit: tiers.bronze, mult: 1.0  },
                     ].map(({ key, icon, label, limit, mult }) => {
                       const active = currentTier?.tier === key;
+                      const isBronze = key === "bronze";
+                      const bonusPercent = Math.round((mult - 1) * 100);
                       return (
-                        <div key={key} className={`rounded-md border px-2 py-1.5 text-center transition-all ${active ? "border-primary/50 bg-primary/10 font-bold scale-105" : "border-border opacity-60"}`}>
-                          <span className="text-base">{icon}</span>
-                          <p className="font-semibold">{label}</p>
-                          <p className="text-muted-foreground">{"< "}{formatSeconds(limit)}</p>
-                          <p className="font-bold text-primary">{Math.round(xpBase * mult)} XP</p>
+                        <div key={key} className={`rounded-md border px-2.5 py-2 transition-all ${active ? "border-primary/50 bg-primary/10" : "border-border/70 opacity-80"}`}>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-sm leading-none">{icon}</span>
+                              <div className="min-w-0">
+                                <p className="font-semibold leading-none">{label}</p>
+                                <p className="text-[11px] text-muted-foreground mt-1 leading-none">até {formatSeconds(limit)}</p>
+                              </div>
+                            </div>
+                            <p className={`text-[11px] font-bold whitespace-nowrap ${active ? "text-primary" : "text-muted-foreground"}`}>
+                              {isBronze ? `${Math.round(xpBase)} XP mínimo` : `+${bonusPercent}% XP`}
+                            </p>
+                          </div>
                         </div>
                       );
                     })}
@@ -490,7 +581,7 @@ export default function CapituloEditorPage() {
               {activeTab === "story" && (
                 <div>
                   <p className="text-sm text-muted-foreground mb-4">
-                    {capitulo.contextoHistoria}
+                    {capitulo.introHistoria}
                   </p>
                   <ObjetivosPanel objetivos={capituloView.objetivos} />
                 </div>
@@ -539,7 +630,7 @@ export default function CapituloEditorPage() {
               <h2 className="text-sm font-semibold text-foreground">Editor SQL</h2>
               <button
                 onClick={handleRunQuery}
-                disabled={isRunning || !isReady || isVictorious}
+                disabled={isRunning || !isReady || isVictorious || !!pendingAdvance}
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isRunning ? "Executando..." : "▶ Executar Query"}
@@ -554,19 +645,31 @@ export default function CapituloEditorPage() {
             </div>
           )}
 
-          {/* Painel de interpretação narrativa */}
-          {narrativa && (
-            <div className="bg-emerald-950/60 border border-emerald-500/40 rounded-lg px-4 py-3 flex gap-3 items-start animate-pulse-once">
+          {/* Painel de narrativa + confirmação de avanço */}
+          {(narrativa || pendingAdvance) && (
+            <div className="bg-emerald-950/60 border border-emerald-500/40 rounded-lg px-4 py-3 flex gap-3 items-start">
               <span className="text-xl shrink-0 mt-0.5">🔍</span>
-              <div>
+              <div className="flex-1 min-w-0">
                 <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">Dedução do investigador</p>
-                <p className="text-sm text-emerald-100 leading-relaxed">{narrativa}</p>
+                <p className="text-sm text-emerald-100 leading-relaxed">
+                  {narrativa ?? "Objetivo concluído! Pronto para continuar a investigação?"}
+                </p>
+                {pendingAdvance && (
+                  <button
+                    onClick={handleContinue}
+                    className="mt-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg transition-colors"
+                  >
+                    {pendingAdvance.type === "victory" ? "Ver resultado final →" : "Continuar investigação →"}
+                  </button>
+                )}
               </div>
-              <button
-                onClick={() => setNarrativa(null)}
-                className="shrink-0 text-emerald-500 hover:text-emerald-300 text-lg leading-none ml-auto"
-                aria-label="Fechar"
-              >×</button>
+              {!pendingAdvance && (
+                <button
+                  onClick={() => setNarrativa(null)}
+                  className="shrink-0 text-emerald-500 hover:text-emerald-300 text-lg leading-none ml-auto"
+                  aria-label="Fechar"
+                >×</button>
+              )}
             </div>
           )}
 

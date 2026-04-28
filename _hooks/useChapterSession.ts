@@ -23,38 +23,56 @@ interface UseChapterSessionReturn {
   saveProgress: (state: SessionState, isClosing?: boolean) => void;
 }
 
-const AUTOSAVE_INTERVAL_MS = 30_000;
+const AUTOSAVE_INTERVAL_MS = 5 * 60_000;
 
 export function useChapterSession(
   uid: string | null | undefined,
   desafioId: string,
-  capituloId: string
+  capituloId: string,
+  paused = false,
 ): UseChapterSessionReturn {
   const [totalSeconds, setTotalSeconds] = useState(0);
   const [sessionLoaded, setSessionLoaded] = useState(false);
   const [restored, setRestored] = useState<SessionState | null>(null);
 
-  // Tick do cronômetro local (conta apenas o tempo da sessão atual)
-  const localSecondsRef = useRef(0);
   const sessionStartRef = useRef<number>(0);
-
-  // Ref para o estado mais recente — usada pelos listeners de evento
+  const loadRequestIdRef = useRef(0);
   const stateRef = useRef<SessionState>({
     currentObjetivoIndex: 0,
     completedObjetivos: [],
     hintsRevealed: [],
   });
 
-  // Atualiza a ref toda vez que o estado mudar (chamado externamente via saveProgress)
+  // Rastreia tempo pausado para excluir do elapsed enviado ao servidor
+  const pauseStartRef = useRef<number | null>(null);
+  const pendingPausedMsRef = useRef(0);
+
+  useEffect(() => {
+    if (paused) {
+      pauseStartRef.current = Date.now();
+    } else if (pauseStartRef.current !== null) {
+      pendingPausedMsRef.current += Date.now() - pauseStartRef.current;
+      pauseStartRef.current = null;
+    }
+  }, [paused]);
+
   const saveProgress = useCallback(
     (state: SessionState, isClosing = false) => {
       stateRef.current = state;
       if (!uid) return;
 
-      const elapsed = Math.floor((Date.now() - sessionStartRef.current) / 1000);
-      sessionStartRef.current = Date.now();
-      localSecondsRef.current += elapsed;
-      setTotalSeconds((prev) => prev + elapsed);
+      const now = Date.now();
+      const raw = now - sessionStartRef.current;
+      // Exclui o tempo de pausa acumulado desde o último saveProgress
+      const pausedMs =
+        pendingPausedMsRef.current +
+        (pauseStartRef.current !== null ? now - pauseStartRef.current : 0);
+      const elapsed = Math.max(0, Math.floor((raw - pausedMs) / 1000));
+
+      // Reseta contadores de pausa
+      pendingPausedMsRef.current = 0;
+      if (pauseStartRef.current !== null) pauseStartRef.current = now;
+      sessionStartRef.current = now;
 
       const body = {
         elapsedSeconds: elapsed,
@@ -65,7 +83,6 @@ export function useChapterSession(
       };
 
       if (isClosing) {
-        // navigator.sendBeacon garante entrega mesmo quando a página está fechando
         const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sessions/${uid}/${desafioId}/${capituloId}`;
         const blob = new Blob([JSON.stringify(body)], { type: "application/json" });
         navigator.sendBeacon(url, blob);
@@ -78,17 +95,26 @@ export function useChapterSession(
 
   // Carrega sessão salva ao montar
   useEffect(() => {
+    const requestId = ++loadRequestIdRef.current;
+    queueMicrotask(() => {
+      if (loadRequestIdRef.current !== requestId) return;
+      setSessionLoaded(false);
+      setRestored(null);
+    });
+
     if (!uid) {
       sessionStartRef.current = Date.now();
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSessionLoaded(true);
+      queueMicrotask(() => {
+        if (loadRequestIdRef.current !== requestId) return;
+        setSessionLoaded(true);
+      });
       return;
     }
 
     api
-      .get<{ data: SessionResponse }>(`/api/sessions/${uid}/${desafioId}/${capituloId}`)
-      .then((res) => {
-        const s = (res as { data: SessionResponse }).data;
+      .get<SessionResponse>(`/api/sessions/${uid}/${desafioId}/${capituloId}`)
+      .then((s) => {
+        if (loadRequestIdRef.current !== requestId) return;
         setTotalSeconds(s.totalSeconds ?? 0);
 
         const restoredState: SessionState = {
@@ -101,6 +127,7 @@ export function useChapterSession(
       })
       .catch(() => {})
       .finally(() => {
+        if (loadRequestIdRef.current !== requestId) return;
         sessionStartRef.current = Date.now();
         setSessionLoaded(true);
       });
@@ -112,7 +139,13 @@ export function useChapterSession(
 
     const handleUnload = () => saveProgress(stateRef.current, true);
     window.addEventListener("beforeunload", handleUnload);
-    return () => window.removeEventListener("beforeunload", handleUnload);
+    window.addEventListener("pagehide", handleUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleUnload);
+      window.removeEventListener("pagehide", handleUnload);
+      saveProgress(stateRef.current, true);
+    };
   }, [uid, sessionLoaded, saveProgress]);
 
   // Autosave a cada 30s
@@ -126,15 +159,15 @@ export function useChapterSession(
     return () => clearInterval(interval);
   }, [uid, sessionLoaded, saveProgress]);
 
-  // Cronômetro visual (incrementa a cada segundo)
+  // Cronômetro visual — congela quando paused=true
   useEffect(() => {
-    if (!sessionLoaded) return;
+    if (!sessionLoaded || paused) return;
 
     const interval = setInterval(() => {
       setTotalSeconds((prev) => prev + 1);
     }, 1000);
     return () => clearInterval(interval);
-  }, [sessionLoaded]);
+  }, [sessionLoaded, paused]);
 
   return { totalSeconds, sessionLoaded, restored, saveProgress };
 }

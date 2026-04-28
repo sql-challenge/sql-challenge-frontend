@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Header } from "@/_components/_organisms/header";
 import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import { useUser } from "@/_context/userContext";
@@ -21,22 +21,40 @@ export default function RankingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/top?limit=20`);
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        // endpoint retorna array direto (sem wrapper data)
-        setPlayers(Array.isArray(data) ? data : data.data ?? []);
-      } catch {
-        setError("Não foi possível carregar o ranking.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    load();
+  const loadRanking = useCallback(async (showLoading = false) => {
+    if (showLoading) setIsLoading(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/top?limit=20`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      // endpoint retorna array direto (sem wrapper data)
+      setPlayers(Array.isArray(data) ? data : data.data ?? []);
+      setError(null);
+    } catch {
+      setError("Não foi possível carregar o ranking.");
+    } finally {
+      if (showLoading) setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    loadRanking(true);
+
+    const interval = setInterval(() => loadRanking(false), 15_000);
+    const onFocus = () => loadRanking(false);
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") loadRanking(false);
+    };
+
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [loadRanking, me?.xp]);
 
   const myPosition = players.findIndex((p) => p.uid === me?.uid) + 1;
 

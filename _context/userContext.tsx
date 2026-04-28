@@ -7,6 +7,7 @@ import { User, UserSignUpForm } from '@/_lib/types/user'
 import {
   signInWithGoogle as firebaseSignInWithGoogle,
   signInWithGithub as firebaseSignInWithGithub,
+  signInWithEmailPassword as firebaseSignInWithEmailPassword,
   firebaseSignOut,
 } from "@/_lib/firebase/auth"
 
@@ -18,6 +19,7 @@ type UserContextType = {
   signInWithGithub: () => Promise<void>
   signOut: () => void
   updateUser: (updates: Partial<User>) => Promise<void>
+  updateUserLocal: (updates: Partial<User>) => void
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
@@ -43,7 +45,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
-    const user = await api.post<User>('/api/user/auth/', { email, password })
+    const { idToken } = await firebaseSignInWithEmailPassword(email, password)
+    const user = await api.post<User>('/api/user/auth/oauth', { idToken })
     persist(user)
   }
 
@@ -86,9 +89,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     persist(updatedUser)
   }
 
+  const updateUserLocal = (updates: Partial<User>) => {
+    if (!user) return
+    persist({ ...user, ...updates })
+  }
+
   return (
     <UserContext.Provider
-      value={{ user, signIn, signUp, signInWithGoogle, signInWithGithub, signOut, updateUser }}
+      value={{ user, signIn, signUp, signInWithGoogle, signInWithGithub, signOut, updateUser, updateUserLocal }}
     >
       {children}
     </UserContext.Provider>
