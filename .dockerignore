@@ -1,3 +1,5 @@
 .next
 node_modules
 .env*
+sql-challenge
+sql-challenge-staging
