@@ -110,10 +110,7 @@ export default function ConquistasPage() {
     if (!user?.uid || hasLoaded.current) return;
     hasLoaded.current = true;
     const fetchUserByUid = async (uid: string): Promise<User> => {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/uid/${uid}`);
-      if (!response.ok) throw new Error("Falha ao buscar usuário");
-      const payload = await response.json();
-      return (payload?.data ?? payload) as User;
+      return api.get<User>(`/api/user/uid/${uid}`);
     };
 
     const localXpSnapshot = user.xp ?? 0;

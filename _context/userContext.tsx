@@ -9,6 +9,7 @@ import {
   signInWithGithub as firebaseSignInWithGithub,
   signInWithEmailPassword as firebaseSignInWithEmailPassword,
   firebaseSignOut,
+  onFirebaseAuthStateChanged,
 } from "@/_lib/firebase/auth"
 
 type UserContextType = {
@@ -24,62 +25,88 @@ type UserContextType = {
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
+function persist(u: User) {
+  localStorage.setItem("user", JSON.stringify(u))
+}
+
+function persistToken(token: string) {
+  localStorage.setItem("idToken", token)
+  api.setToken(token)
+}
+
+function clearPersisted() {
+  localStorage.removeItem("user")
+  localStorage.removeItem("idToken")
+  api.setToken(null)
+}
+
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
 
+  // On mount: restore session from Firebase auth + localStorage
   useEffect(() => {
     const savedUser = localStorage.getItem("user")
     if (savedUser) {
       try {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
         setUser(JSON.parse(savedUser))
       } catch {
         localStorage.removeItem("user")
       }
     }
-  }, [])
 
-  const persist = (u: User) => {
-    setUser(u)
-    localStorage.setItem("user", JSON.stringify(u))
-  }
+    // Subscribe to Firebase auth state — keeps token fresh across page reloads
+    const unsubscribe = onFirebaseAuthStateChanged(async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const freshToken = await firebaseUser.getIdToken()
+          persistToken(freshToken)
+        } catch {
+          // Token refresh failed — probably signed out
+          clearPersisted()
+          setUser(null)
+        }
+      }
+    })
+
+    return () => unsubscribe()
+  }, [])
 
   const signIn = async (email: string, password: string) => {
     const { idToken } = await firebaseSignInWithEmailPassword(email, password)
+    persistToken(idToken)
     const user = await api.post<User>('/api/user/auth/oauth', { idToken })
     persist(user)
+    setUser(user)
   }
 
   const signUp = async (form: UserSignUpForm) => {
     const user = await api.post<User>('/api/user/', form)
+    const { idToken } = await firebaseSignInWithEmailPassword(form.email, form.password)
+    persistToken(idToken)
     persist(user)
+    setUser(user)
   }
 
-  /**
-   * Login/cadastro via Google.
-   * O Firebase (Google) autentica o usuário e retorna um ID token assinado.
-   * O backend verifica o token e cria o usuário no Firestore se for a primeira vez.
-   */
   const signInWithGoogle = async () => {
     const { idToken } = await firebaseSignInWithGoogle()
+    persistToken(idToken)
     const user = await api.post<User>('/api/user/auth/oauth', { idToken })
     persist(user)
+    setUser(user)
   }
 
-  /**
-   * Login/cadastro via GitHub.
-   * Mesmo fluxo do Google — Firebase verifica a identidade, backend cria/atualiza o registro.
-   */
   const signInWithGithub = async () => {
     const { idToken } = await firebaseSignInWithGithub()
+    persistToken(idToken)
     const user = await api.post<User>('/api/user/auth/oauth', { idToken })
     persist(user)
+    setUser(user)
   }
 
   const signOut = async () => {
     await firebaseSignOut().catch(() => {})
     setUser(null)
-    localStorage.removeItem("user")
+    clearPersisted()
   }
 
   const updateUser = async (updates: Partial<User>) => {
@@ -87,11 +114,14 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     await api.put('/api/user/', { ...updates, uid: user.uid })
     const updatedUser = { ...user, ...updates }
     persist(updatedUser)
+    setUser(updatedUser)
   }
 
   const updateUserLocal = (updates: Partial<User>) => {
     if (!user) return
-    persist({ ...user, ...updates })
+    const updatedUser = { ...user, ...updates }
+    persist(updatedUser)
+    setUser(updatedUser)
   }
 
   return (

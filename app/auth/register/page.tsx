@@ -97,9 +97,7 @@ export default function RegisterPage() {
 
       // Call signUp with validated data
       await signUp(formData)
-       //
-      // router.push("/dashboard")
-      router.push("/mystery")
+      router.push("/dashboard")
     } catch (err) {
       // Handle API errors
       if (err instanceof ApiError) {
@@ -264,7 +262,7 @@ export default function RegisterPage() {
                     setIsLoading(true)
                     setError("")
                     await signInWithGoogle()
-                    router.push("/mystery")
+                    router.push("/dashboard")
                   } catch (err: unknown) {
                     setError(err instanceof Error ? err.message : "Erro ao entrar com Google.")
                   } finally {
@@ -289,7 +287,7 @@ export default function RegisterPage() {
                     setIsLoading(true)
                     setError("")
                     await signInWithGithub()
-                    router.push("/mystery")
+                    router.push("/dashboard")
                   } catch (err: unknown) {
                     setError(err instanceof Error ? err.message : "Erro ao entrar com GitHub.")
                   } finally {

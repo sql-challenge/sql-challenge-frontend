@@ -60,9 +60,7 @@ export default function LoginPage() {
       const validatedData = loginSchema.parse(formData)
       //
       await signIn(validatedData.email, validatedData.password)
-      // change to deashbpard when finish
-      // router.push("/dashboard")
-      router.push("/mystery")
+      router.push("/dashboard")
     } catch (err) {
       // Handle Zod validation errors
       if (err instanceof ZodError) {
@@ -167,7 +165,7 @@ export default function LoginPage() {
                     setIsLoading(true)
                     setError("")
                     await signInWithGoogle()
-                    router.push("/mystery")
+                    router.push("/dashboard")
                   } catch (err: unknown) {
                     setError(err instanceof Error ? err.message : "Erro ao entrar com Google.")
                   } finally {
@@ -192,7 +190,7 @@ export default function LoginPage() {
                     setIsLoading(true)
                     setError("")
                     await signInWithGithub()
-                    router.push("/mystery")
+                    router.push("/dashboard")
                   } catch (err: unknown) {
                     setError(err instanceof Error ? err.message : "Erro ao entrar com GitHub.")
                   } finally {

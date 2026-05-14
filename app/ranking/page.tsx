@@ -5,6 +5,7 @@ import { Header } from "@/_components/_organisms/header";
 import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import { useUser } from "@/_context/userContext";
 import { User } from "@/_lib/types/user";
+import { api } from "@/_lib/api";
 
 const MEDAL = ["🥇", "🥈", "🥉"];
 const LEVEL_FROM_XP = (xp: number) => {
@@ -24,11 +25,8 @@ export default function RankingPage() {
   const loadRanking = useCallback(async (showLoading = false) => {
     if (showLoading) setIsLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/top?limit=20`);
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      // endpoint retorna array direto (sem wrapper data)
-      setPlayers(Array.isArray(data) ? data : data.data ?? []);
+      const data = await api.get<User[]>("/api/user/top?limit=20");
+      setPlayers(data);
       setError(null);
     } catch {
       setError("Não foi possível carregar o ranking.");

@@ -339,12 +339,8 @@ export default function CapituloEditorPage() {
       }
       if (user?.uid) {
         try {
-          const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/user/uid/${user.uid}`);
-          if (response.ok) {
-            const payload = await response.json();
-            const freshUser = (payload?.data ?? payload) as typeof user;
-            if (freshUser?.uid) updateUserLocal(freshUser);
-          }
+          const freshUser = await api.get<typeof user>(`/api/user/uid/${user.uid}`);
+          if (freshUser?.uid) updateUserLocal(freshUser);
         } catch {}
       }
       setIsVictorious(true);

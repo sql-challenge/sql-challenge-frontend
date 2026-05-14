@@ -24,7 +24,7 @@ export interface User {
     nick: string;
     email: string;
     // password?: string;
-    imagePerfil: string; // mudei para opcional, thing
+    imagePerfil: string | null;
     createdAt: Date;
     lastLogin: Date;
     rankingPosition: number;

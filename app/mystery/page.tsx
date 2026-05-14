@@ -5,6 +5,7 @@ import { Header } from "@/_components/_organisms/header";
 import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import Link from "next/link";
 import { Capitulo, Desafio } from "@/_lib/types/capitulo";
+import { api } from "@/_lib/api";
 import { useUser } from "@/_context/userContext";
 
 const RULES = [
@@ -70,14 +71,10 @@ export default function MysteriesPage() {
   useEffect(() => {
     const fetchDesafios = async () => {
       try {
-        const [desafiosRes, capitulosRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/desafios/`),
-          fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/capitulo/`),
+        const [desafiosData, capitulosData] = await Promise.all([
+          api.get<Desafio[]>("/api/desafios/"),
+          api.get<Capitulo[]>("/api/capitulo/"),
         ]);
-        if (!desafiosRes.ok || !capitulosRes.ok) throw new Error("Falha ao carregar desafios");
-
-        const desafiosData: Desafio[] = await desafiosRes.json();
-        const capitulosData: Capitulo[] = await capitulosRes.json();
         const chapterTotals = capitulosData.reduce<Record<number, number>>((acc, cap) => {
           acc[cap.idDesafio] = (acc[cap.idDesafio] ?? 0) + 1;
           return acc;

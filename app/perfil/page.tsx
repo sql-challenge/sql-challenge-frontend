@@ -269,8 +269,6 @@ export default function PerfilPage() {
     }
   }, [user]);
 
-  const BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-
   const loadFriends = async () => {
     if (!user) return;
     try {
@@ -323,9 +321,7 @@ export default function PerfilPage() {
     if (!searchQuery.trim()) return;
     setSearching(true);
     try {
-      const res  = await fetch(`${BASE}/api/user/name/${encodeURIComponent(searchQuery.trim().toLowerCase())}`);
-      const json = await res.json();
-      const list: User[] = Array.isArray(json) ? json : (json.data ?? []);
+      const list = await api.get<User[]>(`/api/user/name/${encodeURIComponent(searchQuery.trim().toLowerCase())}`);
       setSearchResults(list.filter(u => u.uid !== user?.uid));
     } catch {
       setSearchResults([]);
