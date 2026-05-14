@@ -1,4 +1,4 @@
-import type { QueryResult } from "@/_lib/types/mystery";
+import type { QueryResult } from "@/_lib/types/capitulo";
 
 interface ResultsPanelProps {
   results: QueryResult | null;
