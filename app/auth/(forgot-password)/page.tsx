@@ -4,23 +4,31 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
+import { sendPasswordResetEmail } from "firebase/auth"
 import { Logo } from "@/_components/_molecules/logo"
 import { AuthCard } from "@/_components/_organisms/auth-card"
 import { FormField } from "@/_components/_molecules/form-field"
 import { Button } from "@/_components/_atoms/button"
+import { auth } from "@/_lib/firebase/config"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500))
-    setIsLoading(false)
-    setIsSubmitted(true)
+    setError(null)
+    try {
+      await sendPasswordResetEmail(auth, email)
+      setIsSubmitted(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Erro ao enviar email de redefinição")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   if (isSubmitted) {
@@ -94,6 +102,10 @@ export default function ForgotPasswordPage() {
               helperText="Enviaremos instruções de redefinição para este email"
               required
             />
+
+            {error && (
+              <p className="text-sm text-red-400 text-center">{error}</p>
+            )}
 
             <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
               {isLoading ? "Enviando..." : "Enviar Instruções de Redefinição"}

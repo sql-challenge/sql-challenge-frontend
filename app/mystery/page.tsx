@@ -99,14 +99,14 @@ export default function MysteriesPage() {
 
   const getResumeChapter = (desafioId: number) => {
     const progress = user?.challenge_progress?.find(
-      (p) => p.nameChallange === String(desafioId)
+      (p) => p.nameChallenge === String(desafioId)
     );
     return Math.max(1, (progress?.capFinish ?? 0) + 1);
   };
 
   const getPlayerProgress = (desafioId: number) => {
     const progress = user?.challenge_progress?.find(
-      (p) => p.nameChallange === String(desafioId)
+      (p) => p.nameChallenge === String(desafioId)
     );
     const completed = progress?.capFinish ?? 0;
     const total = chaptersByChallenge[desafioId] ?? 0;

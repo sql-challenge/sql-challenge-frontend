@@ -250,6 +250,9 @@ export default function PerfilPage() {
   const [saving,   setSaving]   = useState(false);
   const [saved,    setSaved]    = useState(false);
 
+  // loading
+  const [isLoading,     setIsLoading]     = useState(true);
+
   // friends
   const [friends,       setFriends]       = useState<Friend[]>([]);
   const [searchQuery,   setSearchQuery]   = useState("");
@@ -274,7 +277,9 @@ export default function PerfilPage() {
     try {
       const data = await api.get<Friend[]>(`/api/user/${user.uid}/friends`);
       setFriends(Array.isArray(data) ? data : []);
-    } catch {}
+    } catch {} finally {
+      setIsLoading(false);
+    }
   };
 
   const loadFriendRanking = useCallback(async () => {
@@ -381,6 +386,14 @@ export default function PerfilPage() {
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
 
+        {isLoading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+          </div>
+        )}
+
+        {!isLoading && (
+        <>
         {/* Avatar + nome */}
         <div className="flex items-center gap-5 mb-8">
           <div className="w-16 h-16 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center text-3xl font-bold text-primary">
@@ -612,6 +625,8 @@ export default function PerfilPage() {
               </div>
             )}
           </div>
+        )}
+          </>
         )}
       </div>
     </div>

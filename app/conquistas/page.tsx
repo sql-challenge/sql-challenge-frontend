@@ -103,6 +103,7 @@ export default function ConquistasPage() {
   const { user, updateUserLocal } = useUser();
   const hasLoaded = useRef(false);
 
+  const [isLoading, setIsLoading] = useState(true);
   const [newlyUnlocked, setNewlyUnlocked] = useState<Achievement[]>([]);
 
   // Busca dados frescos do Firestore e detecta conquistas novas numa única passagem
@@ -116,6 +117,7 @@ export default function ConquistasPage() {
     const localXpSnapshot = user.xp ?? 0;
     fetchUserByUid(user.uid)
       .then(async (fresh) => {
+        setIsLoading(false);
         if (!fresh?.uid) return;
 
         let syncedUser = fresh;
@@ -162,7 +164,10 @@ export default function ConquistasPage() {
           setNewlyUnlocked(newOnes.filter((a) => grantedIds.has(a.id)));
         });
       })
-      .catch((err) => console.error("Achievement fetch error:", err));
+      .catch((err) => {
+        setIsLoading(false);
+        console.error("Achievement fetch error:", err);
+      });
   }, [user?.uid, user?.xp, updateUserLocal]);
 
   const achievements = buildAchievements(user);
@@ -253,6 +258,14 @@ export default function ConquistasPage() {
 
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
 
+          {isLoading && (
+            <div className="flex items-center justify-center py-20">
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+          )}
+
+          {!isLoading && (
+          <>
           {/* ── Header ──────────────────────────────────────────────── */}
           <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
             <div>
@@ -336,6 +349,8 @@ export default function ConquistasPage() {
                 );
               })}
           </div>
+          </>
+        )}
         </div>
       </div>
     </ProtectedRoute>
