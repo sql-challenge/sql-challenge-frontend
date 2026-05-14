@@ -88,17 +88,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
-    const { idToken } = await firebaseSignInWithGoogle()
+    const { idToken, displayName, photoURL } = await firebaseSignInWithGoogle()
     persistToken(idToken)
-    const user = await api.post<User>('/api/user/auth/oauth', { idToken })
+    const user = await api.post<User>('/api/user/auth/oauth', { idToken, displayName, photoURL })
     persist(user)
     setUser(user)
   }
 
   const signInWithGithub = async () => {
-    const { idToken } = await firebaseSignInWithGithub()
+    const { idToken, displayName, photoURL } = await firebaseSignInWithGithub()
     persistToken(idToken)
-    const user = await api.post<User>('/api/user/auth/oauth', { idToken })
+    const user = await api.post<User>('/api/user/auth/oauth', { idToken, displayName, photoURL })
     persist(user)
     setUser(user)
   }

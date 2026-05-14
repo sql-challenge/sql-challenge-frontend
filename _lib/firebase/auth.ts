@@ -5,24 +5,24 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  type UserCredential,
   type User,
+  type UserCredential,
 } from "firebase/auth";
 import { auth } from "./config";
 
 const googleProvider = new GoogleAuthProvider();
 const githubProvider = new GithubAuthProvider();
 
-export async function signInWithGoogle(): Promise<{ idToken: string; credential: UserCredential }> {
+export async function signInWithGoogle(): Promise<{ idToken: string; displayName: string; photoURL: string }> {
   const credential = await signInWithPopup(auth, googleProvider);
   const idToken = await credential.user.getIdToken();
-  return { idToken, credential };
+  return { idToken, displayName: credential.user.displayName ?? "", photoURL: credential.user.photoURL ?? "" };
 }
 
-export async function signInWithGithub(): Promise<{ idToken: string; credential: UserCredential }> {
+export async function signInWithGithub(): Promise<{ idToken: string; displayName: string; photoURL: string }> {
   const credential = await signInWithPopup(auth, githubProvider);
   const idToken = await credential.user.getIdToken();
-  return { idToken, credential };
+  return { idToken, displayName: credential.user.displayName ?? "", photoURL: credential.user.photoURL ?? "" };
 }
 
 export async function signInWithEmailPassword(email: string, password: string): Promise<{ idToken: string; credential: UserCredential }> {

@@ -9,79 +9,14 @@ import { Logo } from "@/_components/_molecules/logo"
 import { AuthCard } from "@/_components/_organisms/auth-card"
 import { FormField } from "@/_components/_molecules/form-field"
 import { Button } from "@/_components/_atoms/button"
-import { loginSchema, type LoginFormData } from "@/_lib/forms"
 import { useUser } from "@/_context/userContext"
-import { ZodError } from "zod"
-import { ApiError } from "@/_lib/errors"
 
 export default function LoginPage() {
-  const [formData, setFormData] = useState<LoginFormData>({
-    email: "",
-    password: "",
-  })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({})
 
-  const { signIn, signInWithGoogle, signInWithGithub } = useUser()
+  const { signInWithGoogle, signInWithGithub } = useUser()
   const router = useRouter()
-
-  const validateField = (field: keyof LoginFormData, value: string) => {
-    try {
-      loginSchema.shape[field].parse(value)
-      setFieldErrors((prev) => ({ ...prev, [field]: undefined }))
-    } catch (err) {
-      if (err instanceof ZodError && err.issues?.[0]?.message) {
-        setFieldErrors((prev) => ({ ...prev, [field]: err.issues[0].message }))
-      }
-    }
-  }
-
-  const handleFieldChange = (field: keyof LoginFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setFormData((prev) => ({ ...prev, [field]: value }))
-    // Clear error when user starts typing
-    if (fieldErrors[field]) {
-      setFieldErrors((prev) => ({ ...prev, [field]: undefined }))
-    }
-  }
-
-  const handleFieldBlur = (field: keyof LoginFormData) => () => {
-    validateField(field, formData[field])
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-
-    try {
-      setIsLoading(true)
-      //
-      const validatedData = loginSchema.parse(formData)
-      //
-      await signIn(validatedData.email, validatedData.password)
-      router.push("/dashboard")
-    } catch (err) {
-      // Handle Zod validation errors
-      if (err instanceof ZodError) {
-        const errors: Partial<Record<keyof LoginFormData, string>> = {}
-        err.issues.forEach((error) => {
-          if (error.path[0]) {
-            errors[error.path[0] as keyof LoginFormData] = error.message
-          }
-        })
-        setFieldErrors(errors)
-      }
-
-      if (err instanceof ApiError) {
-        setError(err.getUserMessage())
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const hasErrors = Object.values(fieldErrors).some((error) => error !== undefined)
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -95,7 +30,7 @@ export default function LoginPage() {
         </div>
 
         <AuthCard>
-          <form onSubmit={(e) => { void handleSubmit(e); }} className="space-y-6">
+          <form className="space-y-6">
             {error && (
               <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
                 {error}
@@ -106,10 +41,8 @@ export default function LoginPage() {
               label="Email"
               type="email"
               placeholder="detetive@sqlchallenger.com"
-              value={formData.email}
-              onChange={handleFieldChange("email")}
-              onBlur={handleFieldBlur("email")}
-              error={fieldErrors.email}
+              value=""
+              disabled
               required
             />
 
@@ -117,32 +50,18 @@ export default function LoginPage() {
               label="Senha"
               type="password"
               placeholder="Digite sua senha"
-              value={formData.password}
-              onChange={handleFieldChange("password")}
-              onBlur={handleFieldBlur("password")}
-              error={fieldErrors.password}
+              value=""
+              disabled
               required
             />
 
-            <div className="flex items-center justify-between text-sm mb-2">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" className="h-4 w-4 rounded border-border bg-input accent-primary" />
-                <span className="text-muted-foreground">Lembrar de mim</span>
-              </label>
-              {/* <Link href="/auth/forgot-password" className="text-primary hover:underline">
-                Esqueceu a senha?
-              </Link> */}
-            </div>
-
-            <div className="mb-2 text-sm">
-              <Link href="/auth/register" className="text-primary hover:underline">
-                Não tem uma conta? Cadastre-se!
-              </Link>
-            </div>
-
-            <Button type="submit" className="w-full cursor-pointer" size="lg" disabled={isLoading || hasErrors}>
-              {isLoading ? "Entrando..." : "Entrar"}
+            <Button type="submit" className="w-full" size="lg" disabled>
+              Entrar
             </Button>
+
+            <p className="text-center text-xs text-muted-foreground">
+              Login com email e senha desabilitado. Use Google ou GitHub abaixo.
+            </p>
           </form>
 
           <div className="mt-6">
@@ -206,14 +125,14 @@ export default function LoginPage() {
             </div>
           </div>
         </AuthCard>
-
-        <p className="text-center text-sm text-muted-foreground">
-          Não tem uma conta?{" "}
-          <Link href="/auth/register" className="text-primary hover:underline font-semibold">
-            Comece sua investigação
-          </Link>
-        </p>
       </div>
+
+      <p className="text-center text-sm text-muted-foreground">
+        Novo por aqui?{" "}
+        <Link href="/auth/register" className="text-primary hover:underline font-semibold">
+          Crie sua conta
+        </Link>
+      </p>
     </div>
   )
 }

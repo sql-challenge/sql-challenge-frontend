@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { useUser } from "@/_context/userContext"
 import { useRouter } from "next/navigation"
@@ -10,113 +10,13 @@ import { Logo } from "@/_components/_molecules/logo"
 import { AuthCard } from "@/_components/_organisms/auth-card"
 import { FormField } from "@/_components/_molecules/form-field"
 import { Button } from "@/_components/_atoms/button"
-import { Badge } from "@/_components/_atoms/badge"
-import { ApiError } from "@/_lib/errors"
-import { UserSignUpForm } from "@/_lib/types/user"
-
 
 export default function RegisterPage() {
-  const [formData, setFormData] = useState<UserSignUpForm>({
-    username: "",
-    email: "",
-    imagePerfil: "",
-    password: "",
-    confirmPassword: "",
-    nick: "", // campo inutil?
-  })
   const [isLoading, setIsLoading] = useState(false)
-  const [passwordStrength, setPasswordStrength] = useState(0)
   const [error, setError] = useState("")
-  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof UserSignUpForm, string>>>({})
 
-  const { signUp, signInWithGoogle, signInWithGithub } = useUser()
+  const { signInWithGoogle, signInWithGithub } = useUser()
   const router = useRouter()
-
-  const validateField = (field: keyof UserSignUpForm, value: string) => {
-    try {
-      // Basic validation
-      if (field === "confirmPassword" && value !== formData. password) {
-        setFieldErrors((prev) => ({ ...prev, confirmPassword: "As senhas não coincidem" }))
-      } else if (field === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        setFieldErrors((prev) => ({ ...prev, email: "Email inválido" }))
-      } else if (field === "password" && value.length < 8) {
-        setFieldErrors((prev) => ({ ...prev, password: "A senha deve ter no mínimo 8 caracteres" }))
-      } else if (field === "username" && value.length < 3) {
-        setFieldErrors((prev) => ({ ...prev, username: "O nome deve ter no mínimo 3 caracteres" }))
-      } else {
-        setFieldErrors((prev) => ({ ...prev, [field]: undefined }))
-      }
-    } catch (err) {
-      console.error("Validation error:", err)
-    }
-  }
-
-  const handleFieldChange = (field: keyof UserSignUpForm) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value
-    setFormData((prev) => ({ ...prev, [field]: value }))
-
-    // Clear error when user starts typing
-    if (fieldErrors[field]) {
-      setFieldErrors((prev) => ({ ...prev, [field]: undefined }))
-    }
-
-    // Calculate password strength
-    if (field === "password") {
-      let strength = 0
-      if (value.length >= 8) strength++
-      if (/[a-z]/.test(value)) strength++
-      if (/[A-Z]/. test(value)) strength++
-      if (/[0-9]/.test(value)) strength++
-      if (/[^A-Za-z0-9]/. test(value)) strength++
-      setPasswordStrength(strength)
-    }
-  }
-
-  const handleFieldBlur = (field: keyof UserSignUpForm) => () => {
-    validateField(field, String(formData[field] ?? ""))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-
-    try {
-      setIsLoading(true)
-      
-      // Validate all fields
-      if (formData.password !== formData.confirmPassword) {
-        setFieldErrors((prev) => ({ ...prev, confirmPassword: "As senhas não coincidem" }))
-        return
-      }
-
-      if (formData.password.length < 8) {
-        setFieldErrors((prev) => ({ ...prev, password: "A senha deve ter no mínimo 8 caracteres" }))
-        return
-      }
-
-      // Call signUp with validated data
-      await signUp(formData)
-      router.push("/dashboard")
-    } catch (err) {
-      // Handle API errors
-      if (err instanceof ApiError) {
-        setError(err.getUserMessage())
-      } else {
-        setError("Ocorreu um erro ao criar sua conta. Tente novamente.")
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const hasErrors = Object.values(fieldErrors).some((error) => error !== undefined)
-
-  const getPasswordStrengthLabel = () => {
-    if (passwordStrength === 0) return null
-    if (passwordStrength <= 2) return <Badge variant="destructive">Fraca</Badge>
-    if (passwordStrength <= 3) return <Badge variant="warning">Média</Badge>
-    return <Badge variant="success">Forte</Badge>
-  }
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 py-12">
@@ -130,115 +30,26 @@ export default function RegisterPage() {
         </div>
 
         <AuthCard>
-          <form onSubmit={(e) => { void handleSubmit(e); }} className="space-y-5">
+          <form className="space-y-5">
             {error && (
               <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
                 {error}
               </div>
             )}
 
-            <FormField
-              label="Nome do usuário"
-              type="text"
-              placeholder="nome_do_detetive"
-              value={formData.username}
-              onChange={handleFieldChange("username")}
-              onBlur={handleFieldBlur("username")}
-              error={fieldErrors.username}
-              helperText="Este será seu nome de detetive público"
-              required
-            />
+            <FormField label="Nome do usuário" type="text" placeholder="nome_do_detetive" value="" disabled required />
+            <FormField label="Apelido" type="text" placeholder="apelido_do_detetive" value="" disabled required />
+            <FormField label="Email" type="email" placeholder="detetive@sqlchallenger.com" value="" disabled required />
+            <FormField label="Senha" type="password" placeholder="Crie uma senha forte" value="" disabled required />
+            <FormField label="Confirmar Senha" type="password" placeholder="Confirme sua senha" value="" disabled required />
 
-            <FormField
-              label="Apelido"
-              type="text"
-              placeholder="apelido_do_detetive"
-              value={formData.nick}
-              onChange={handleFieldChange("nick")}
-              onBlur={handleFieldBlur("nick")}
-              error={fieldErrors.nick}
-              helperText="Este será seu apelido de detetive público"
-              required
-            />
-
-            <FormField
-              label="Email"
-              type="email"
-              placeholder="detetive@sqlchallenger.com"
-              value={formData.email}
-              onChange={handleFieldChange("email")}
-              onBlur={handleFieldBlur("email")}
-              error={fieldErrors.email}
-              required
-            />
-
-            <div className="space-y-2">
-              <FormField
-                label="Senha"
-                type="password"
-                placeholder="Crie uma senha forte"
-                value={formData. password}
-                onChange={handleFieldChange("password")}
-                onBlur={handleFieldBlur("password")}
-                error={fieldErrors.password}
-                helperText="Mínimo de 8 caracteres com letras maiúsculas, minúsculas e números"
-                required
-              />
-              {formData.password && (
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 flex gap-1">
-                    {[...Array(5)].map((_, i) => (
-                      <div
-                        key={i}
-                        className={`h-1 flex-1 rounded-full transition-colors ${
-                          i < passwordStrength
-                            ? passwordStrength <= 2
-                              ? "bg-destructive"
-                              : passwordStrength <= 3
-                                ? "bg-warning"
-                                : "bg-success"
-                            : "bg-secondary"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  {getPasswordStrengthLabel()}
-                </div>
-              )}
-            </div>
-
-            <FormField
-              label="Confirmar Senha"
-              type="password"
-              placeholder="Confirme sua senha"
-              value={formData.confirmPassword}
-              onChange={handleFieldChange("confirmPassword")}
-              onBlur={handleFieldBlur("confirmPassword")}
-              error={fieldErrors.confirmPassword}
-              required
-            />
-
-            <div className="flex items-start gap-2 text-sm">
-              <input
-                type="checkbox"
-                className="mt-0.5 h-4 w-4 rounded border-border bg-input accent-primary"
-                required
-              />
-              <span className="text-muted-foreground">
-                Eu concordo com os{" "}
-                <Link href="/terms" className="text-primary hover: underline">
-                  Termos de Serviço
-                </Link>{" "}
-                e{" "}
-                <Link href="/privacy" className="text-primary hover:underline">
-                  Política de Privacidade
-                </Link>
-              </span>
-            </div>
-
-            <Button type="submit" className="w-full cursor-pointer" size="lg" disabled={isLoading || hasErrors}>
-              {isLoading ? "Criando conta..." : "Criar Conta de Detetive"}
+            <Button type="submit" className="w-full" size="lg" disabled>
+              Criar Conta de Detetive
             </Button>
+
+            <p className="text-center text-xs text-muted-foreground">
+              Cadastro por formulário desabilitado. Use Google ou GitHub abaixo.
+            </p>
           </form>
 
           <div className="mt-6">
@@ -304,7 +115,7 @@ export default function RegisterPage() {
         </AuthCard>
 
         <p className="text-center text-sm text-muted-foreground">
-          Já tem uma conta? {" "}
+          Já tem uma conta?{" "}
           <Link href="/auth/login" className="text-primary hover:underline font-semibold">
             Entre
           </Link>

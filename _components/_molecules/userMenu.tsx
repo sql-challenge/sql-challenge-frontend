@@ -24,7 +24,7 @@ export function UserMenu() {
     return (
         <div className="relative group">
             <button className="flex items-center gap-2 rounded-lg p-1 hover:bg-secondary transition-colors">
-                <Avatar src={user?.imagePerfil} alt={user?.username} fallback={initials} size="md" />
+                <Avatar src={user?.imagePerfil ?? undefined} alt={user?.username} fallback={initials} size="md" />
             </button>
 
             {/* Dropdown menu */}
