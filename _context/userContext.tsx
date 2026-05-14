@@ -45,6 +45,12 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   // On mount: restore session from Firebase auth + localStorage
   useEffect(() => {
+    // Restore token immediately so API calls work before Firebase auth fires
+    const savedToken = localStorage.getItem("idToken")
+    if (savedToken) {
+      api.setToken(savedToken)
+    }
+
     const savedUser = localStorage.getItem("user")
     if (savedUser) {
       try {
