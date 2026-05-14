@@ -3,7 +3,6 @@
 import { Header } from "@/_components/_organisms/header"
 import { StatCard } from "@/_components/_molecules/statCard"
 import { ProgressBar } from "@/_components/_molecules/progressBar"
-import { AchievementCard } from "@/_components/_molecules/achievementCard"
 import { useUser } from "@/_context/userContext"
 import Link from "next/link"
 

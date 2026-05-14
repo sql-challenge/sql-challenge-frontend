@@ -10,7 +10,6 @@ export function FriendNotificationBell() {
   const { user } = useUser();
   const [open, setOpen]         = useState(false);
   const [pending, setPending]   = useState<Friend[]>([]);
-  const [loading, setLoading]   = useState(false);
   const [acting, setActing]     = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -20,7 +19,7 @@ export function FriendNotificationBell() {
       const data = await api.get<Friend[]>(`/api/user/${user.uid}/friends`);
       const list: Friend[] = Array.isArray(data) ? data : [];
       setPending(list.filter(f => f.status === "pending"));
-    } catch {}
+    } catch { console.error("Failed to fetch pending friends"); }
   };
 
   useEffect(() => {

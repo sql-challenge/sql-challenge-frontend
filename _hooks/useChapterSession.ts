@@ -87,7 +87,7 @@ export function useChapterSession(
         const blob = new Blob([JSON.stringify(body)], { type: "application/json" });
         navigator.sendBeacon(url, blob);
       } else {
-        api.patch(`/api/sessions/${uid}/${desafioId}/${capituloId}`, body).catch(() => {});
+        api.patch(`/api/sessions/${uid}/${desafioId}/${capituloId}`, body).catch((err) => console.error("Session save error:", err));
       }
     },
     [uid, desafioId, capituloId]
@@ -125,7 +125,7 @@ export function useChapterSession(
         stateRef.current = restoredState;
         setRestored(restoredState);
       })
-      .catch(() => {})
+      .catch((err) => console.error("Session load error:", err))
       .finally(() => {
         if (loadRequestIdRef.current !== requestId) return;
         sessionStartRef.current = Date.now();

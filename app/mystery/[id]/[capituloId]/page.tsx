@@ -46,8 +46,8 @@ function getTimeTier(seconds: number, capituloNumero: number): Tier {
 export default function CapituloEditorPage() {
   const params = useParams();
   const router = useRouter();
-  const desafioId = params.id as string;
-  const capituloId = params.capituloId as string;
+  const desafioId = typeof params.id === "string" ? params.id : "";
+  const capituloId = typeof params.capituloId === "string" ? params.capituloId : "";
   const { user, updateUserLocal } = useUser();
 
   const [capituloView, setCapituloView] = useState<CapituloView | null>(null);

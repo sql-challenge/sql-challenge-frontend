@@ -15,21 +15,16 @@ export function useSqlDatabase(schemaArg: DatabaseSchema | null = null) {
   // Initialize database when schema changes
   useEffect(() => {
     if (!schema) {
-      console.log("No schema provided");
       setIsLoading(true);
       return;
     }
 
-    // Check if schema actually changed
     if (schemaRef.current === schema && database?.isReady()) {
-      console.log("Schema unchanged and database ready, skipping init");
       setIsLoading(false);
       return;
     }
 
-    // Prevent double initialization
     if (initializingRef.current) {
-      console.log("Already initializing, skipping");
       return;
     }
 
@@ -41,14 +36,8 @@ export function useSqlDatabase(schemaArg: DatabaseSchema | null = null) {
       setError(null);
 
       try {
-        console.log("Starting database initialization...");
         const db = await resetDatabase(schema);
-        console.log("Database initialized and schema loaded");
-        
-        // Test query to verify data
-        const testResult = db.executeQuery("SELECT COUNT(*) as count FROM " + schema.visaoTabelas[0].nome);
-        // console.log("Test query result:", testResult);
-        
+        db.executeQuery("SELECT COUNT(*) as count FROM " + schema.visaoTabelas[0].nome);
         setDatabase(db);
       } catch (err) {
         console.error("Failed to initialize database:", err);
@@ -61,9 +50,7 @@ export function useSqlDatabase(schemaArg: DatabaseSchema | null = null) {
 
     initDatabase();
 
-    // Cleanup on unmount only
     return () => {
-      console.log("Cleanup: Component unmounting");
       // Don't close the database here as it might be reused
     };
   }, [schema]); // Removed database from dependencies
@@ -74,10 +61,7 @@ export function useSqlDatabase(schemaArg: DatabaseSchema | null = null) {
       throw new Error("Database not ready");
     }
     
-    // console.log("Executing query:", query);
-    const result = database.executeQuery(query);
-    // console.log("Query result:", result);
-    return result;
+    return database.executeQuery(query);
   };
 
   const setSchemaStable = useCallback((newSchema: DatabaseSchema) => {

@@ -84,7 +84,7 @@ export default function ForgotPasswordPage() {
         </div>
 
         <AuthCard>
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={(e) => { void handleSubmit(e); }} className="space-y-6">
             <FormField
               label="Email"
               type="email"

@@ -120,7 +120,7 @@ export default function ConquistasPage() {
 
         let syncedUser = fresh;
         if (localXpSnapshot > (fresh.xp ?? 0)) {
-          await api.put("/api/user/", { uid: fresh.uid, xp: localXpSnapshot }).catch(() => {});
+          await api.put("/api/user/", { uid: fresh.uid, xp: localXpSnapshot }).catch((err) => console.error("XP sync error:", err));
           syncedUser = { ...fresh, xp: localXpSnapshot };
         }
         updateUserLocal(syncedUser);
@@ -162,7 +162,7 @@ export default function ConquistasPage() {
           setNewlyUnlocked(newOnes.filter((a) => grantedIds.has(a.id)));
         });
       })
-      .catch(() => {});
+      .catch((err) => console.error("Achievement fetch error:", err));
   }, [user?.uid, user?.xp, updateUserLocal]);
 
   const achievements = buildAchievements(user);

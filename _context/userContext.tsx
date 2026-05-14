@@ -104,7 +104,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signOut = async () => {
-    await firebaseSignOut().catch(() => {})
+    await firebaseSignOut().catch((err) => console.error("Sign out error:", err))
     setUser(null)
     clearPersisted()
   }

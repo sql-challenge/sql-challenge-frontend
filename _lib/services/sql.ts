@@ -40,13 +40,11 @@ export class SqlDatabase {
       }
 
       if (this.db) {
-        // console.log("Closing existing database");
         this.db.close();
       }
 
       this.db = new SQL.Database();
       this.isInitialized = true;
-      console.log("Database instance created");
     } catch (error) {
       console.error("Failed to initialize database:", error);
       throw new Error(
@@ -131,11 +129,7 @@ export class SqlDatabase {
         throw new Error("Empty query");
       }
 
-      console.log("Executing SQL:", cleanQuery);
-
-      // Execute the query
       const results = this.db.exec(cleanQuery);
-      // console.log("Raw SQL.js results:", results);
 
       // Handle queries that don't return data (INSERT, UPDATE, DELETE, CREATE, etc.)
       if (!results || results.length === 0) {
@@ -182,7 +176,6 @@ export class SqlDatabase {
       }
 
       if (!values || values.length === 0) {
-        console.log("Query returned no rows");
         return {
           columns,
           rows: [],
@@ -200,7 +193,6 @@ export class SqlDatabase {
         return rowObj;
       });
 
-      // console.log("Processed result:", { columns, rowCount: rows.length, rows });
       return {
         columns,
         rows,
@@ -233,7 +225,6 @@ export class SqlDatabase {
 
   close(): void {
     if (this.db) {
-      console.log("Closing database");
       this.db.close();
       this.db = null;
       this.isInitialized = false;
@@ -267,7 +258,6 @@ export function getDatabase(mysteryId?: string): SqlDatabase {
   const key = mysteryId || "default";
 
   if (!databaseInstances.has(key)) {
-    console.log(`Creating new database instance for: ${key}`);
     databaseInstances.set(key, new SqlDatabase());
   }
 
@@ -285,8 +275,7 @@ export async function resetDatabase(
   // Verify data was loaded
   const firstTable = schema.visaoTabelas[0]?.nome;
   if (firstTable) {
-    const rowCount = db.verifyData(firstTable);
-    console.log(`Verification: Table ${firstTable} has ${rowCount} rows`);
+    db.verifyData(firstTable);
   }
 
   return db;
@@ -295,5 +284,4 @@ export async function resetDatabase(
 export function clearAllDatabases(): void {
   databaseInstances.forEach((db) => db.close());
   databaseInstances.clear();
-  console.log("All databases cleared");
 }

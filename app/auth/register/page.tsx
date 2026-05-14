@@ -11,9 +11,8 @@ import { AuthCard } from "@/_components/_organisms/auth-card"
 import { FormField } from "@/_components/_molecules/form-field"
 import { Button } from "@/_components/_atoms/button"
 import { Badge } from "@/_components/_atoms/badge"
-import { ZodError } from "zod"
 import { ApiError } from "@/_lib/errors"
-import { UserSignUpForm, UserSignUp, UserSignUpWithoutDefaultValues } from "@/_lib/types/user"
+import { UserSignUpForm } from "@/_lib/types/user"
 
 
 export default function RegisterPage() {
@@ -131,7 +130,7 @@ export default function RegisterPage() {
         </div>
 
         <AuthCard>
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={(e) => { void handleSubmit(e); }} className="space-y-5">
             {error && (
               <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
                 {error}
