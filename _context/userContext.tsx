@@ -14,6 +14,7 @@ import {
 
 type UserContextType = {
   user: User | null
+  isAuthReady: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (form: UserSignUpForm) => Promise<void>
   signInWithGoogle: () => Promise<void>
@@ -24,6 +25,14 @@ type UserContextType = {
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined)
+
+// ── Synchronous initialization before any component renders ──
+if (typeof window !== "undefined") {
+  const savedToken = localStorage.getItem("idToken")
+  if (savedToken) {
+    api.setToken(savedToken)
+  }
+}
 
 function persist(u: User) {
   localStorage.setItem("user", JSON.stringify(u))
@@ -41,37 +50,31 @@ function clearPersisted() {
 }
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window === "undefined") return null
+    try {
+      const saved = localStorage.getItem("user")
+      return saved ? JSON.parse(saved) : null
+    } catch {
+      localStorage.removeItem("user")
+      return null
+    }
+  })
 
-  // On mount: restore session from Firebase auth + localStorage
+  const [isAuthReady, setIsAuthReady] = useState(false)
+
   useEffect(() => {
-    // Restore token immediately so API calls work before Firebase auth fires
-    const savedToken = localStorage.getItem("idToken")
-    if (savedToken) {
-      api.setToken(savedToken)
-    }
-
-    const savedUser = localStorage.getItem("user")
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser))
-      } catch {
-        localStorage.removeItem("user")
-      }
-    }
-
-    // Subscribe to Firebase auth state — keeps token fresh across page reloads
     const unsubscribe = onFirebaseAuthStateChanged(async (firebaseUser) => {
       if (firebaseUser) {
         try {
           const freshToken = await firebaseUser.getIdToken()
           persistToken(freshToken)
         } catch {
-          // Token refresh failed — probably signed out
           clearPersisted()
           setUser(null)
         }
       }
+      setIsAuthReady(true)
     })
 
     return () => unsubscribe()
@@ -132,7 +135,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <UserContext.Provider
-      value={{ user, signIn, signUp, signInWithGoogle, signInWithGithub, signOut, updateUser, updateUserLocal }}
+      value={{ user, isAuthReady, signIn, signUp, signInWithGoogle, signInWithGithub, signOut, updateUser, updateUserLocal }}
     >
       {children}
     </UserContext.Provider>

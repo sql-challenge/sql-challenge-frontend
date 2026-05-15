@@ -127,12 +127,12 @@ export default function LoginPage() {
         </AuthCard>
       </div>
 
-      <p className="text-center text-sm text-muted-foreground">
+      {/* <p className="text-center text-sm text-muted-foreground">
         Novo por aqui?{" "}
         <Link href="/auth/register" className="text-primary hover:underline font-semibold">
           Crie sua conta
         </Link>
-      </p>
+      </p> */}
     </div>
   )
 }
