@@ -19,7 +19,7 @@ export function FriendNotificationBell() {
       const data = await api.get<Friend[]>(`/api/user/${user.uid}/friends`);
       const list: Friend[] = Array.isArray(data) ? data : [];
       setPending(list.filter(f => f.status === "pending"));
-    } catch { console.error("Failed to fetch pending friends"); }
+    } catch (err) { console.error("Failed to fetch pending friends", err); }
   };
 
   useEffect(() => {
