@@ -3,20 +3,22 @@
 import { api } from "@/_lib/api"
 import type React from "react"
 import { createContext, useContext, useCallback, useEffect, useState } from "react"
-import { User, UserSignUpForm } from '@/_lib/types/user'
+import { User } from '@/_lib/types/user'
 import {
   signInWithGoogle as firebaseSignInWithGoogle,
   signInWithGithub as firebaseSignInWithGithub,
   signInWithEmailPassword as firebaseSignInWithEmailPassword,
+  createUserWithEmailPassword as firebaseCreateUserWithEmailPassword,
   firebaseSignOut,
   onFirebaseAuthStateChanged,
 } from "@/_lib/firebase/auth"
+import type { RegisterFormData } from "@/_lib/forms"
 
 type UserContextType = {
   user: User | null
   isAuthReady: boolean
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (form: UserSignUpForm) => Promise<void>
+  signUp: (form: RegisterFormData) => Promise<void>
   signInWithGoogle: () => Promise<void>
   signInWithGithub: () => Promise<void>
   signOut: () => void
@@ -88,10 +90,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setUser(user)
   }
 
-  const signUp = async (form: UserSignUpForm) => {
-    const user = await api.post<User>('/api/user/', form)
-    const { idToken } = await firebaseSignInWithEmailPassword(form.email, form.password)
+  const signUp = async (form: RegisterFormData) => {
+    const { idToken } = await firebaseCreateUserWithEmailPassword(form.email, form.password)
     persistToken(idToken)
+    const user = await api.post<User>('/api/user/auth/oauth', { idToken, displayName: form.username })
     persist(user)
     setUser(user)
   }

@@ -3,6 +3,7 @@ import {
   GithubAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
   type User,
@@ -29,6 +30,12 @@ export async function signInWithEmailPassword(email: string, password: string): 
   const credential = await signInWithEmailAndPassword(auth, email, password);
   const idToken = await credential.user.getIdToken();
   return { idToken, credential };
+}
+
+export async function createUserWithEmailPassword(email: string, password: string): Promise<{ idToken: string }> {
+  const credential = await createUserWithEmailAndPassword(auth, email, password);
+  const idToken = await credential.user.getIdToken();
+  return { idToken };
 }
 
 export async function firebaseSignOut(): Promise<void> {

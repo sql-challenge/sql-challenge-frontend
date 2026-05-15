@@ -10,13 +10,37 @@ import { Logo } from "@/_components/_molecules/logo"
 import { AuthCard } from "@/_components/_organisms/auth-card"
 import { FormField } from "@/_components/_molecules/form-field"
 import { Button } from "@/_components/_atoms/button"
+import { registerSchema } from "@/_lib/forms"
 
 export default function RegisterPage() {
+  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const { signInWithGoogle, signInWithGithub } = useUser()
+  const { signUp, signInWithGoogle, signInWithGithub } = useUser()
   const router = useRouter()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    const parsed = registerSchema.safeParse({ username, email, password, confirmPassword })
+    if (!parsed.success) {
+      setError(parsed.error.issues[0].message)
+      return
+    }
+    try {
+      setIsLoading(true)
+      await signUp(parsed.data)
+      router.push("/dashboard")
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao criar conta.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4 py-12">
@@ -30,26 +54,49 @@ export default function RegisterPage() {
         </div>
 
         <AuthCard>
-          <form className="space-y-5">
+          <form className="space-y-5" onSubmit={handleSubmit}>
             {error && (
               <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
                 {error}
               </div>
             )}
 
-            <FormField label="Nome do usuário" type="text" placeholder="nome_do_detetive" value="" disabled required />
-            <FormField label="Apelido" type="text" placeholder="apelido_do_detetive" value="" disabled required />
-            <FormField label="Email" type="email" placeholder="detetive@sqlchallenger.com" value="" disabled required />
-            <FormField label="Senha" type="password" placeholder="Crie uma senha forte" value="" disabled required />
-            <FormField label="Confirmar Senha" type="password" placeholder="Confirme sua senha" value="" disabled required />
+            <FormField
+              label="Nome do usuário"
+              type="text"
+              placeholder="nome_do_detetive"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+            <FormField
+              label="Email"
+              type="email"
+              placeholder="detetive@sqlchallenger.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            <FormField
+              label="Senha"
+              type="password"
+              placeholder="Crie uma senha forte"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            <FormField
+              label="Confirmar Senha"
+              type="password"
+              placeholder="Confirme sua senha"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+            />
 
-            <Button type="submit" className="w-full" size="lg" disabled>
-              Criar Conta de Detetive
+            <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+              {isLoading ? "Criando conta..." : "Criar Conta de Detetive"}
             </Button>
-
-            <p className="text-center text-xs text-muted-foreground">
-              Cadastro por formulário desabilitado. Use Google ou GitHub abaixo.
-            </p>
           </form>
 
           <div className="mt-6">

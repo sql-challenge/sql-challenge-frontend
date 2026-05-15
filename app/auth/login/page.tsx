@@ -10,13 +10,35 @@ import { AuthCard } from "@/_components/_organisms/auth-card"
 import { FormField } from "@/_components/_molecules/form-field"
 import { Button } from "@/_components/_atoms/button"
 import { useUser } from "@/_context/userContext"
+import { loginSchema } from "@/_lib/forms"
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const { signInWithGoogle, signInWithGithub } = useUser()
+  const { signIn, signInWithGoogle, signInWithGithub } = useUser()
   const router = useRouter()
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    const parsed = loginSchema.safeParse({ email, password })
+    if (!parsed.success) {
+      setError(parsed.error.issues[0].message)
+      return
+    }
+    try {
+      setIsLoading(true)
+      await signIn(email, password)
+      router.push("/dashboard")
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Erro ao entrar.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -30,7 +52,7 @@ export default function LoginPage() {
         </div>
 
         <AuthCard>
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
               <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
                 {error}
@@ -41,8 +63,8 @@ export default function LoginPage() {
               label="Email"
               type="email"
               placeholder="detetive@sqlchallenger.com"
-              value=""
-              disabled
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
 
@@ -50,18 +72,14 @@ export default function LoginPage() {
               label="Senha"
               type="password"
               placeholder="Digite sua senha"
-              value=""
-              disabled
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               required
             />
 
-            <Button type="submit" className="w-full" size="lg" disabled>
-              Entrar
+            <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+              {isLoading ? "Entrando..." : "Entrar"}
             </Button>
-
-            <p className="text-center text-xs text-muted-foreground">
-              Login com email e senha desabilitado. Use Google ou GitHub abaixo.
-            </p>
           </form>
 
           <div className="mt-6">
@@ -125,14 +143,14 @@ export default function LoginPage() {
             </div>
           </div>
         </AuthCard>
-      </div>
 
-      {/* <p className="text-center text-sm text-muted-foreground">
-        Novo por aqui?{" "}
-        <Link href="/auth/register" className="text-primary hover:underline font-semibold">
-          Crie sua conta
-        </Link>
-      </p> */}
+        <p className="text-center text-sm text-muted-foreground">
+          Novo por aqui?{" "}
+          <Link href="/auth/register" className="text-primary hover:underline font-semibold">
+            Crie sua conta
+          </Link>
+        </p>
+      </div>
     </div>
   )
 }
