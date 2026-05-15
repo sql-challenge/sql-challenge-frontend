@@ -22,6 +22,7 @@ type ApiResponse<T> = {
 class ApiClient {
     private baseUrl: string
     private token: string | null = null
+    private onAuthExpiredCb: (() => void) | null = null
 
     constructor(baseUrl = "/api") {
         this.baseUrl = baseUrl
@@ -33,6 +34,10 @@ class ApiClient {
 
     getToken(): string | null {
         return this.token
+    }
+
+    setOnAuthExpired(cb: (() => void) | null) {
+        this.onAuthExpiredCb = cb
     }
 
     /**
@@ -65,6 +70,11 @@ class ApiClient {
 
         try {
             const response = await fetch(`${this.baseUrl}${path}`, config)
+
+            // ── 401 interceptor: session expired ───────────────
+            if (response.status === 401) {
+                this.onAuthExpiredCb?.()
+            }
 
             let data: ApiResponse<T>
 

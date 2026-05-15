@@ -8,6 +8,7 @@ import { ResultsPanel } from "@/_components/_organisms/resultsPanel";
 import { DatabaseExplorer } from "@/_components/_organisms/databaseExplorer";
 import { HintsPanel } from "@/_components/_organisms/hintsPanel";
 import { LoadingScreen } from "@/_components/_organisms/loadingScreen";
+import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import { useSqlDatabase } from "@/_context/sqlContext";
 import { type CapituloView, type ObjetivoComConsulta, type QueryResult } from "@/_lib/types/capitulo";
 import { api } from "@/_lib/api";
@@ -466,8 +467,9 @@ export default function CapituloEditorPage() {
   const currentObjetivo = capituloView.objetivos[currentObjetivoIndex];
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
-      <Header />
+    <ProtectedRoute>
+      <div className="h-screen bg-background flex flex-col overflow-hidden">
+        <Header />
       <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 overflow-hidden min-h-0">
         {/* LEFT: Info */}
         <div className="lg:w-1/3 flex flex-col gap-4 overflow-hidden min-h-0">
@@ -676,5 +678,7 @@ export default function CapituloEditorPage() {
       </div>
       <VictoryBanner />
     </div>
+    </ProtectedRoute>
   );
 }
+

@@ -2,7 +2,7 @@
 
 import { api } from "@/_lib/api"
 import type React from "react"
-import { createContext, useContext, useEffect, useState } from "react"
+import { createContext, useContext, useCallback, useEffect, useState } from "react"
 import { User, UserSignUpForm } from '@/_lib/types/user'
 import {
   signInWithGoogle as firebaseSignInWithGoogle,
@@ -112,11 +112,17 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setUser(user)
   }
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await firebaseSignOut().catch((err) => console.error("Sign out error:", err))
     setUser(null)
     clearPersisted()
-  }
+  }, [])
+
+  // Wire up API 401 interceptor — automatic logout on session expiry
+  useEffect(() => {
+    api.setOnAuthExpired(signOut)
+    return () => api.setOnAuthExpired(null)
+  }, [signOut])
 
   const updateUser = async (updates: Partial<User>) => {
     if (!user) return
