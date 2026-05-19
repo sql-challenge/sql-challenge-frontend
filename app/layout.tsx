@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Oswald, Sora, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/_context/themeProvider";
 import { UserProvider } from "@/_context/userContext";
 import { PageTitleSync } from "@/_components/_organisms/pageTitleSync";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const oswald = Oswald({
+  variable: "--font-oswald",
+  subsets: ["latin"],
+});
+
+const sora = Sora({
+  variable: "--font-sora",
   subsets: ["latin"],
 });
 
@@ -27,8 +32,8 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="pt-BR"
+      className={`${oswald.variable} ${sora.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
           <ThemeProvider>

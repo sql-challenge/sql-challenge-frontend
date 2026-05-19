@@ -15,6 +15,7 @@ import { api } from "@/_lib/api";
 import { useChapterSession, formatSeconds } from "@/_hooks/useChapterSession";
 import { useUser } from "@/_context/userContext";
 import { NARRATIVAS } from "@/_lib/narrativas";
+import { CheckCircle, PlayCircle, Lock } from "feather-icons-react";
 
 // Faixas de tempo por capítulo (em segundos)
 // Calibradas para refletir dificuldade crescente: SELECT → GROUP BY → JOIN → CTE → ENCODE
@@ -248,6 +249,17 @@ export default function CapituloEditorPage() {
     return true;
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault()
+        handleRunQuery()
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  })
+
   const handleRunQuery = async () => {
     if (!query.trim()) {
       setError("Por favor, escreva uma query SQL.");
@@ -353,9 +365,9 @@ export default function CapituloEditorPage() {
   const VictoryBanner = () =>
     !isVictorious ? null : (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-card border-2 border-green-500 rounded-xl p-8 max-w-md w-full shadow-2xl">
+        <div className="bg-card border-2 border-green-500 rounded-xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300 ease-out-expo">
           <div className="text-center space-y-4">
-            <div className="text-6xl animate-bounce">{earnedTier?.tier === "gold" ? "🏆" : "🎉"}</div>
+            <div className="text-6xl animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out-expo">{earnedTier?.tier === "gold" ? "🏆" : "🎉"}</div>
             <h2 className="text-3xl font-bold text-green-500">Capítulo Resolvido!</h2>
             <p className="text-muted-foreground">{feedback}</p>
 
@@ -418,8 +430,13 @@ export default function CapituloEditorPage() {
                 : "border border-border/40 text-muted-foreground opacity-50"
             }`}
           >
-            <span className="mt-0.5 shrink-0 text-base">
-              {isDone ? "✅" : isCurrent ? "▶" : "🔒"}
+            <span className="mt-0.5 shrink-0">
+              {isDone
+                ? <CheckCircle className="w-4 h-4 text-green-400" />
+                : isCurrent
+                ? <PlayCircle className="w-4 h-4 text-primary" />
+                : <Lock className="w-4 h-4 text-muted-foreground" />
+              }
             </span>
             <span>
               <span className="font-semibold mr-1">{obj.ordem}.</span>
@@ -482,7 +499,7 @@ export default function CapituloEditorPage() {
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-0.5">Capítulo {capitulo.numero}</p>
 
                 {/* Timer em destaque */}
-                <div className={`flex items-center justify-between rounded-lg border px-4 py-2.5 mb-3 ${currentTier?.badgeClass ?? ""}`}>
+                <div className={`flex items-center justify-between rounded-lg border px-4 py-2.5 mb-3 ${currentTier?.badgeClass ?? ""} ${currentTier?.tier === "gold" ? "animate-gold-pulse" : ""}`}>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-widest opacity-70">Tempo</p>
                     <p className={`text-2xl font-mono font-bold tabular-nums leading-none ${currentTier?.timerColor}`}>
@@ -550,7 +567,8 @@ export default function CapituloEditorPage() {
                   activeTab === "story"
                     ? "text-primary border-b-2 border-primary"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+                aria-current={activeTab === "story" ? "page" : undefined}
               >
                 Objetivos
               </button>
@@ -560,7 +578,8 @@ export default function CapituloEditorPage() {
                   activeTab === "database"
                     ? "text-primary border-b-2 border-primary"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+                aria-current={activeTab === "database" ? "page" : undefined}
               >
                 Banco de Dados
               </button>
@@ -570,7 +589,8 @@ export default function CapituloEditorPage() {
                   activeTab === "hints"
                     ? "text-primary border-b-2 border-primary"
                     : "text-muted-foreground hover:text-foreground"
-                }`}
+                } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+                aria-current={activeTab === "hints" ? "page" : undefined}
               >
                 Dicas ({hintsRevealed.length}/{capituloView.dicas.length})
               </button>
@@ -614,7 +634,7 @@ export default function CapituloEditorPage() {
 
           {/* Feedback de erro no objetivo atual */}
           {objetivoFeedback && !isVictorious && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3" role="alert">
               <p className="text-sm text-red-400">{objetivoFeedback}</p>
             </div>
           )}
@@ -631,14 +651,14 @@ export default function CapituloEditorPage() {
                 disabled={isRunning || !isReady || isVictorious || !!pendingAdvance}
                 className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {isRunning ? "Executando..." : "▶ Executar Query"}
+                {isRunning ? "Executando..." : "▶ Executar Query  ⌘⏎"}
               </button>
             </div>
             <SqlEditor value={query} onChange={setQuery} />
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3">
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3" role="alert">
               <p className="text-sm text-red-400">{error}</p>
             </div>
           )}

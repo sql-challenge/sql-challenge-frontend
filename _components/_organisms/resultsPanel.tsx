@@ -13,7 +13,7 @@ export function ResultsPanel({ results, error, isRunning }: ResultsPanelProps) {
         <h2 className="text-sm font-semibold text-foreground">Resultados</h2>
       </div>
 
-      <div className="flex-1 overflow-auto p-4">
+      <div className="flex-1 overflow-auto p-4" aria-live="polite" aria-atomic="true">
         {isRunning && (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -70,9 +70,12 @@ export function ResultsPanel({ results, error, isRunning }: ResultsPanelProps) {
 
         {! results && !error && !isRunning && (
           <div className="flex items-center justify-center h-full">
-            <p className="text-sm text-muted-foreground">
-              Execute uma query para ver os resultados
-            </p>
+            <div className="text-center">
+              <p className="text-2xl mb-2">🔍</p>
+              <p className="text-sm text-muted-foreground">
+                Os dados estão esperando. Escreva uma query para investigar.
+              </p>
+            </div>
           </div>
         )}
       </div>

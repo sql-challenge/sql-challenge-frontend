@@ -176,7 +176,9 @@ export default function RankingPage() {
 
             {players.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
-                Ainda não há jogadores no ranking. Seja o primeiro!
+                <p className="text-4xl mb-3">📊</p>
+                <p className="text-base font-semibold text-foreground">Ranking vazio</p>
+                <p className="text-sm mt-1">Ainda não há detetives registrados. Seja o primeiro a investigar!</p>
               </div>
             )}
           </div>

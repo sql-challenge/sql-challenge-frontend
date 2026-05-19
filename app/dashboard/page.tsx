@@ -143,9 +143,9 @@ export default function DashboardPage() {
 
               {recentActivity.length === 0 ? (
                 <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
-                  <p className="text-4xl mb-3">🔍</p>
-                  <p className="font-semibold text-foreground">Nenhum caso iniciado</p>
-                  <p className="text-sm mt-1">Comece um mistério para ver seu progresso aqui</p>
+                  <p className="text-4xl mb-3">🕵️</p>
+                  <p className="font-semibold text-foreground">Nenhum caso em andamento</p>
+                  <p className="text-sm mt-1">Um arquivo vazio espera por um detetive. Pronto para começar?</p>
                   <Link href="/mystery" className="mt-4 inline-block px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
                     Explorar mistérios
                   </Link>

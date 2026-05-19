@@ -6,12 +6,13 @@ import { UserMenu } from "@/_components/_molecules/userMenu"
 import { FriendNotificationBell } from "@/_components/_molecules/friendNotificationBell"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { Search, Star, Award, User } from "feather-icons-react"
 
 const NAV_LINKS = [
-  { href: "/mystery",    label: "Mistérios",  icon: "🔍" },
-  { href: "/ranking",    label: "Ranking",    icon: "🏆" },
-  { href: "/conquistas", label: "Conquistas", icon: "🎖️" },
-  { href: "/perfil",     label: "Perfil",     icon: "👤" },
+  { href: "/mystery",    label: "Mistérios",  Icon: Search },
+  { href: "/ranking",    label: "Ranking",    Icon: Star },
+  { href: "/conquistas", label: "Conquistas", Icon: Award },
+  { href: "/perfil",     label: "Perfil",     Icon: User },
 ]
 
 export function Header() {
@@ -24,7 +25,7 @@ export function Header() {
           <div className="flex items-center gap-6">
             <Logo size="md" />
             <nav className="hidden md:flex items-center gap-1">
-              {NAV_LINKS.map(({ href, label, icon }) => {
+              {NAV_LINKS.map(({ href, label, Icon }) => {
                 const active = pathname === href || pathname.startsWith(href + "/")
                 return (
                   <Link
@@ -36,7 +37,7 @@ export function Header() {
                         : "text-muted-foreground hover:text-foreground hover:bg-accent"
                     }`}
                   >
-                    <span>{icon}</span>
+                    <Icon className="w-4 h-4" />
                     {label}
                   </Link>
                 )
@@ -53,7 +54,7 @@ export function Header() {
 
         {/* Mobile nav */}
         <div className="md:hidden flex border-t border-border">
-          {NAV_LINKS.map(({ href, label, icon }) => {
+          {NAV_LINKS.map(({ href, label, Icon }) => {
             const active = pathname === href || pathname.startsWith(href + "/")
             return (
               <Link
@@ -63,7 +64,7 @@ export function Header() {
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
-                <span className="text-base">{icon}</span>
+                <Icon className="w-4 h-4 mb-0.5" />
                 {label}
               </Link>
             )

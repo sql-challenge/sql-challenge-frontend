@@ -7,6 +7,7 @@ import Link from "next/link";
 import { Capitulo, Desafio } from "@/_lib/types/capitulo";
 import { api } from "@/_lib/api";
 import { useUser } from "@/_context/userContext";
+import { Search } from "feather-icons-react";
 
 const RULES = [
   {
@@ -181,7 +182,7 @@ export default function MysteriesPage() {
         </div>
 
         <div className="mb-6 relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">🔎</span>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Buscar caso..."
@@ -264,7 +265,9 @@ export default function MysteriesPage() {
               })
             ) : (
               <div className="col-span-full text-center py-12">
-                <p className="text-muted-foreground text-lg">Nenhum caso encontrado.</p>
+                <p className="text-4xl mb-3">📋</p>
+                <p className="text-muted-foreground text-lg">Nenhum caso encontrado com esse nome.</p>
+                <p className="text-sm text-muted-foreground mt-1">Tente outro termo de busca.</p>
               </div>
             )}
           </div>
