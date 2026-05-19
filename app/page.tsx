@@ -255,7 +255,7 @@ export default function HomePage() {
                 Aprenda SQL resolvendo mistérios. Uma plataforma gamificada para desenvolvedores que querem aprender na prática.
               </p>
             </div>
-            <div>
+            <div className="ml-auto">
               <h4 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Links</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><Link href="/mystery" className="hover:text-foreground transition-colors">Mistérios</Link></li>
@@ -263,14 +263,14 @@ export default function HomePage() {
                 <li><Link href="/conquistas" className="hover:text-foreground transition-colors">Conquistas</Link></li>
               </ul>
             </div>
-            <div>
+            {/* <div>
               <h4 className="text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">Informações</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li><span className="hover:text-foreground transition-colors cursor-default">Sobre</span></li>
                 <li><span className="hover:text-foreground transition-colors cursor-default">Termos de Uso</span></li>
                 <li><span className="hover:text-foreground transition-colors cursor-default">Contato</span></li>
               </ul>
-            </div>
+            </div> */}
           </div>
           <div className="border-t border-border mt-8 pt-6 text-center text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} SQL Challenger. Feito para detetives de dados.
