@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/_context/userContext";
 import { api } from "@/_lib/api";
@@ -12,9 +12,13 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [isTokenValidating, setIsTokenValidating] = useState(false);
 
+  const hasValidated = useRef(false);
+
   // Validate token with backend when auth is ready and user exists
   useEffect(() => {
     if (!isAuthReady || !user) return;
+    if (hasValidated.current) return;
+    hasValidated.current = true;
     
     const validateToken = async () => {
       setIsTokenValidating(true);
