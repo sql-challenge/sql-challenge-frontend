@@ -82,18 +82,23 @@ class ApiClient {
                 data = await response.json()
             } catch {
                 if (!response.ok) {
-                    throw new ApiError(response.statusText || "Requisição falhou", response.status)
+                    throw new ApiError("Resposta inválida do servidor.", response.status)
                 }
                 data = {} as ApiResponse<T>
-
             }
 
             if (data.error) {
-                throw new ApiError(data.error, response.status)
+                const message = response.status >= 500
+                    ? "Erro interno do servidor. Tente novamente."
+                    : data.error
+                throw new ApiError(message, response.status)
             }
 
             if (!response.ok) {
-                throw new ApiError((data.error || data.message) || "Requisição falhou", response.status, data.fieldErrors)
+                const message = response.status >= 500
+                    ? "Erro interno do servidor. Tente novamente."
+                    : (data.error || data.message) || "Requisição falhou"
+                throw new ApiError(message, response.status, data.fieldErrors)
             }
 
             return data.data as T
@@ -103,10 +108,10 @@ class ApiClient {
             }
 
             if (error instanceof TypeError) {
-                throw new ApiError(`${error.name}-${error.message}`)
+                throw new ApiError("Erro de conexão com o servidor. Verifique sua internet.")
             }
 
-            throw new ApiError(error instanceof Error ? error.message : "Um erro inesperado aconteceu")
+            throw new ApiError("Um erro inesperado aconteceu. Tente novamente.")
         }
     }
 
