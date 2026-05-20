@@ -1,22 +1,19 @@
 import type { Metadata } from "next";
-import { Oswald, Sora, Geist_Mono } from "next/font/google";
+import { Press_Start_2P, VT323 } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/_context/themeProvider";
 import { UserProvider } from "@/_context/userContext";
 import { PageTitleSync } from "@/_components/_organisms/pageTitleSync";
 
-const oswald = Oswald({
-  variable: "--font-oswald",
+const pressStart2P = Press_Start_2P({
+  variable: "--font-display",
+  weight: "400",
   subsets: ["latin"],
 });
 
-const sora = Sora({
-  variable: "--font-sora",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const vt323 = VT323({
+  variable: "--font-body",
+  weight: "400",
   subsets: ["latin"],
 });
 
@@ -33,9 +30,9 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${oswald.variable} ${sora.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${pressStart2P.variable} ${vt323.variable} h-full`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col scanlines">
           <ThemeProvider>
             <UserProvider>
               <PageTitleSync />

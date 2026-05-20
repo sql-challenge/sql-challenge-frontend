@@ -18,13 +18,13 @@ interface QueryExample {
   rows: string[][]
 }
 
-const KEYWORD = "text-purple-400"
-const STRING = "text-green-400/90"
-const FUNCTION = "text-amber-400/90"
-const COMMENT = "text-muted-foreground italic"
-const NUMBER = "text-amber-400"
-const OPERATOR = "text-blue-400"
-const COLUMN = "text-cyan-300"
+const KEYWORD = "text-primary"
+const STRING = "text-success"
+const FUNCTION = "text-warning"
+const COMMENT = "text-muted-foreground"
+const NUMBER = "text-warning"
+const OPERATOR = "text-ring"
+const COLUMN = "text-accent"
 
 const examples: QueryExample[] = [
   {
@@ -106,25 +106,25 @@ export function TerminalEditor() {
   }, [example])
 
   return (
-    <div className="rounded-xl border-2 border-primary/30 bg-black/80 shadow-xl shadow-primary/10 overflow-hidden backdrop-blur-sm">
+    <div className="border-2 border-primary/40 bg-card shadow-pixel">
       {/* Terminal Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-black/40 border-b border-primary/20">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-secondary border-b-2 border-primary/20">
         <div className="flex items-center gap-2">
-          <div className="flex gap-1.5">
-            <div className="w-3 h-3 rounded-full bg-destructive/80" />
-            <div className="w-3 h-3 rounded-full bg-warning/80" />
-            <div className="w-3 h-3 rounded-full bg-success/80" />
+          <div className="flex gap-1">
+            <div className="w-3 h-3 bg-destructive" />
+            <div className="w-3 h-3 bg-warning" />
+            <div className="w-3 h-3 bg-success" />
           </div>
-          <span className="text-xs text-gray-400 font-mono ml-3 tracking-wider uppercase">
+          <span className="text-xs text-muted-foreground ml-3 tracking-wider uppercase">
             <span className="inline-flex items-center gap-1.5">
               <Terminal size={12} className="text-primary" />
-              Terminal de Investigação
+              Terminal de Investiga&ccedil;&atilde;o
             </span>
           </span>
         </div>
         <button
           onClick={handleCopy}
-          className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-200 transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
           aria-label={copied ? "Copiado" : "Copiar query"}
         >
           {copied ? (
@@ -142,17 +142,17 @@ export function TerminalEditor() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-primary/10 bg-black/20 overflow-x-auto" role="tablist" aria-label="Exemplos de queries">
+      <div className="flex border-b-2 border-primary/10 bg-secondary/50 overflow-x-auto" role="tablist" aria-label="Exemplos de queries">
         {examples.map((ex, i) => (
           <button
             key={ex.id}
             role="tab"
             aria-selected={i === activeTab}
             onClick={() => setActiveTab(i)}
-            className={`px-4 py-2.5 text-xs font-mono tracking-wide whitespace-nowrap transition-colors cursor-pointer border-b-2 ${
+            className={`px-4 py-2 text-xs tracking-wide whitespace-nowrap transition-colors cursor-pointer border-b-2 -mb-[2px] ${
               i === activeTab
                 ? "text-primary border-primary bg-primary/10"
-                : "text-gray-400 border-transparent hover:text-gray-200 hover:bg-white/5"
+                : "text-muted-foreground border-transparent hover:text-foreground"
             }`}
           >
             <span className="inline-flex items-center gap-1.5">
@@ -166,31 +166,31 @@ export function TerminalEditor() {
       <div className="relative">
         {/* Description */}
         <div className="px-4 pt-3 pb-1">
-          <p className="text-xs text-gray-400 font-mono">
+          <p className="text-xs text-muted-foreground">
             <span className="text-primary">--</span> {example.description}
           </p>
         </div>
 
         {/* SQL Code */}
         <div className="px-4 py-3 overflow-x-auto">
-          <pre className="font-mono text-sm leading-relaxed">
+          <pre className="text-sm leading-relaxed">
             {example.code.map((line, li) => (
               <div key={li} className="whitespace-pre">
                 {li === example.code.length - 1 ? (
                   <>
                     <span className="text-muted-foreground/50 select-none">{`  `}</span>
                     {line.map((token, ti) => (
-                      <span key={ti} className={token.color || "text-gray-200"}>
+                      <span key={ti} className={token.color || "text-foreground"}>
                         {token.text}
                       </span>
                     ))}
-                    <span className="inline-block w-2 h-4 ml-0.5 bg-primary/70 animate-pulse align-text-bottom" />
+                    <span className="inline-block w-2 h-[0.9em] ml-0.5 bg-primary align-text-bottom animate-blink-pixel" />
                   </>
                 ) : (
                   <>
                     <span className="text-muted-foreground/50 select-none">{`  `}</span>
                     {line.map((token, ti) => (
-                      <span key={ti} className={token.color || "text-gray-200"}>
+                      <span key={ti} className={token.color || "text-foreground"}>
                         {token.text}
                       </span>
                     ))}
@@ -202,18 +202,18 @@ export function TerminalEditor() {
         </div>
 
         {/* Result Area */}
-        <div className="border-t border-primary/10 bg-black/30">
+        <div className="border-t-2 border-primary/10 bg-secondary/30">
           <div className="px-4 py-2 flex items-center gap-2">
             <Play size={12} className="text-success" />
-            <span className="text-xs font-mono text-success/80">Resultado:</span>
-            <span className="text-xs font-mono text-gray-400">{example.result}</span>
+            <span className="text-xs text-success/80">Resultado:</span>
+            <span className="text-xs text-muted-foreground">{example.result}</span>
           </div>
           <div className="px-4 pb-4 overflow-x-auto">
-            <table className="w-full text-xs font-mono">
+            <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-primary/20">
+                <tr className="border-b-2 border-primary/20">
                   {example.columns.map((col) => (
-                    <th key={col} className="text-left py-1.5 pr-4 text-primary/80 font-semibold tracking-wider uppercase">
+                    <th key={col} className="text-left py-1.5 pr-4 text-primary font-semibold tracking-wider uppercase">
                       {col}
                     </th>
                   ))}
@@ -221,9 +221,9 @@ export function TerminalEditor() {
               </thead>
               <tbody>
                 {example.rows.map((row, ri) => (
-                  <tr key={ri} className="border-b border-primary/5 last:border-0">
+                  <tr key={ri} className="border-b border-primary/10 last:border-0">
                     {row.map((cell, ci) => (
-                      <td key={ci} className="py-1 pr-4 text-gray-300">
+                      <td key={ci} className="py-1 pr-4 text-foreground/80">
                         {cell}
                       </td>
                     ))}

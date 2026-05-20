@@ -1,14 +1,30 @@
 "use client"
 import React, { useRef, useEffect } from 'react';
+import { twMerge } from "tailwind-merge";
 import * as THREE from 'three';
 import spline from "@/_utils/spline";
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { useTheme } from "@/_context/themeProvider";
 
-const ThreeScene: React.FC = () => {
+const THEME_BG = { dark: 0x07070d, light: 0xe8e8e8 } as const;
+const THEME_FOG = { dark: 0x07070d, light: 0xe8e8e8 } as const;
+const THEME_TUBE = { dark: 0x0099ff, light: 0x0055cc } as const;
+const THEME_BLOOM_STRENGTH = { dark: 3.5, light: 1.5 } as const;
+
+interface ThreeSceneProps {
+  className?: string;
+}
+
+const ThreeScene: React.FC<ThreeSceneProps> = ({ className }) => {
     const containerRef = useRef<HTMLDivElement>(null);
+    const { theme } = useTheme();
+    const sceneRef = useRef<THREE.Scene | null>(null);
+    const fogRef = useRef<THREE.FogExp2 | null>(null);
+    const tubeMatRef = useRef<THREE.LineBasicMaterial | null>(null);
+    const bloomRef = useRef<UnrealBloomPass | null>(null);
     useEffect(() => {
 
         if (typeof window !== 'undefined') {
@@ -16,6 +32,8 @@ const ThreeScene: React.FC = () => {
             const h = window.innerHeight;
             const scene = new THREE.Scene();
             scene.fog = new THREE.FogExp2(0x000000, 0.7);
+            sceneRef.current = scene;
+            fogRef.current = scene.fog;
             const camera = new THREE.PerspectiveCamera(75, w / h, 0.1, 1000);
             camera.position.z = 5;
             const renderer = new THREE.WebGLRenderer();
@@ -34,6 +52,7 @@ const ThreeScene: React.FC = () => {
             bloomPass.threshold = 0.002;
             bloomPass.strength = 3.5;
             bloomPass.radius = 0;
+            bloomRef.current = bloomPass;
             const composer = new EffectComposer(renderer);
             composer.addPass(renderScene);
             composer.addPass(bloomPass);
@@ -51,6 +70,7 @@ const ThreeScene: React.FC = () => {
             // create edges geometry from the spline
             const edges = new THREE.EdgesGeometry(tubeGeo, 0.2);
             const lineMat = new THREE.LineBasicMaterial({ color: 0x0099ff });
+            tubeMatRef.current = lineMat;
             const tubeLines = new THREE.LineSegments(edges, lineMat);
             scene.add(tubeLines);
 
@@ -110,6 +130,18 @@ const ThreeScene: React.FC = () => {
             window.addEventListener('resize', handleWindowResize, false);
         }
     }, []);
-    return <div className="fixed left-0 top-0 inset-0 -z-10 w-full h-full" ref={containerRef} />;
+    useEffect(() => {
+        if (!sceneRef.current || !fogRef.current) return;
+        const bg = THEME_BG[theme];
+        sceneRef.current.background = new THREE.Color(bg);
+        fogRef.current.color.setHex(bg);
+        if (tubeMatRef.current) {
+            tubeMatRef.current.color.setHex(THEME_TUBE[theme]);
+        }
+        if (bloomRef.current) {
+            bloomRef.current.strength = THEME_BLOOM_STRENGTH[theme];
+        }
+    }, [theme]);
+    return <div className={twMerge("fixed left-0 top-0 inset-0 w-full h-full -z-10", className)} ref={containerRef} />;
 };
 export default ThreeScene;

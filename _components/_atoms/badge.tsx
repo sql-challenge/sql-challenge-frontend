@@ -13,13 +13,13 @@ const Badge = forwardRef<HTMLDivElement, BadgeProps>(({ className, variant = "de
     <div
       ref={ref}
       className={twMerge(
-        "inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-colors",
-        variant === "default" && "bg-secondary text-secondary-foreground",
-        variant === "primary" && "bg-primary text-primary-foreground",
-        variant === "success" && "bg-success text-success-foreground",
-        variant === "warning" && "bg-warning text-warning-foreground",
-        variant === "destructive" && "bg-destructive text-destructive-foreground",
-        variant === "outline" && "border border-border bg-transparent",
+        "inline-flex items-center px-2.5 py-1 text-xs font-semibold transition-colors border-2",
+        variant === "default" && "bg-secondary text-secondary-foreground border-secondary",
+        variant === "primary" && "bg-primary text-primary-foreground border-primary",
+        variant === "success" && "bg-success text-success-foreground border-success",
+        variant === "warning" && "bg-warning text-warning-foreground border-warning",
+        variant === "destructive" && "bg-destructive text-destructive-foreground border-destructive",
+        variant === "outline" && "border-border bg-transparent",
         className,
       )}
       {...props}

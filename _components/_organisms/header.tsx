@@ -20,8 +20,8 @@ export function Header() {
 
   return (
     <div className="sticky top-2 z-50 w-full px-4">
-      <header className="rounded-xl border-b border-border bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+      <header className="border-2 border-border bg-background">
+        <div className="container mx-auto flex h-14 items-center justify-between px-4">
           <div className="flex items-center gap-6">
             <Logo size="md" />
             <nav className="hidden md:flex items-center gap-1">
@@ -31,10 +31,10 @@ export function Header() {
                   <Link
                     key={href}
                     href={href}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium transition-colors border-2 ${
                       active
-                        ? "bg-primary/10 text-primary"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "border-transparent text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     <Icon className="w-4 h-4" />
@@ -53,7 +53,7 @@ export function Header() {
         </div>
 
         {/* Mobile nav */}
-        <div className="md:hidden flex border-t border-border">
+        <div className="md:hidden flex border-t-2 border-border">
           {NAV_LINKS.map(({ href, label, Icon }) => {
             const active = pathname === href || pathname.startsWith(href + "/")
             return (

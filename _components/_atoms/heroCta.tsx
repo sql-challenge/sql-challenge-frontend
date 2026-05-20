@@ -11,7 +11,7 @@ export function HeroCta() {
   return (
     <Button
       size="lg"
-      className="cursor-pointer shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-shadow"
+      className="cursor-pointer"
       onClick={() => router.push(user ? "/mystery" : "/auth/login")}
     >
       Resolver Primeiro Mistério
