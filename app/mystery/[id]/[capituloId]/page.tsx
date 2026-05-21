@@ -10,7 +10,7 @@ import { HintsPanel } from "@/_components/_organisms/hintsPanel";
 import { LoadingScreen } from "@/_components/_organisms/loadingScreen";
 import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import { useSqlDatabase } from "@/_context/sqlContext";
-import { type CapituloView, type ObjetivoComConsulta, type QueryResult } from "@/_lib/types/capitulo";
+import { type CapituloView, type ObjetivoComConsulta, type QueryResult, type VisaoTabela } from "@/_lib/types/capitulo";
 import { api } from "@/_lib/api";
 import { useChapterSession, formatSeconds } from "@/_hooks/useChapterSession";
 import { useUser } from "@/_context/userContext";
@@ -181,11 +181,33 @@ export default function CapituloEditorPage() {
     loadCapituloData();
   }, [capituloId, desafioId, setSchema]);
 
+  const extractViewFromQuery = (query: string): string | null => {
+    const match = query.match(/FROM\s+(\w+)/i);
+    return match ? match[1] : null;
+  };
+
   const checkObjetivoCondition = (
     userResults: QueryResult,
-    objetivo: ObjetivoComConsulta
+    objetivo: ObjetivoComConsulta,
+    visaoTabelas: VisaoTabela[]
   ): boolean => {
     const expected = objetivo.consulta;
+    if (!expected) {
+      // B2 — Tenta casar colunas com alguma view do capítulo
+      const userCols = new Set(userResults.columns.map(c => c.toLowerCase()));
+      const matchedView = visaoTabelas.find(view => {
+        const viewCols = new Set(view.colunas.map(c => c.nome.toLowerCase()));
+        return userCols.size === viewCols.size && [...userCols].every(c => viewCols.has(c));
+      });
+      if (matchedView) {
+        setObjetivoFeedback(null);
+        return true;
+      }
+      setObjetivoFeedback("Nenhuma view do capítulo possui essas colunas. Veja as tabelas disponíveis no Explorador.");
+      return false;
+    }
+
+    const expectedView = extractViewFromQuery(expected.query);
 
     // 1. Verifica colunas (sem considerar ordem)
     const userCols = new Set(userResults.columns.map((c: string) => c.toLowerCase()));
@@ -194,13 +216,21 @@ export default function CapituloEditorPage() {
       userCols.size !== expectedCols.size ||
       [...expectedCols].some((col) => !userCols.has(col))
     ) {
-      setObjetivoFeedback("As colunas retornadas não correspondem às esperadas.");
+      setObjetivoFeedback(
+        expectedView
+          ? `As colunas retornadas não correspondem às esperadas. Tente consultar a view "${expectedView}".`
+          : "As colunas retornadas não correspondem às esperadas."
+      );
       return false;
     }
 
     // 2. Garante que o usuário retornou pelo menos 1 linha
     if (userResults.rows.length === 0) {
-      setObjetivoFeedback("A query não retornou nenhum resultado.");
+      setObjetivoFeedback(
+        expectedView
+          ? `Nenhum resultado encontrado. Tente: SELECT * FROM ${expectedView};`
+          : "A query não retornou nenhum resultado."
+      );
       return false;
     }
 
@@ -282,7 +312,7 @@ export default function CapituloEditorPage() {
       totalQueriesRef.current = totalQueries + 1;
 
       const objetivo = capituloView.objetivos[currentObjetivoIndex];
-      const correct = checkObjetivoCondition(queryResults, objetivo);
+      const correct = checkObjetivoCondition(queryResults, objetivo, capituloView.schema.visaoTabelas);
 
       if (correct) {
         const newCompleted = [...completedObjetivos, objetivo.id];

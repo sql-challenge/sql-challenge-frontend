@@ -38,7 +38,7 @@ export interface Objetivo {
 }
 
 export interface ObjetivoComConsulta extends Objetivo {
-  consulta: Consulta;
+  consulta: Consulta | null;
 }
 
 export interface Dica {
@@ -104,6 +104,7 @@ export interface CapituloView {
   objetivos: ObjetivoComConsulta[];
   dicas: Dica[];
   schema: DatabaseSchema;
+  visoes: string[];
 }
 
 // --- EXAMPLE MOCK ---
