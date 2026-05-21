@@ -7,11 +7,6 @@ import { useUser } from "@/_context/userContext";
 import { api } from "@/_lib/api";
 import { Friend, User } from "@/_lib/types/user";
 
-// ── XP por raridade de conquista ───────────────────────────
-const ACHIEVEMENT_XP: Record<string, number> = {
-  comum: 50, raro: 150, épico: 300, lendário: 500,
-};
-
 // ── Spider Chart SVG customizado ──────────────────────────
 const AXES = [
   { key: "value",  icon: "⌨️", label: "Queries"    },

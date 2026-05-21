@@ -175,7 +175,7 @@ export default function HomePage() {
               Veja Como Funciona na Pr&aacute;tica
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-balance">
-              O editor que voc&ecirc; vai usar. Sem rodeios &mdash; SQL puro com resultados reais.
+              SQLite &mdash; o editor roda 100% no seu navegador. Escreva SQL de verdade com resultados instant&acirc;neos.
             </p>
           </div>
           <TerminalEditor />

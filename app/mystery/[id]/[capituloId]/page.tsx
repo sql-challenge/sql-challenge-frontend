@@ -15,6 +15,8 @@ import { api } from "@/_lib/api";
 import { useChapterSession, formatSeconds } from "@/_hooks/useChapterSession";
 import { useUser } from "@/_context/userContext";
 import { NARRATIVAS } from "@/_lib/narrativas";
+import { useAchievements } from "@/_hooks/useAchievements";
+import { AchievementPopup } from "@/_components/_organisms/achievementPopup";
 import { CheckCircle, PlayCircle, Lock } from "feather-icons-react";
 
 // Faixas de tempo por capítulo (em segundos)
@@ -77,6 +79,8 @@ export default function CapituloEditorPage() {
     { type: "next"; nextIndex: number } | { type: "victory"; finalXp: number } | null
   >(null);
   const [totalQueries, setTotalQueries] = useState(0);
+  const [showAchievementPopup, setShowAchievementPopup] = useState(false);
+  const { newlyUnlocked, checkAchievements, clearNewly } = useAchievements();
 
   // Delta refs — rastreiam quanto já foi enviado ao backend para evitar dupla contagem
   const sentQueriesRef = useRef(0);
@@ -209,17 +213,29 @@ export default function CapituloEditorPage() {
 
     const expectedView = extractViewFromQuery(expected.query);
 
-    // 1. Verifica colunas (sem considerar ordem)
-    const userCols = new Set(userResults.columns.map((c: string) => c.toLowerCase()));
-    const expectedCols = new Set(expected.colunas.map((c) => c.toLowerCase()));
-    if (
-      userCols.size !== expectedCols.size ||
-      [...expectedCols].some((col) => !userCols.has(col))
-    ) {
+    // 1. Verifica colunas
+    // Nível 0-1: subset — aceita colunas extras (SELECT * é ok)
+    // Nível ≥2: exact — rejeita colunas extras ou faltando
+    const userColsLower = userResults.columns.map((c: string) => c.toLowerCase());
+    const userColSet = new Set(userColsLower);
+    const expectedColSet = new Set(expected.colunas.map((c) => c.toLowerCase()));
+
+    const missing = expected.colunas.filter((col) => !userColSet.has(col.toLowerCase()));
+    if (missing.length > 0) {
       setObjetivoFeedback(
         expectedView
-          ? `As colunas retornadas não correspondem às esperadas. Tente consultar a view "${expectedView}".`
-          : "As colunas retornadas não correspondem às esperadas."
+          ? `Colunas necessárias: ${expected.colunas.join(', ')}. Faltando: ${missing.join(', ')}. Tente consultar a view "${expectedView}".`
+          : `Colunas necessárias: ${expected.colunas.join(', ')}. Faltando: ${missing.join(', ')}.`
+      );
+      return false;
+    }
+
+    if (objetivo.nivel >= 2 && userColSet.size !== expectedColSet.size) {
+      const extra = userColsLower.filter((c) => !expectedColSet.has(c));
+      setObjetivoFeedback(
+        expectedView
+          ? `Colunas extras detectadas: ${[...new Set(extra)].join(', ')}. Retorne apenas: ${expected.colunas.join(', ')}. Tente consultar a view "${expectedView}".`
+          : `Colunas extras detectadas: ${[...new Set(extra)].join(', ')}. Retorne apenas: ${expected.colunas.join(', ')}.`
       );
       return false;
     }
@@ -383,7 +399,10 @@ export default function CapituloEditorPage() {
       if (user?.uid) {
         try {
           const freshUser = await api.get<typeof user>(`/api/user/uid/${user.uid}`);
-          if (freshUser?.uid) updateUserLocal(freshUser);
+          if (freshUser?.uid) {
+            updateUserLocal(freshUser);
+            await checkAchievements(freshUser);
+          }
         } catch {}
       }
       setIsVictorious(true);
@@ -432,7 +451,12 @@ export default function CapituloEditorPage() {
                 Próximo Capítulo
               </button>
               <button
-                onClick={() => setIsVictorious(false)}
+                onClick={() => {
+                  setIsVictorious(false);
+                  if (newlyUnlocked.length > 0) {
+                    setShowAchievementPopup(true);
+                  }
+                }}
                 className="px-4 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
               >
                 Revisar
@@ -675,7 +699,10 @@ export default function CapituloEditorPage() {
             style={{ height: "42%" }}
           >
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <h2 className="text-sm font-semibold text-foreground">Editor SQL</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold text-foreground">Editor SQL</h2>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-border bg-muted text-muted-foreground">SQLite</span>
+              </div>
               <button
                 onClick={handleRunQuery}
                 disabled={isRunning || !isReady || isVictorious || !!pendingAdvance}
@@ -727,6 +754,15 @@ export default function CapituloEditorPage() {
         </div>
       </div>
       <VictoryBanner />
+      {showAchievementPopup && (
+        <AchievementPopup
+          achievements={newlyUnlocked}
+          onClose={() => {
+            setShowAchievementPopup(false);
+            clearNewly();
+          }}
+        />
+      )}
     </div>
     </ProtectedRoute>
   );

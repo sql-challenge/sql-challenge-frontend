@@ -5,6 +5,7 @@ import { StatCard } from "@/_components/_molecules/statCard"
 import { ProgressBar } from "@/_components/_molecules/progressBar"
 import { ProtectedRoute } from "@/_components/_organisms/protectedRoute"
 import { useUser } from "@/_context/userContext"
+import { getQuickAchievements } from "@/_lib/achievements"
 import Link from "next/link"
 
 // ── Sistema de níveis ─────────────────────────────────────
@@ -27,25 +28,6 @@ function getLevel(xp: number) {
   return { current: current.name, next: next?.name ?? "Máximo", nextMin: next?.min ?? current.min }
 }
 
-// ── Conquistas rápidas (mesmo critério da página de conquistas) ──
-function buildQuickAchievements(user: ReturnType<typeof useUser>["user"]) {
-  const progress = user?.challenge_progress ?? []
-  const totalCaps    = progress.reduce((a, p) => a + (p.capFinish ?? 0), 0)
-  const totalXP      = user?.xp ?? 0
-  const totalDesafios = progress.length
-  const totalQueries = progress.reduce((a, p) => a + (p.totalQueries ?? 0), 0)
-  const awarded: string[] = user?.awardedAchievements ?? []
-
-  return [
-    { id: "first_blood", icon: "🩸", title: "Primeira Gota de Sangue", unlocked: totalCaps >= 1 },
-    { id: "xp_500",      icon: "⚡", title: "Faísca de Gênio",         unlocked: totalXP >= 500 },
-    { id: "xp_2000",     icon: "🔥", title: "Detetive em Ascensão",    unlocked: totalXP >= 2000 },
-    { id: "xp_5000",     icon: "💎", title: "Elite da Investigação",   unlocked: totalXP >= 5000 },
-    { id: "multi_case",  icon: "🗂️", title: "Detetive Polivalente",    unlocked: totalDesafios >= 3 },
-    { id: "queries_10",  icon: "⌨️", title: "Digitador Curioso",       unlocked: totalQueries >= 10 },
-  ].map(a => ({ ...a, description: "", xpReward: 0 }))
-}
-
 export default function DashboardPage() {
   const { user } = useUser()
 
@@ -54,7 +36,7 @@ export default function DashboardPage() {
   const level    = getLevel(xp)
   const totalCaps = progress.reduce((a, p) => a + (p.capFinish ?? 0), 0)
   const totalMins = Math.floor(progress.reduce((a, p) => a + (p.totalSeconds ?? 0), 0) / 60)
-  const quickAchievements = buildQuickAchievements(user)
+  const quickAchievements = getQuickAchievements(user)
   const unlockedCount = quickAchievements.filter(a => a.unlocked).length
 
   // Atividade recente a partir do progresso real

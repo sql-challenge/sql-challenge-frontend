@@ -18,8 +18,8 @@ const vt323 = VT323({
 });
 
 export const metadata: Metadata = {
-  title: "SQL CHALLENGER",
-  description: "SQL CHALLENGER - Mistérios e desafios SQL",
+  title: "SQL CHALLENGE",
+  description: "SQL CHALLENGE - Mistérios e desafios SQL",
 };
 
 export default function RootLayout({
