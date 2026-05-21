@@ -344,9 +344,13 @@ export default function CapituloEditorPage() {
           const baseXp = Math.max(0, capituloView.capitulo.xpRecompensa - totalPenalty);
           const tier = getTimeTier(totalSeconds, capituloView.capitulo.numero);
           setEarnedTier(tier);
-          const finalXp = Math.round(baseXp * tier.multiplier);
+          const progress = user?.challenge_progress?.find(p => p.nameChallenge === desafioId);
+          const alreadyCompleted = (progress?.capFinish ?? 0) >= capituloView.capitulo.numero;
+          const finalXp = alreadyCompleted ? 0 : Math.round(baseXp * tier.multiplier);
           setScore(finalXp);
-          setFeedback("Você desvendou todos os mistérios deste capítulo!");
+          setFeedback(alreadyCompleted
+            ? "Você já havia resolvido este capítulo!"
+            : "Você desvendou todos os mistérios deste capítulo!");
           setPendingAdvance({ type: "victory", finalXp });
           saveProgress(
             { currentObjetivoIndex, completedObjetivos: newCompleted, hintsRevealed },
@@ -400,8 +404,18 @@ export default function CapituloEditorPage() {
         try {
           const freshUser = await api.get<typeof user>(`/api/user/uid/${user.uid}`);
           if (freshUser?.uid) {
-            updateUserLocal(freshUser);
-            await checkAchievements(freshUser);
+            const granted = await checkAchievements(freshUser);
+            if (granted.length > 0) {
+              updateUserLocal({
+                ...freshUser,
+                awardedAchievements: [
+                  ...(freshUser.awardedAchievements ?? []),
+                  ...granted.map(a => a.id),
+                ],
+              });
+            } else {
+              updateUserLocal(freshUser);
+            }
           }
         } catch {}
       }
@@ -430,16 +444,18 @@ export default function CapituloEditorPage() {
               </div>
             )}
 
-            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-              <p className="text-sm text-muted-foreground mb-1">XP Ganho</p>
-              <p className="text-4xl font-bold text-green-500">+{score} XP</p>
-              <p className="text-xs text-muted-foreground mt-1">⏱ Tempo: {formatSeconds(totalSeconds)}</p>
-              {hintsRevealed.length > 0 && (
-                <p className="text-xs text-yellow-500 mt-1">
-                  {hintsRevealed.length} dica(s) usada(s)
-                </p>
-              )}
-            </div>
+            {score > 0 && (
+              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+                <p className="text-sm text-muted-foreground mb-1">XP Ganho</p>
+                <p className="text-4xl font-bold text-green-500">+{score} XP</p>
+                <p className="text-xs text-muted-foreground mt-1">⏱ Tempo: {formatSeconds(totalSeconds)}</p>
+                {hintsRevealed.length > 0 && (
+                  <p className="text-xs text-yellow-500 mt-1">
+                    {hintsRevealed.length} dica(s) usada(s)
+                  </p>
+                )}
+              </div>
+            )}
 
             <div className="flex gap-2 mt-6">
               <button

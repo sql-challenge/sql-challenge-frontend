@@ -114,7 +114,7 @@ export function FriendNotificationBell() {
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground mb-2.5">
-                    Quer ser seu amigo no <span className="text-primary font-semibold">SQL Challenger</span>.
+                    Quer ser seu amigo no <span className="text-primary font-semibold">SQL CHALLENGE</span>.
                   </p>
                   <div className="flex gap-2">
                     <button

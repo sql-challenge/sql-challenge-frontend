@@ -250,7 +250,7 @@ export default function HomePage() {
             <div className="grid sm:grid-cols-3 gap-8">
               <div>
                 <h3 className="text-lg font-bold font-display tracking-tight mb-2">
-                  SQL Challenger
+                  SQL CHALLENGE
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Aprenda SQL resolvendo mistérios. Uma plataforma gamificada para desenvolvedores que querem aprender na prática.
@@ -274,7 +274,7 @@ export default function HomePage() {
             </div> */}
             </div>
             <div className="border-t border-border mt-8 pt-6 text-center text-xs text-muted-foreground">
-              &copy; {new Date().getFullYear()} SQL Challenger. Feito para detetives de dados.
+              &copy; {new Date().getFullYear()} SQL CHALLENGE. Feito para detetives de dados.
             </div>
           </div>
         </footer>

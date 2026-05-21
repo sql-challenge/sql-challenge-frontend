@@ -9,12 +9,24 @@ interface AchievementPopupProps {
   onNavigateNext?: () => void;
 }
 
+const popInKeyframes = `
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+`;
+
 export function AchievementPopup({ achievements, onClose, onNavigateNext }: AchievementPopupProps) {
   if (achievements.length === 0) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-card border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-200">
+    <>
+      <style>{popInKeyframes}</style>
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div
+        className="bg-card border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl"
+        style={{ animation: "pop-in 0.2s ease-out 1 forwards" }}
+      >
         <div className="flex items-center justify-between mb-4">
           <div>
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-0.5">
@@ -74,5 +86,6 @@ export function AchievementPopup({ achievements, onClose, onNavigateNext }: Achi
         </button>
       </div>
     </div>
+    </>
   );
 }

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
-const BRAND = "SQL CHALLENGER";
+const BRAND = "SQL CHALLENGE";
 
 function getPageTitle(pathname: string): string {
   if (pathname === "/") return BRAND;

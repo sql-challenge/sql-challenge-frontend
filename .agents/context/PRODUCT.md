@@ -1,7 +1,7 @@
-# SQL Challenger
+# SQL CHALLENGE
 
 ## Product Purpose
-SQL Challenger é uma plataforma gamificada de aprendizado de SQL com tema detetivesco. Usuários resolvem mistérios escrevendo queries SQL reais em um editor interativo, com progressão por capítulos, sistema de XP, conquistas, ranking, e dicas com penalidade.
+SQL CHALLENGE é uma plataforma gamificada de aprendizado de SQL com tema detetivesco. Usuários resolvem mistérios escrevendo queries SQL reais em um editor interativo, com progressão por capítulos, sistema de XP, conquistas, ranking, e dicas com penalidade.
 
 ## Users
 - **Público-alvo**: Desenvolvedores iniciantes e intermediários (18-35 anos) que querem aprender SQL de forma prática e envolvente

@@ -1,4 +1,4 @@
-# SQL Challenger — Design Tokens
+# SQL CHALLENGE — Design Tokens
 
 ## Colors
 
