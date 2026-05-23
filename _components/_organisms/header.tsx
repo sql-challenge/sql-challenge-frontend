@@ -3,7 +3,7 @@
 import { Logo } from "@/_components/_molecules/logo"
 import { ThemeToggler } from "@/_components/_atoms/themeToggler"
 import { UserMenu } from "@/_components/_molecules/userMenu"
-import { FriendNotificationBell } from "@/_components/_molecules/friendNotificationBell"
+// import { FriendNotificationBell } from "@/_components/_molecules/friendNotificationBell"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Search, Star, Award, User } from "feather-icons-react"
@@ -46,7 +46,7 @@ export function Header() {
           </div>
 
           <div className="flex items-center gap-2">
-            <FriendNotificationBell />
+            {/* <FriendNotificationBell /> */}
             <ThemeToggler />
             <UserMenu />
           </div>

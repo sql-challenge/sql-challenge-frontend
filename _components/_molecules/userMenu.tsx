@@ -1,14 +1,15 @@
 "use client"
 
 import { Avatar } from "@/_components/_atoms/avatar"
-import { useUser } from "@/_context/userContext"
+import { useAuth, useUser } from "@/_context/userContext"
 import { LogIn, LogOut, Settings, User as UserIcon } from "feather-icons-react"
 import Link from "next/link"
 import { useEffect, useMemo } from "react"
 import { twMerge } from "tailwind-merge"
 
 export function UserMenu() {
-    const { user, signOut } = useUser()
+    const { user } = useUser()
+    const { signOut } = useAuth()
 
     const initials = useMemo(() => {
         if (!user) return "??"

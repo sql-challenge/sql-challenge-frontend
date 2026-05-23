@@ -118,7 +118,7 @@ export function TerminalEditor() {
           <span className="text-xs text-muted-foreground ml-3 tracking-wider uppercase">
             <span className="inline-flex items-center gap-1.5">
               <Terminal size={12} className="text-primary" />
-              Terminal de Investiga&ccedil;&atilde;o
+              Terminal de Investigação
             </span>
           </span>
         </div>

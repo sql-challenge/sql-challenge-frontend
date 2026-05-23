@@ -70,7 +70,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-lg font-bold mb-2 font-display tracking-wide">Aprendizado atrav&eacute;s de Hist&oacute;rias</h3>
               <p className="text-muted-foreground leading-relaxed text-sm flex-1">
-                Resolva mist&eacute;rios de SQL por meio de hist&oacute;rias de detetive envolventes que tornam o aprendizado divertido e memor&aacute;vel.
+                Resolva mist&eacute;rios de SQL por meio de hist&oacute;rias de detetive envolventes que tornam o aprendizado divertido e memorável.
               </p>
             </div>
           </Reveal>
@@ -96,7 +96,7 @@ export default function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold mb-2 font-display tracking-wide">Pr&aacute;tica M&atilde;o na Massa</h3>
+              <h3 className="text-lg font-bold mb-2 font-display tracking-wide">Prática Mão na Massa</h3>
               <p className="text-muted-foreground leading-relaxed text-sm flex-1">
                 Escreva consultas SQL reais em nosso editor interativo com feedback instant&acirc;neo e dicas.
               </p>
@@ -147,7 +147,7 @@ export default function HomePage() {
                   <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
                 </svg>
               ),
-              title: "Resolva &amp; Evolua",
+              title: "Resolva & Evolua",
               description: "Consulta certa? Ganhe XP, destrave conquistas e suba no ranking. Cada caso resolvido te prepara para o pr&oacute;ximo n&iacute;vel.",
             },
           ].map((item, index) => (
@@ -172,10 +172,10 @@ export default function HomePage() {
         <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
           <div className="text-center space-y-4 mb-10">
             <h2 className="text-3xl md:text-4xl font-bold font-display tracking-wide">
-              Veja Como Funciona na Pr&aacute;tica
+              Veja Como Funciona na Prática
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-balance">
-              SQLite &mdash; o editor roda 100% no seu navegador. Escreva SQL de verdade com resultados instant&acirc;neos.
+              SQLite - o editor roda 100% no seu navegador. Escreva SQL de verdade com resultados instantâneos.
             </p>
           </div>
           <TerminalEditor />
@@ -186,18 +186,18 @@ export default function HomePage() {
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
         <div className="text-center space-y-4 mb-12">
           <h2 className="text-3xl md:text-4xl font-bold font-display tracking-wide">
-            O Que Voc&ecirc; Vai Aprender
+            O Que Você Vai Aprender
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-balance">
-            Dos fundamentos ao avan&ccedil;ado, sempre investigando.
+            Dos fundamentos ao avançado, sempre investigando.
           </p>
         </div>
         <div className="grid sm:grid-cols-2 gap-4">
           {[
             { name: "SELECT, WHERE, ORDER BY", level: "Iniciante", levelVariant: "success" },
-            { name: "JOINs (INNER, LEFT, RIGHT)", level: "Intermedi&aacute;rio", levelVariant: "warning" },
-            { name: "GROUP BY, HAVING, Agrega&ccedil;&otilde;es", level: "Intermedi&aacute;rio", levelVariant: "warning" },
-            { name: "Subqueries e CTEs", level: "Avan&ccedil;ado", levelVariant: "destructive" },
+            { name: "JOINs (INNER, LEFT, RIGHT)", level: "Intermediário", levelVariant: "warning" },
+            { name: "GROUP BY, HAVING, Agregações", level: "Intermediário", levelVariant: "warning" },
+            { name: "Subqueries e CTEs", level: "Avançado", levelVariant: "destructive" },
           ].map((topic, index) => (
             <Reveal key={topic.name} direction={index % 2 === 0 ? "left" : "right"} delay={index * 100}>
               <div className="border-2 border-border bg-card p-4 shadow-pixel-sm hover:border-primary/60 transition-colors flex items-center gap-4">
@@ -235,7 +235,7 @@ export default function HomePage() {
               <HeroCta />
               <Link href="/auth/login">
                 <Button size="lg" variant="outline" className="cursor-pointer">
-                  J&aacute; tenho conta
+                  Já tenho conta
                 </Button>
               </Link>
             </div>

@@ -37,6 +37,7 @@ export function useChapterSession(
 
   const sessionStartRef = useRef<number>(0);
   const loadRequestIdRef = useRef(0);
+  const dirtyRef = useRef(false);
   const stateRef = useRef<SessionState>({
     currentObjetivoIndex: 0,
     completedObjetivos: [],
@@ -46,6 +47,7 @@ export function useChapterSession(
   // Rastreia tempo pausado para excluir do elapsed enviado ao servidor
   const pauseStartRef = useRef<number | null>(null);
   const pendingPausedMsRef = useRef(0);
+  const pagehideFiredRef = useRef(false);
 
   useEffect(() => {
     if (paused) {
@@ -58,8 +60,18 @@ export function useChapterSession(
 
   const saveProgress = useCallback(
     (state: SessionState, isClosing = false) => {
-      stateRef.current = state;
       if (!uid) return;
+
+      // Skip save if nothing changed (unless closing)
+      const prev = stateRef.current;
+      const changed = (
+        prev.currentObjetivoIndex !== state.currentObjetivoIndex ||
+        prev.completedObjetivos.length !== state.completedObjetivos.length ||
+        prev.hintsRevealed.length !== state.hintsRevealed.length
+      );
+      if (!changed && !isClosing) return;
+
+      stateRef.current = state;
 
       const now = Date.now();
       const raw = now - sessionStartRef.current;
@@ -137,14 +149,18 @@ export function useChapterSession(
   useEffect(() => {
     if (!uid || !sessionLoaded) return;
 
-    const handleUnload = () => saveProgress(stateRef.current, true);
-    window.addEventListener("beforeunload", handleUnload);
-    window.addEventListener("pagehide", handleUnload);
+    pagehideFiredRef.current = false;
+    const handlePageHide = () => {
+      pagehideFiredRef.current = true;
+      saveProgress(stateRef.current, true);
+    };
+    window.addEventListener("pagehide", handlePageHide);
 
     return () => {
-      window.removeEventListener("beforeunload", handleUnload);
-      window.removeEventListener("pagehide", handleUnload);
-      saveProgress(stateRef.current, true);
+      window.removeEventListener("pagehide", handlePageHide);
+      if (!pagehideFiredRef.current) {
+        saveProgress(stateRef.current, true);
+      }
     };
   }, [uid, sessionLoaded, saveProgress]);
 

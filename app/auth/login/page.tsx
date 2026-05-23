@@ -9,7 +9,7 @@ import { Logo } from "@/_components/_molecules/logo"
 import { AuthCard } from "@/_components/_organisms/auth-card"
 import { FormField } from "@/_components/_molecules/form-field"
 import { Button } from "@/_components/_atoms/button"
-import { useUser } from "@/_context/userContext"
+import { useAuth } from "@/_context/userContext"
 import { loginSchema } from "@/_lib/forms"
 
 export default function LoginPage() {
@@ -18,7 +18,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const { signIn, signInWithGoogle, signInWithGithub } = useUser()
+  const { signIn, signInWithGoogle, signInWithGithub } = useAuth()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {

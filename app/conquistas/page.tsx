@@ -46,7 +46,9 @@ export default function ConquistasPage() {
           await api.put("/api/user/", { uid: fresh.uid, xp: localXpSnapshot }).catch((err) => console.error("XP sync error:", err));
           syncedUser = { ...fresh, xp: localXpSnapshot };
         }
-        updateUserLocal(syncedUser);
+        if (syncedUser.xp !== user?.xp || syncedUser.username !== user?.username) {
+          updateUserLocal(syncedUser);
+        }
 
         await checkAchievements(syncedUser);
       })

@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
-import { useUser } from "@/_context/userContext"
+import { useAuth } from "@/_context/userContext"
 import { useRouter } from "next/navigation"
 import { Logo } from "@/_components/_molecules/logo"
 import { AuthCard } from "@/_components/_organisms/auth-card"
@@ -20,7 +20,7 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
 
-  const { signUp, signInWithGoogle, signInWithGithub } = useUser()
+  const { signUp, signInWithGoogle, signInWithGithub } = useAuth()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -1,12 +1,12 @@
 "use client"
 import { ApiError } from "../errors"
 
-
 type RequestOptions = {
     method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
     body?: unknown
     headers?: Record<string, string>
     token?: string
+    signal?: AbortSignal
 }
 
 type ApiResponse<T> = {
@@ -16,13 +16,13 @@ type ApiResponse<T> = {
     message?: string
 }
 
-/**
- * API Client for making HTTP requests with error handling
- */
+const DEBUG = typeof window !== "undefined" && process.env["NEXT_PUBLIC_API_DEBUG"] === "true"
+
 class ApiClient {
     private baseUrl: string
     private token: string | null = null
     private onAuthExpiredCb: (() => void) | null = null
+    private inFlight: Map<string, Promise<unknown>> = new Map()
 
     constructor(baseUrl = "/api") {
         this.baseUrl = baseUrl
@@ -40,11 +40,22 @@ class ApiClient {
         this.onAuthExpiredCb = cb
     }
 
-    /**
-     * Make an API request
-     */
+    private dedupKey(method: string, path: string, token?: string): string {
+        return `${method}:${path}:${token ?? this.token ?? ""}`
+    }
+
     async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-        const { method = "GET", body, headers = {}, token } = options
+        const { method = "GET", body, headers = {}, token, signal } = options
+
+        // ── Deduplicate concurrent GET requests ────────────────
+        if (method === "GET") {
+            const key = this.dedupKey(method, path, token)
+            const existing = this.inFlight.get(key)
+            if (existing) {
+                if (DEBUG) console.debug(`[API] dedup GET ${path}`)
+                return existing as Promise<T>
+            }
+        }
 
         const config: RequestInit = {
             method,
@@ -52,9 +63,9 @@ class ApiClient {
                 "Content-Type": "application/json",
                 ...headers,
             },
+            signal,
         }
 
-        // Add authorization header — prefer explicit token, fall back to instance token
         const bearerToken = token ?? this.token
         if (bearerToken) {
             config.headers = {
@@ -63,60 +74,80 @@ class ApiClient {
             }
         }
 
-        // Add body for non-GET requests
         if (body && method !== "GET") {
             config.body = JSON.stringify(body)
         }
 
-        try {
-            const response = await fetch(`${this.baseUrl}${path}`, config)
-
-            // ── 401 interceptor: session expired ───────────────
-            if (response.status === 401) {
-                this.onAuthExpiredCb?.()
-            }
-
-            let data: ApiResponse<T>
+        const doFetch = async (): Promise<T> => {
+            if (DEBUG) console.debug(`[API] ${method} ${path}`)
 
             try {
-                data = await response.json()
-            } catch {
-                if (!response.ok) {
-                    throw new ApiError("Resposta inválida do servidor.", response.status)
+                const response = await fetch(`${this.baseUrl}${path}`, config)
+
+                if (response.status === 401) {
+                    this.onAuthExpiredCb?.()
                 }
-                data = {} as ApiResponse<T>
-            }
 
-            if (data.error) {
-                const message = response.status >= 500
-                    ? "Erro interno do servidor. Tente novamente."
-                    : data.error
-                throw new ApiError(message, response.status)
-            }
+                let data: ApiResponse<T>
 
-            if (!response.ok) {
-                const message = response.status >= 500
-                    ? "Erro interno do servidor. Tente novamente."
-                    : (data.error || data.message) || "Requisição falhou"
-                throw new ApiError(message, response.status, data.fieldErrors)
-            }
+                try {
+                    data = await response.json()
+                } catch {
+                    if (!response.ok) {
+                        throw new ApiError("Resposta inválida do servidor.", response.status)
+                    }
+                    data = {} as ApiResponse<T>
+                }
 
-            return data.data as T
-        } catch (error) {
-            if (error instanceof ApiError) {
-                throw error
-            }
+                if (data.error) {
+                    const message = response.status >= 500
+                        ? "Erro interno do servidor. Tente novamente."
+                        : data.error
+                    throw new ApiError(message, response.status)
+                }
 
-            if (error instanceof TypeError) {
-                throw new ApiError("Erro de conexão com o servidor. Verifique sua internet.")
-            }
+                if (!response.ok) {
+                    const message = response.status >= 500
+                        ? "Erro interno do servidor. Tente novamente."
+                        : (data.error || data.message) || "Requisição falhou"
+                    throw new ApiError(message, response.status, data.fieldErrors)
+                }
 
-            throw new ApiError("Um erro inesperado aconteceu. Tente novamente.")
+                return data.data as T
+            } catch (error) {
+                if (error instanceof ApiError) {
+                    throw error
+                }
+
+                if (error instanceof DOMException && error.name === "AbortError") {
+                    throw error
+                }
+
+                if (error instanceof TypeError) {
+                    throw new ApiError("Erro de conexão com o servidor. Verifique sua internet.")
+                }
+
+                throw new ApiError("Um erro inesperado aconteceu. Tente novamente.")
+            }
         }
+
+        const promise = doFetch()
+        const key = method === "GET" ? this.dedupKey(method, path, token) : null
+
+        if (key) {
+            this.inFlight.set(key, promise)
+            promise.finally(() => {
+                if (this.inFlight.get(key) === promise) {
+                    this.inFlight.delete(key)
+                }
+            })
+        }
+
+        return promise
     }
 
-    async get<T>(path: string, token?: string): Promise<T> {
-        return this.request<T>(path, { method: "GET", token })
+    async get<T>(path: string, token?: string, signal?: AbortSignal): Promise<T> {
+        return this.request<T>(path, { method: "GET", token, signal })
     }
 
     async post<T>(path: string, body?: unknown, token?: string): Promise<T> {

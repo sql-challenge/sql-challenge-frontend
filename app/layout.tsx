@@ -31,6 +31,7 @@ export default function RootLayout({
     <html
       lang="pt-BR"
       className={`${pressStart2P.variable} ${vt323.variable} h-full`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col scanlines">
           <ThemeProvider>

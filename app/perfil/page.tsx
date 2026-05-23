@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/_components/_organisms/header";
 import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import { useUser } from "@/_context/userContext";
-import { api } from "@/_lib/api";
-import { Friend, User } from "@/_lib/types/user";
+import { User } from "@/_lib/types/user";
 
 // ── Spider Chart SVG customizado ──────────────────────────
 const AXES = [
@@ -245,65 +244,56 @@ export default function PerfilPage() {
   const [saving,   setSaving]   = useState(false);
   const [saved,    setSaved]    = useState(false);
 
-  // loading
-  const [isLoading,     setIsLoading]     = useState(true);
+  const [isLoading]     = useState(false);
 
-  // friends
-  const [friends,       setFriends]       = useState<Friend[]>([]);
-  const [searchQuery,   setSearchQuery]   = useState("");
-  const [searchResults, setSearchResults] = useState<User[]>([]);
-  const [searching,     setSearching]     = useState(false);
-  const [compareUid,    setCompareUid]    = useState<string | null>(null);
-  const [compareUser,   setCompareUser]   = useState<User | null>(null);
-
-  // friend ranking
-  const [friendRanking, setFriendRanking] = useState<User[]>([]);
+  // friends (disabled — will be re-enabled later)
+  // const [friends,       setFriends]       = useState<Friend[]>([]);
+  // const friendsLoadedRef = useRef<string | null>(null);
+  // const [searchQuery,   setSearchQuery]   = useState("");
+  // const [searchResults, setSearchResults] = useState<User[]>([]);
+  // const [searching,     setSearching]     = useState(false);
+  // const [compareUid,    setCompareUid]    = useState<string | null>(null);
+  // const [compareUser,   setCompareUser]   = useState<User | null>(null);
+  // const [friendRanking, setFriendRanking] = useState<User[]>([]);
 
   useEffect(() => {
-    if (user) {
-      setNick(user.nick ?? "");
-      setUsername(user.username ?? "");
-      loadFriends();
-    }
-  }, [user]);
-
-  const loadFriends = async () => {
     if (!user) return;
-    try {
-      const data = await api.get<Friend[]>(`/api/user/${user.uid}/friends`);
-      setFriends(Array.isArray(data) ? data : []);
-    } catch {} finally {
-      setIsLoading(false);
-    }
-  };
+    setNick(user.nick ?? "");
+    setUsername(user.username ?? "");
+  }, [user?.uid]);
 
-  const loadFriendRanking = useCallback(async () => {
-    if (!user) return;
-    try {
-      const data = await api.get<User[]>(`/api/user/${user.uid}/friends/ranking`);
-      setFriendRanking(Array.isArray(data) ? data : []);
-    } catch {}
-  }, [user]);
+  // const loadFriends = async () => {
+  //   if (!user) return;
+  //   try {
+  //     const data = await api.get<Friend[]>(`/api/user/${user.uid}/friends`);
+  //     setFriends(Array.isArray(data) ? data : []);
+  //   } catch {} finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
-  useEffect(() => {
-    if (tab !== "ranking") return;
+  // const loadFriendRanking = useCallback(async () => {
+  //   if (!user) return;
+  //   try {
+  //     const data = await api.get<User[]>(`/api/user/${user.uid}/friends/ranking`);
+  //     setFriendRanking(Array.isArray(data) ? data : []);
+  //   } catch {}
+  // }, [user?.uid]);
 
-    loadFriendRanking();
-    const interval = setInterval(() => loadFriendRanking(), 15_000);
-    const onFocus = () => loadFriendRanking();
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") loadFriendRanking();
-    };
+  // const friendRankingMountedRef = useRef(true);
 
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onVisibility);
-
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, [tab, loadFriendRanking, user?.xp]);
+  // useEffect(() => {
+  //   if (tab !== "ranking") return;
+  //   friendRankingMountedRef.current = true;
+  //   loadFriendRanking();
+  //   const interval = setInterval(() => {
+  //     if (friendRankingMountedRef.current) loadFriendRanking();
+  //   }, 60_000);
+  //   return () => {
+  //     friendRankingMountedRef.current = false;
+  //     clearInterval(interval);
+  //   };
+  // }, [tab, loadFriendRanking]);
 
   const handleSave = async () => {
     if (!user) return;
@@ -317,61 +307,61 @@ export default function PerfilPage() {
     }
   };
 
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) return;
-    setSearching(true);
-    try {
-      const list = await api.get<User[]>(`/api/user/name/${encodeURIComponent(searchQuery.trim().toLowerCase())}`);
-      setSearchResults(list.filter(u => u.uid !== user?.uid));
-    } catch {
-      setSearchResults([]);
-    } finally {
-      setSearching(false);
-    }
-  };
+  // const handleSearch = async () => {
+  //   if (!searchQuery.trim()) return;
+  //   setSearching(true);
+  //   try {
+  //     const list = await api.get<User[]>(`/api/user/name/${encodeURIComponent(searchQuery.trim().toLowerCase())}`);
+  //     setSearchResults(list.filter(u => u.uid !== user?.uid));
+  //   } catch {
+  //     setSearchResults([]);
+  //   } finally {
+  //     setSearching(false);
+  //   }
+  // };
 
-  const handleAddFriend = async (targetUid: string) => {
-    if (!user) return;
-    try {
-      await api.post(`/api/user/${user.uid}/friends/${targetUid}`, {});
-      await loadFriends();
-      setSearchResults([]);
-      setSearchQuery("");
-    } catch (e: unknown) {
-      alert(e instanceof Error ? e.message : "Erro ao adicionar amigo");
-    }
-  };
+  // const handleAddFriend = async (targetUid: string) => {
+  //   if (!user) return;
+  //   try {
+  //     await api.post(`/api/user/${user.uid}/friends/${targetUid}`, {});
+  //     await loadFriends();
+  //     setSearchResults([]);
+  //     setSearchQuery("");
+  //   } catch (e: unknown) {
+  //     alert(e instanceof Error ? e.message : "Erro ao adicionar amigo");
+  //   }
+  // };
 
-  const handleAccept = async (targetUid: string) => {
-    if (!user) return;
-    await api.put(`/api/user/${user.uid}/friends/${targetUid}/accept`, {});
-    await loadFriends();
-  };
+  // const handleAccept = async (targetUid: string) => {
+  //   if (!user) return;
+  //   await api.put(`/api/user/${user.uid}/friends/${targetUid}/accept`, {});
+  //   await loadFriends();
+  // };
 
-  const handleRemove = async (targetUid: string) => {
-    if (!user) return;
-    await api.delete(`/api/user/${user.uid}/friends/${targetUid}`);
-    await loadFriends();
-    if (compareUid === targetUid) { setCompareUid(null); setCompareUser(null); }
-  };
+  // const handleRemove = async (targetUid: string) => {
+  //   if (!user) return;
+  //   await api.delete(`/api/user/${user.uid}/friends/${targetUid}`);
+  //   await loadFriends();
+  //   if (compareUid === targetUid) { setCompareUid(null); setCompareUser(null); }
+  // };
 
-  const handleCompare = async (f: Friend) => {
-    if (compareUid === f.uid) { setCompareUid(null); setCompareUser(null); return; }
-    try {
-      const data = await api.get<User>(`/api/user/uid/${f.uid}`);
-      setCompareUser(data);
-      setCompareUid(f.uid);
-    } catch {}
-  };
+  // const handleCompare = async (f: Friend) => {
+  //   if (compareUid === f.uid) { setCompareUid(null); setCompareUser(null); return; }
+  //   try {
+  //     const data = await api.get<User>(`/api/user/uid/${f.uid}`);
+  //     setCompareUser(data);
+  //     setCompareUid(f.uid);
+  //   } catch {}
+  // };
 
-  const radarData = buildRadarData(user, compareUser);
-  const accepted  = friends.filter(f => f.status === "accepted");
-  const pending   = friends.filter(f => f.status === "pending");
+  const radarData = buildRadarData(user);
+  // const accepted  = friends.filter(f => f.status === "accepted");
+  // const pending   = friends.filter(f => f.status === "pending");
 
   const TABS: { id: Tab; label: string }[] = [
     { id: "perfil",  label: "Perfil" },
-    { id: "amigos",  label: `Amigos (${accepted.length})` },
-    { id: "ranking", label: "Ranking de Amigos" },
+    // { id: "amigos",  label: `Amigos (${accepted.length})` },
+    // { id: "ranking", label: "Ranking de Amigos" },
   ];
 
   return (
@@ -381,11 +371,11 @@ export default function PerfilPage() {
 
       <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
 
-        {isLoading && (
+        {/* {isLoading && (
           <div className="flex items-center justify-center py-20">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           </div>
-        )}
+        )} */}
 
         {!isLoading && (
         <>
@@ -485,142 +475,23 @@ export default function PerfilPage() {
             </div>
 
             {/* Spider chart */}
-            <SpiderChart data={radarData} compareUser={compareUser} />
+            <SpiderChart data={radarData} compareUser={null} />
           </div>
         )}
 
         {/* ── ABA AMIGOS ──────────────────────────────────── */}
-        {tab === "amigos" && (
+        {/* {tab === "amigos" && (
           <div className="space-y-6">
-
-            {/* Busca */}
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-3">Buscar jogadores</h2>
-              <div className="flex gap-2">
-                <input
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handleSearch()}
-                  placeholder="Nome de usuário..."
-                  className="flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
-                />
-                <button
-                  onClick={handleSearch}
-                  disabled={searching}
-                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
-                >
-                  {searching ? "..." : "Buscar"}
-                </button>
-              </div>
-
-              {searchResults.length > 0 && (
-                <div className="mt-3 space-y-2">
-                  {searchResults.map(u => (
-                    <div key={u.uid} className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
-                      <div>
-                        <p className="font-semibold text-sm text-foreground">{u.nick || u.username}</p>
-                        <p className="text-xs text-muted-foreground">@{u.username} · {(u.xp ?? 0).toLocaleString()} XP</p>
-                      </div>
-                      <button
-                        onClick={() => handleAddFriend(u.uid)}
-                        className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 font-semibold"
-                      >
-                        + Adicionar
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Pendentes */}
-            {pending.length > 0 && (
-              <div>
-                <h2 className="text-lg font-bold text-foreground mb-3">Solicitações pendentes</h2>
-                <div className="space-y-2">
-                  {pending.map(f => (
-                    <div key={f.uid} className="flex items-center justify-between rounded-lg border border-yellow-500/30 bg-yellow-500/5 px-4 py-3">
-                      <div>
-                        <p className="font-semibold text-sm text-foreground">{f.nick || f.username}</p>
-                        <p className="text-xs text-muted-foreground">@{f.username} · {(f.xp ?? 0).toLocaleString()} XP</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => handleAccept(f.uid)} className="text-xs px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 font-semibold">Aceitar</button>
-                        <button onClick={() => handleRemove(f.uid)} className="text-xs px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 font-semibold">Recusar</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Lista de amigos */}
-            <div>
-              <h2 className="text-lg font-bold text-foreground mb-3">Meus amigos</h2>
-              {accepted.length === 0 ? (
-                <p className="text-muted-foreground text-sm">Nenhum amigo ainda. Busque jogadores acima!</p>
-              ) : (
-                <div className="space-y-2">
-                  {accepted.map(f => (
-                    <div key={f.uid} className={`flex items-center justify-between rounded-lg border px-4 py-3 transition-colors ${compareUid === f.uid ? "border-primary/50 bg-primary/5" : "border-border bg-card"}`}>
-                      <div>
-                        <p className="font-semibold text-sm text-foreground">{f.nick || f.username}</p>
-                        <p className="text-xs text-muted-foreground">@{f.username} · {(f.xp ?? 0).toLocaleString()} XP · #{f.rankingPosition || "—"}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => { handleCompare(f); setTab("perfil"); }}
-                          className={`text-xs px-3 py-1.5 rounded-lg font-semibold transition-colors ${compareUid === f.uid ? "bg-primary text-primary-foreground" : "bg-primary/10 text-primary hover:bg-primary/20"}`}
-                        >
-                          {compareUid === f.uid ? "Comparando" : "Comparar"}
-                        </button>
-                        <button onClick={() => handleRemove(f.uid)} className="text-xs px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 font-semibold">Remover</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            ...
           </div>
-        )}
+        )} */}
 
         {/* ── ABA RANKING DE AMIGOS ───────────────────────── */}
-        {tab === "ranking" && (
+        {/* {tab === "ranking" && (
           <div>
-            <h2 className="text-lg font-bold text-foreground mb-4">Ranking entre amigos</h2>
-            {friendRanking.length === 0 ? (
-              <p className="text-muted-foreground text-sm">Adicione amigos para ver o ranking!</p>
-            ) : (
-              <div className="space-y-2">
-                {friendRanking.map((u, i) => {
-                  const isMe = u.uid === user?.uid;
-                  const medal = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`;
-                  return (
-                    <div key={u.uid} className={`flex items-center gap-4 rounded-xl border px-4 py-3 transition-all ${isMe ? "border-primary/50 bg-primary/5" : "border-border bg-card"}`}>
-                      <span className="text-xl w-8 text-center">{medal}</span>
-                      <div className="flex-1">
-                        <p className="font-bold text-sm text-foreground">
-                          {u.nick || u.username}
-                          {isMe && <span className="ml-2 text-xs text-primary font-semibold">(você)</span>}
-                        </p>
-                        <p className="text-xs text-muted-foreground">@{u.username}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-black text-primary">{(u.xp ?? 0).toLocaleString()} XP</p>
-                        <div className="mt-1 h-1.5 w-24 bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-primary rounded-full"
-                            style={{ width: `${Math.min(100, ((u.xp ?? 0) / Math.max(...friendRanking.map(p => p.xp ?? 0), 1)) * 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            ...
           </div>
-        )}
+        )} */}
           </>
         )}
       </div>
