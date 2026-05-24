@@ -442,8 +442,8 @@ export default function PerfilPage() {
                 />
               </div>
 
-              {/* Notificações por e-mail */}
-              <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
+              {/* Notificações por e-mail — disabled, backend notify endpoint preserved for future */}
+              {/* <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
                 <div>
                   <p className="text-sm font-semibold text-foreground">Notificações por e-mail</p>
                   <p className="text-xs text-muted-foreground mt-0.5">Receba um e-mail quando novas histórias forem adicionadas</p>
@@ -463,7 +463,7 @@ export default function PerfilPage() {
                     user?.emailNotifications ? "translate-x-5" : "translate-x-0"
                   }`} />
                 </button>
-              </div>
+              </div> */}
 
               <button
                 onClick={handleSave}
