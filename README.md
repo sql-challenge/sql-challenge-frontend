@@ -119,9 +119,8 @@ FB_APP_ID=
 FB_MEASUREMENT_ID=
 
 # Firebase Admin SDK (backend)
-FIREBASE_ADMIN_PROJECT_ID=
-FIREBASE_ADMIN_CLIENT_EMAIL=
-FIREBASE_ADMIN_PRIVATE_KEY=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY=
 
 # Notificações por email
 EMAIL_USER=
@@ -171,12 +170,14 @@ Configure os seguintes secrets em **ambos** os repositórios (`sql-challenge-bac
 | `FB_AUTH_DOMAIN` | Firebase Auth Domain |
 | `FB_PROJECT_ID` | Firebase Project ID |
 | `FB_STORAGE_BUCKET` | Firebase Storage Bucket |
+| `FIREBASE_CLIENT_EMAIL` | Firebase Admin Client Email |
+| `FIREBASE_PRIVATE_KEY` | Firebase Admin Private Key |
 | `FB_MESSAGING_SENDER_ID` | Firebase Messaging Sender ID |
 | `FB_APP_ID` | Firebase App ID |
 | `FB_MEASUREMENT_ID` | Firebase Measurement ID |
-| `FIREBASE_ADMIN_PROJECT_ID` | Firebase Admin Project ID |
-| `FIREBASE_ADMIN_CLIENT_EMAIL` | Firebase Admin Client Email |
-| `FIREBASE_ADMIN_PRIVATE_KEY` | Firebase Admin Private Key |
+| ~~`FIREBASE_ADMIN_PROJECT_ID`~~ | ~~Firebase Admin Project ID~~ (substituído por `FIREBASE_CLIENT_EMAIL` + `FIREBASE_PRIVATE_KEY`) |
+| ~~`FIREBASE_ADMIN_CLIENT_EMAIL`~~ | ~~Firebase Admin Client Email~~ (substituído) |
+| ~~`FIREBASE_ADMIN_PRIVATE_KEY`~~ | ~~Firebase Admin Private Key~~ (substituído) |
 
 ### Passo 5 — Primeiro deploy
 
@@ -223,6 +224,40 @@ sudo systemctl restart nginx
 # Status do certificado SSL
 sudo certbot certificates
 ```
+
+## Testes automatizados (frontend)
+
+Os testes de frontend usam `agent-browser` (Playwright) para simular o usuário no navegador. Localizados em `tests/frontend/`:
+
+| Arquivo | Função |
+|---------|--------|
+| `run-tests.sh` | Orquestrador: setup → start backend → sync Firestore → start frontend → executa testes |
+| `test-flows.sh` | 11 fluxos de teste com agent-browser + sumário de requisições |
+| `setup-test-user.cjs` | Cria usuário de teste no Firebase via Admin SDK |
+
+### Fluxos de teste
+
+| # | Fluxo | Descrição |
+|---|-------|-----------|
+| 1 | Homepage | `/` carrega com hero, features, CTA |
+| 2 | Login page | `/auth/login` — campos Email/Senha, botões Google/GitHub |
+| 3 | Register page | `/auth/register` — formulário de cadastro |
+| 4 | Login email/senha | Preenche formulário, redireciona para `/dashboard` |
+| 5 | Dashboard | Stats cards, nível, conquistas |
+| 6 | Mysteries | `/mystery` — lista casos disponíveis |
+| 7 | Editor SQL | ⏳ Bloqueado — ver Session Notes no PLAN.md |
+| 8 | Ranking | `/ranking` — tabela pública |
+| 9 | Perfil | `/perfil` — dados e edição |
+| 10 | Conquistas | `/conquistas` — lista conquistas |
+| 11 | Logout | Limpa localStorage, navega para `/auth/login` |
+
+### Executar
+
+```bash
+bash tests/frontend/run-tests.sh
+```
+
+Os logs são salvos em `tests/frontend/logs/`. O usuário de teste (`teste@sqlchallenge.dev`) é criado no Firebase no setup e deletado no cleanup.
 
 ## Scripts disponíveis
 
