@@ -18,8 +18,46 @@ const vt323 = VT323({
 });
 
 export const metadata: Metadata = {
-  title: "SQL CHALLENGE",
-  description: "SQL CHALLENGE - Mistérios e desafios SQL",
+  metadataBase: new URL("https://sql-challenge.atcfalcons.org"),
+  title: {
+    default: "SQL CHALLENGE",
+    template: "%s | SQL CHALLENGE",
+  },
+  description: "SQL CHALLENGE — Mistérios e desafios SQL. Aprenda SQL resolvendo casos detectivescos em um mundo mágico.",
+  applicationName: "SQL CHALLENGE",
+  keywords: ["SQL", "aprendizado", "desafios", "banco de dados", "gamificação", "mistérios", "detetive"],
+  authors: [{ name: "SQL Challenge" }],
+  creator: "SQL Challenge",
+  publisher: "SQL Challenge",
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    siteName: "SQL CHALLENGE",
+    title: "SQL CHALLENGE",
+    description: "Mistérios e desafios SQL. Aprenda SQL resolvendo casos detectivescos em um mundo mágico.",
+    url: "https://sql-challenge.atcfalcons.org",
+    images: [{
+      url: "/og-image.png",
+      width: 1200,
+      height: 630,
+      alt: "SQL CHALLENGE — Mistérios e desafios SQL",
+    }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SQL CHALLENGE",
+    description: "Mistérios e desafios SQL. Aprenda SQL resolvendo casos detectivescos.",
+    images: ["/og-image.png"],
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/apple-icon.png",
+  },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
