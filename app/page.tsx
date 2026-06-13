@@ -19,7 +19,7 @@ export default function HomePage() {
             A forma mais envolvente de aprender SQL
           </Badge>
 
-          <h1 className="text-5xl md:text-6xl font-bold text-balance leading-tight font-display tracking-tight">
+          <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight font-display tracking-tight">
             Aprenda SQL sem decorar
             <br />
             <span className="text-primary">
@@ -59,7 +59,7 @@ export default function HomePage() {
       </section>
 
       {/* Features Grid */}
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
         <div className="grid md:grid-cols-3 gap-6">
           <Reveal direction="up" delay={0}>
             <div className="flex flex-col h-full border-2 border-primary/40 bg-card p-5 shadow-pixel hover:border-primary transition-colors">
@@ -68,9 +68,9 @@ export default function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold mb-2 font-display tracking-wide">Aprendizado atrav&eacute;s de Hist&oacute;rias</h3>
+              <h3 className="text-lg font-bold mb-2 font-display tracking-wide">Aprendizado através de Histórias</h3>
               <p className="text-muted-foreground leading-relaxed text-sm flex-1">
-                Resolva mist&eacute;rios de SQL por meio de hist&oacute;rias de detetive envolventes que tornam o aprendizado divertido e memorável.
+                Resolva mistérios de SQL por meio de histórias de detetive envolventes que tornam o aprendizado divertido e memorável.
               </p>
             </div>
           </Reveal>
@@ -98,7 +98,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-lg font-bold mb-2 font-display tracking-wide">Prática Mão na Massa</h3>
               <p className="text-muted-foreground leading-relaxed text-sm flex-1">
-                Escreva consultas SQL reais em nosso editor interativo com feedback instant&acirc;neo e dicas.
+                Escreva consultas SQL reais em nosso editor interativo com feedback instantâneo e dicas.
               </p>
             </div>
           </Reveal>
@@ -106,13 +106,13 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
-        <div className="text-center space-y-4 mb-12">
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
+        <div className="text-center space-y-4 mb-8 sm:mb-12">
           <h2 className="text-3xl md:text-4xl font-bold font-display tracking-wide">
             Como Funciona
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto text-balance">
-            Inspetor, o m&eacute;todo &eacute; simples. Cada mist&eacute;rio segue tr&ecirc;s etapas.
+            Inspetor, o método é simples. Cada mistério segue três etapas.
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-6">
@@ -126,7 +126,7 @@ export default function HomePage() {
                 </svg>
               ),
               title: "Receba o Caso",
-              description: "Cada mist&eacute;rio traz uma hist&oacute;ria detective e um objetivo SQL claro. Voc&ecirc; sabe exatamente o que precisa descobrir.",
+              description: "Cada mistério traz uma história detective e um objetivo SQL claro. Você sabe exatamente o que precisa descobrir.",
             },
             {
               step: "02",
@@ -137,7 +137,7 @@ export default function HomePage() {
                 </svg>
               ),
               title: "Interrogue os Dados",
-              description: "Escreva consultas SQL no editor interativo com feedback instant&acirc;neo. Errou? Receba dicas e tente de novo sem medo.",
+              description: "Escreva consultas SQL no editor interativo com feedback instantâneo. Errou? Receba dicas e tente de novo sem medo.",
             },
             {
               step: "03",
@@ -148,7 +148,7 @@ export default function HomePage() {
                 </svg>
               ),
               title: "Resolva & Evolua",
-              description: "Consulta certa? Ganhe XP, destrave conquistas e suba no ranking. Cada caso resolvido te prepara para o pr&oacute;ximo n&iacute;vel.",
+              description: "Consulta certa? Ganhe XP, destrave conquistas e suba no ranking. Cada caso resolvido te prepara para o próximo nível.",
             },
           ].map((item, index) => (
             <Reveal key={item.step} direction="up" delay={index * 150}>
@@ -169,8 +169,8 @@ export default function HomePage() {
 
       {/* Terminal Editor */}
       <Reveal direction="fade" delay={100}>
-        <section className="mx-auto max-w-5xl px-4 py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
-          <div className="text-center space-y-4 mb-10">
+        <section className="mx-auto max-w-5xl px-4 py-10 sm:py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
+          <div className="text-center space-y-4 mb-6 sm:mb-10">
             <h2 className="text-3xl md:text-4xl font-bold font-display tracking-wide">
               Veja Como Funciona na Prática
             </h2>
@@ -183,8 +183,8 @@ export default function HomePage() {
       </Reveal>
 
       {/* Topics */}
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
-        <div className="text-center space-y-4 mb-12">
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
+        <div className="text-center space-y-4 mb-8 sm:mb-12">
           <h2 className="text-3xl md:text-4xl font-bold font-display tracking-wide">
             O Que Você Vai Aprender
           </h2>
@@ -224,12 +224,12 @@ export default function HomePage() {
       {/* Final CTA */}
       <Reveal direction="up">
         <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
-          <div className="border-2 border-primary/40 bg-card p-10 md:p-14 text-center shadow-pixel">
+          <div className="border-2 border-primary/40 bg-card p-6 sm:p-10 md:p-14 text-center shadow-pixel">
             <h2 className="text-3xl md:text-4xl font-bold font-display tracking-wide mb-4">
               Pronto para Resolver seu Primeiro Caso?
             </h2>
             <p className="text-lg text-muted-foreground max-w-lg mx-auto text-balance mb-8">
-              Junte-se a outros detetives de dados. Sem frescura. SQL puro e hist&oacute;rias que prendem.
+              Junte-se a outros detetives de dados. Sem frescura. SQL puro e histórias que prendem.
             </p>
             <div className="flex items-center justify-center gap-4 flex-wrap">
               <HeroCta />
@@ -274,7 +274,7 @@ export default function HomePage() {
             </div> */}
             </div>
             <div className="border-t border-border mt-8 pt-6 text-center text-xs text-muted-foreground">
-              &copy; {new Date().getFullYear()} SQL CHALLENGE. Feito para detetives de dados.
+              © {new Date().getFullYear()} SQL CHALLENGE. Feito para detetives de dados.
             </div>
           </div>
         </footer>

@@ -128,7 +128,7 @@ export default function MysteriesPage() {
             <span className="inline-block text-xs font-bold uppercase tracking-widest text-primary border border-primary/30 bg-primary/10 px-3 py-1 rounded-full mb-4">
               Agência de Investigação SQL
             </span>
-            <h1 className="text-4xl lg:text-5xl font-extrabold text-foreground mb-4 leading-tight">
+            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-foreground mb-4 leading-tight">
               Desvende os Mistérios{" "}
               <span className="text-primary">com SQL</span>
             </h1>

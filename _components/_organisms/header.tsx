@@ -60,11 +60,11 @@ export function Header() {
               <Link
                 key={href}
                 href={href}
-                className={`flex-1 flex flex-col items-center py-2 text-xs font-medium transition-colors ${
+                className={`flex-1 flex flex-col items-center py-1.5 sm:py-2 text-[10px] sm:text-xs font-medium transition-colors ${
                   active ? "text-primary" : "text-muted-foreground"
                 }`}
               >
-                <Icon className="w-4 h-4 mb-0.5" />
+                <Icon className="w-3.5 sm:w-4 h-3.5 sm:h-4 mb-0.5" />
                 {label}
               </Link>
             )

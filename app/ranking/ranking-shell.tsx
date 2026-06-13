@@ -69,23 +69,23 @@ export function RankingShell({ initialPlayers }: { initialPlayers: Record<string
 
         {/* Top 3 Podium */}
         {!error && players.length >= 3 && (
-          <div className="flex items-end justify-center gap-3 mb-10">
+          <div className="flex items-end justify-center gap-1 sm:gap-3 mb-8 sm:mb-10">
             {[1, 0, 2].map((idx) => {
               const p = players[idx];
-              const height = idx === 0 ? "h-32" : idx === 1 ? "h-24" : "h-20";
+              const height = idx === 0 ? "h-24 sm:h-32" : idx === 1 ? "h-20 sm:h-24" : "h-16 sm:h-20";
               const pos = idx + 1;
               const lvl = LEVEL_FROM_XP(p.xp);
               return (
-                <div key={p.uid} className="flex flex-col items-center gap-2 flex-1 max-w-[140px]">
-                  <div className="text-2xl">{MEDAL[idx]}</div>
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/40 to-primary/10 border-2 border-primary/40 flex items-center justify-center text-xl font-black text-primary">
+                <div key={p.uid} className="flex flex-col items-center gap-1 sm:gap-2 flex-1 max-w-[90px] sm:max-w-[140px]">
+                  <div className="text-lg sm:text-2xl">{MEDAL[idx]}</div>
+                  <div className="w-8 sm:w-12 h-8 sm:h-12 rounded-full bg-gradient-to-br from-primary/40 to-primary/10 border-2 border-primary/40 flex items-center justify-center text-sm sm:text-xl font-black text-primary">
                     {p.username?.[0]?.toUpperCase() ?? "?"}
                   </div>
-                  <p className="text-xs font-bold text-foreground text-center line-clamp-1">{p.username}</p>
-                  <p className={`text-xs ${lvl.color}`}>{lvl.label}</p>
-                  <p className="text-sm font-black text-primary">{p.xp.toLocaleString()} XP</p>
+                  <p className="text-[10px] sm:text-xs font-bold text-foreground text-center line-clamp-1">{p.username}</p>
+                  <p className={`text-[10px] sm:text-xs ${lvl.color}`}>{lvl.label}</p>
+                  <p className="text-[11px] sm:text-sm font-black text-primary">{p.xp.toLocaleString()} XP</p>
                   <div className={`w-full ${height} rounded-t-lg ${idx === 0 ? "bg-yellow-500/20 border border-yellow-500/30" : idx === 1 ? "bg-slate-400/20 border border-slate-400/30" : "bg-amber-700/20 border border-amber-700/30"} flex items-center justify-center`}>
-                    <span className="text-2xl font-black text-muted-foreground">#{pos}</span>
+                    <span className="text-base sm:text-2xl font-black text-muted-foreground">#{pos}</span>
                   </div>
                 </div>
               );
@@ -108,30 +108,30 @@ export function RankingShell({ initialPlayers }: { initialPlayers: Record<string
               return (
                 <div
                   key={p.uid}
-                  className={`flex items-center gap-4 rounded-xl border px-4 py-3 transition-all ${
+                  className={`flex items-center gap-2 sm:gap-4 rounded-xl border px-3 sm:px-4 py-2.5 sm:py-3 transition-all ${
                     isMe
                       ? "border-primary/50 bg-primary/5 shadow-sm shadow-primary/10"
                       : "border-border bg-card"
                   }`}
                 >
-                  <div className="w-8 text-center font-black text-lg shrink-0">
-                    {i < 3 ? MEDAL[i] : <span className="text-muted-foreground text-sm">#{i + 1}</span>}
+                  <div className="w-6 sm:w-8 text-center font-black text-base sm:text-lg shrink-0">
+                    {i < 3 ? MEDAL[i] : <span className="text-muted-foreground text-[11px] sm:text-sm">#{i + 1}</span>}
                   </div>
 
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-black border-2 shrink-0 ${isMe ? "border-primary bg-primary/20 text-primary" : "border-border bg-muted text-muted-foreground"}`}>
+                  <div className={`w-8 sm:w-10 h-8 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-base font-black border-2 shrink-0 ${isMe ? "border-primary bg-primary/20 text-primary" : "border-border bg-muted text-muted-foreground"}`}>
                     {p.username?.[0]?.toUpperCase() ?? "?"}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className={`font-bold text-sm truncate ${isMe ? "text-primary" : "text-foreground"}`}>
+                      <p className={`font-bold text-xs sm:text-sm truncate ${isMe ? "text-primary" : "text-foreground"}`}>
                         {p.username}
-                        {isMe && <span className="ml-1 text-xs opacity-60">(você)</span>}
+                        {isMe && <span className="ml-1 text-[10px] sm:text-xs opacity-60">(você)</span>}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className={`text-xs ${lvl.color}`}>{lvl.label}</span>
-                      <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden max-w-[80px]">
+                    <div className="flex items-center gap-1 sm:gap-2 mt-0.5">
+                      <span className={`text-[10px] sm:text-xs ${lvl.color}`}>{lvl.label}</span>
+                      <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden max-w-[60px] sm:max-w-[80px]">
                         <div
                           className="h-full bg-primary rounded-full transition-all"
                           style={{ width: `${progressPct}%` }}
@@ -141,8 +141,8 @@ export function RankingShell({ initialPlayers }: { initialPlayers: Record<string
                   </div>
 
                   <div className="text-right shrink-0">
-                    <p className="font-black text-sm text-primary">{p.xp.toLocaleString()}</p>
-                    <p className="text-xs text-muted-foreground">XP</p>
+                    <p className="font-black text-xs sm:text-sm text-primary">{p.xp.toLocaleString()}</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">XP</p>
                   </div>
                 </div>
               );

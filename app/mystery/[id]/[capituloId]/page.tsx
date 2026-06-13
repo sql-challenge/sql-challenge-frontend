@@ -457,7 +457,7 @@ export default function CapituloEditorPage() {
               </div>
             )}
 
-            <div className="flex gap-2 mt-6">
+            <div className="flex flex-col sm:flex-row gap-2 mt-6">
               <button
                 onClick={() =>
                   router.push(`/mystery/${desafioId}/${Number(capituloId) + 1}`)
@@ -557,7 +557,7 @@ export default function CapituloEditorPage() {
     <ProtectedRoute>
       <div className="h-screen bg-background flex flex-col overflow-hidden">
         <Header />
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 p-4 overflow-hidden min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden min-h-0">
         {/* LEFT: Info */}
         <div className="lg:w-1/3 flex flex-col gap-4 overflow-hidden min-h-0">
           {(() => {
@@ -565,26 +565,26 @@ export default function CapituloEditorPage() {
             const tiers = capituloView ? TIME_TIERS[Math.min(capituloView.capitulo.numero - 1, TIME_TIERS.length - 1)] : null;
             const xpBase = capituloView?.capitulo.xpRecompensa ?? 0;
             return (
-              <div className="bg-card border border-border rounded-lg p-4">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-0.5">Capítulo {capitulo.numero}</p>
+              <div className="bg-card border border-border rounded-lg p-3 sm:p-4">
+                <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-0.5">Capítulo {capitulo.numero}</p>
 
                 {/* Timer em destaque */}
-                <div className={`flex items-center justify-between rounded-lg border px-4 py-2.5 mb-3 ${currentTier?.badgeClass ?? ""} ${currentTier?.tier === "gold" ? "animate-gold-pulse" : ""}`}>
+                <div className={`flex items-center justify-between rounded-lg border px-3 sm:px-4 py-2 sm:py-2.5 mb-2 sm:mb-3 ${currentTier?.badgeClass ?? ""} ${currentTier?.tier === "gold" ? "animate-gold-pulse" : ""}`}>
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest opacity-70">Tempo</p>
-                    <p className={`text-2xl font-mono font-bold tabular-nums leading-none ${currentTier?.timerColor}`}>
+                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest opacity-70">Tempo</p>
+                    <p className={`text-xl sm:text-2xl font-mono font-bold tabular-nums leading-none ${currentTier?.timerColor}`}>
                       {formatSeconds(totalSeconds)}
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xl leading-none">{currentTier?.icon}</p>
-                    <p className={`text-xs font-bold mt-1 ${currentTier?.timerColor}`}>{currentTier?.label}</p>
+                    <p className="text-lg sm:text-xl leading-none">{currentTier?.icon}</p>
+                    <p className={`text-[11px] sm:text-xs font-bold mt-0.5 sm:mt-1 ${currentTier?.timerColor}`}>{currentTier?.label}</p>
                   </div>
                 </div>
 
                 {/* Faixas de XP por tempo */}
                 {tiers && (
-                  <div className="space-y-1.5 mb-3 text-xs">
+                  <div className="space-y-1 sm:space-y-1.5 mb-2 sm:mb-3 text-[11px] sm:text-xs">
                     {[
                       { key: "gold",   icon: "🥇", label: "Ouro",   limit: tiers.gold,   mult: 1.5  },
                       { key: "silver", icon: "🥈", label: "Prata",  limit: tiers.silver, mult: 1.25 },
@@ -594,17 +594,17 @@ export default function CapituloEditorPage() {
                       const isBronze = key === "bronze";
                       const bonusPercent = Math.round((mult - 1) * 100);
                       return (
-                        <div key={key} className={`rounded-md border px-2.5 py-2 transition-all ${active ? "border-primary/50 bg-primary/10" : "border-border/70 opacity-80"}`}>
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-sm leading-none">{icon}</span>
+                        <div key={key} className={`rounded-md border px-2 sm:px-2.5 py-1.5 sm:py-2 transition-all ${active ? "border-primary/50 bg-primary/10" : "border-border/70 opacity-80"}`}>
+                          <div className="flex items-center justify-between gap-1.5 sm:gap-2">
+                            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                              <span className="text-sm leading-none shrink-0">{icon}</span>
                               <div className="min-w-0">
-                                <p className="font-semibold leading-none">{label}</p>
-                                <p className="text-[11px] text-muted-foreground mt-1 leading-none">até {formatSeconds(limit)}</p>
+                                <p className="font-semibold leading-none text-[11px] sm:text-xs">{label}</p>
+                                <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 sm:mt-1 leading-none">até {formatSeconds(limit)}</p>
                               </div>
                             </div>
-                            <p className={`text-[11px] font-bold whitespace-nowrap ${active ? "text-primary" : "text-muted-foreground"}`}>
-                              {isBronze ? `${Math.round(xpBase)} XP mínimo` : `+${bonusPercent}% XP`}
+                            <p className={`text-[10px] sm:text-[11px] font-bold whitespace-nowrap shrink-0 ${active ? "text-primary" : "text-muted-foreground"}`}>
+                              {isBronze ? `${Math.round(xpBase)} XP` : `+${bonusPercent}% XP`}
                             </p>
                           </div>
                         </div>
@@ -633,7 +633,7 @@ export default function CapituloEditorPage() {
             <div className="flex border-b border-border">
               <button
                 onClick={() => setActiveTab("story")}
-                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                className={`flex-1 px-2 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-sm font-medium transition-colors ${
                   activeTab === "story"
                     ? "text-primary border-b-2 border-primary"
                     : "text-muted-foreground hover:text-foreground"
@@ -644,7 +644,7 @@ export default function CapituloEditorPage() {
               </button>
               <button
                 onClick={() => setActiveTab("database")}
-                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                className={`flex-1 px-2 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-sm font-medium transition-colors ${
                   activeTab === "database"
                     ? "text-primary border-b-2 border-primary"
                     : "text-muted-foreground hover:text-foreground"
@@ -655,7 +655,7 @@ export default function CapituloEditorPage() {
               </button>
               <button
                 onClick={() => setActiveTab("hints")}
-                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+                className={`flex-1 px-2 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-sm font-medium transition-colors ${
                   activeTab === "hints"
                     ? "text-primary border-b-2 border-primary"
                     : "text-muted-foreground hover:text-foreground"
@@ -665,7 +665,7 @@ export default function CapituloEditorPage() {
                 Dicas ({hintsRevealed.length}/{capituloView.dicas.length})
               </button>
             </div>
-            <div className="flex-1 overflow-auto p-4">
+            <div className="flex-1 overflow-auto p-3 sm:p-4">
               {activeTab === "story" && (
                 <div>
                   <p className="text-sm text-muted-foreground mb-4">
@@ -692,11 +692,11 @@ export default function CapituloEditorPage() {
         <div className="lg:w-2/3 flex flex-col gap-4 min-h-0">
           {/* Objetivo atual */}
           {!isVictorious && currentObjetivo && (
-            <div className="bg-primary/10 border border-primary/30 rounded-lg px-4 py-3">
-              <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
+            <div className="bg-primary/10 border border-primary/30 rounded-lg px-3 sm:px-4 py-2 sm:py-3">
+              <p className="text-[11px] sm:text-xs font-semibold text-primary uppercase tracking-wide mb-0.5 sm:mb-1">
                 Objetivo {currentObjetivoIndex + 1} de {totalObjetivos}
               </p>
-              <p className="text-sm font-medium text-foreground">
+              <p className="text-xs sm:text-sm font-medium text-foreground">
                 {currentObjetivo.descricao}
               </p>
             </div>
@@ -704,27 +704,26 @@ export default function CapituloEditorPage() {
 
           {/* Feedback de erro no objetivo atual */}
           {objetivoFeedback && !isVictorious && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3" role="alert">
-              <p className="text-sm text-red-400">{objetivoFeedback}</p>
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-3 sm:px-4 py-2 sm:py-3" role="alert">
+              <p className="text-xs sm:text-sm text-red-400">{objetivoFeedback}</p>
             </div>
           )}
 
           {/* Editor SQL */}
           <div
-            className="bg-card border border-border rounded-lg flex flex-col"
-            style={{ height: "42%" }}
+            className="bg-card border border-border rounded-lg flex flex-col min-h-[220px] lg:min-h-0 lg:h-[42%]"
           >
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <div className="flex items-center gap-2">
-                <h2 className="text-sm font-semibold text-foreground">Editor SQL</h2>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-border bg-muted text-muted-foreground">SQLite</span>
+            <div className="flex items-center justify-between border-b border-border px-3 sm:px-4 py-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <h2 className="text-sm font-semibold text-foreground truncate">Editor SQL</h2>
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-border bg-muted text-muted-foreground shrink-0">SQLite</span>
               </div>
               <button
                 onClick={handleRunQuery}
                 disabled={isRunning || !isReady || isVictorious || !!pendingAdvance}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="px-3 sm:px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
               >
-                {isRunning ? "Executando..." : "▶ Executar Query  ⌘⏎"}
+                {isRunning ? "Executando..." : <><span className="hidden sm:inline">▶ Executar Consulta</span><span className="sm:hidden">▶ Exec.</span> <span className="hidden md:inline">⌘⏎</span></>}
               </button>
             </div>
             <SqlEditor value={query} onChange={setQuery} />
@@ -738,19 +737,19 @@ export default function CapituloEditorPage() {
 
           {/* Painel de narrativa + confirmação de avanço */}
           {(narrativa || pendingAdvance) && (
-            <div className="bg-emerald-950/60 border border-emerald-500/40 rounded-lg px-4 py-3 flex gap-3 items-start">
-              <span className="text-xl shrink-0 mt-0.5">🔍</span>
+            <div className="bg-emerald-950/60 border border-emerald-500/40 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 flex gap-2 sm:gap-3 items-start">
+              <span className="text-lg sm:text-xl shrink-0 mt-0.5">🔍</span>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-emerald-400 uppercase tracking-widest mb-1">Dedução do investigador</p>
-                <p className="text-sm text-emerald-100 leading-relaxed">
+                <p className="text-[11px] sm:text-xs font-bold text-emerald-400 uppercase tracking-widest mb-0.5 sm:mb-1">Dedução do investigador</p>
+                <p className="text-xs sm:text-sm text-emerald-100 leading-relaxed">
                   {narrativa ?? "Objetivo concluído! Pronto para continuar a investigação?"}
                 </p>
                 {pendingAdvance && (
                   <button
                     onClick={handleContinue}
-                    className="mt-3 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold rounded-lg transition-colors"
+                    className="mt-2 sm:mt-3 px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors"
                   >
-                    {pendingAdvance.type === "victory" ? "Ver resultado final →" : "Continuar investigação →"}
+                    {pendingAdvance.type === "victory" ? "Ver resultado final →" : "Continuar →"}
                   </button>
                 )}
               </div>

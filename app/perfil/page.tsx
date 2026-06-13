@@ -47,7 +47,7 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
   const axisAngles = Array.from({ length: N }, (_, i) => (360 / N) * i);
 
   return (
-    <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-background p-5 relative overflow-hidden">
+    <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-background p-3 sm:p-5 relative overflow-hidden">
       {/* glow decorativo */}
       <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
@@ -176,7 +176,7 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
       </svg>
 
       {/* stats abaixo */}
-      <div className="grid grid-cols-5 gap-1 mt-1">
+      <div className="grid grid-cols-5 gap-0.5 sm:gap-1 mt-1">
         {data.map((d, i) => (
           <div key={i} className="text-center">
             <p className="text-[10px] text-muted-foreground">{AXES[i].label}</p>
@@ -380,23 +380,23 @@ export default function PerfilPage() {
         {!isLoading && (
         <>
         {/* Avatar + nome */}
-        <div className="flex items-center gap-5 mb-8">
-          <div className="w-16 h-16 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center text-3xl font-bold text-primary">
+        <div className="flex items-center gap-3 sm:gap-5 mb-6 sm:mb-8">
+          <div className="w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center text-xl sm:text-3xl font-bold text-primary">
             {(user?.nick || user?.username || "?")[0].toUpperCase()}
           </div>
-          <div>
-            <h1 className="text-2xl font-extrabold text-foreground">{user?.nick || user?.username}</h1>
-            <p className="text-muted-foreground text-sm">@{user?.username} · {(user?.xp ?? 0).toLocaleString()} XP</p>
+          <div className="min-w-0">
+            <h1 className="text-lg sm:text-2xl font-extrabold text-foreground truncate">{user?.nick || user?.username}</h1>
+            <p className="text-muted-foreground text-xs sm:text-sm truncate">@{user?.username} · {(user?.xp ?? 0).toLocaleString()} XP</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 border-b border-border mb-8">
+        <div className="flex gap-1 border-b border-border mb-6 sm:mb-8">
           {TABS.map(t => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-t-lg transition-colors ${
                 tab === t.id
                   ? "bg-primary/10 text-primary border-b-2 border-primary"
                   : "text-muted-foreground hover:text-foreground"

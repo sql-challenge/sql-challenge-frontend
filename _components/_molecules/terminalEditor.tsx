@@ -149,7 +149,7 @@ export function TerminalEditor() {
             role="tab"
             aria-selected={i === activeTab}
             onClick={() => setActiveTab(i)}
-            className={`px-4 py-2 text-xs tracking-wide whitespace-nowrap transition-colors cursor-pointer border-b-2 -mb-[2px] ${
+            className={`px-2 sm:px-4 py-2 text-[11px] sm:text-xs tracking-wide whitespace-nowrap transition-colors cursor-pointer border-b-2 -mb-[2px] ${
               i === activeTab
                 ? "text-primary border-primary bg-primary/10"
                 : "text-muted-foreground border-transparent hover:text-foreground"

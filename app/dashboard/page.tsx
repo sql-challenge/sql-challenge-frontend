@@ -51,11 +51,11 @@ export default function DashboardPage() {
 
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           {/* Welcome */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-foreground mb-2">
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">
               Bem-vindo de volta, {user?.nick || user?.username || "Detetive"}! 🔍
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-xs sm:text-base text-muted-foreground">
               Continue sua jornada para dominar SQL através de mistérios envolventes
             </p>
           </div>
@@ -92,18 +92,18 @@ export default function DashboardPage() {
           </div>
 
           {/* Progresso de Nível */}
-          <div className="rounded-xl border border-border bg-card p-6 mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h2 className="text-xl font-bold text-foreground">Nível: {level.current}</h2>
-                <p className="text-sm text-muted-foreground">
+          <div className="rounded-xl border border-border bg-card p-4 sm:p-6 mb-6 sm:mb-8">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <div className="min-w-0">
+                <h2 className="text-base sm:text-xl font-bold text-foreground truncate">Nível: {level.current}</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   {level.next !== "Máximo" ? `Próximo: ${level.next} (${level.nextMin.toLocaleString()} XP)` : "Você atingiu o nível máximo!"}
                 </p>
               </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-primary">{xp.toLocaleString()} XP</div>
+              <div className="text-right shrink-0 ml-2">
+                <div className="text-lg sm:text-2xl font-bold text-primary">{xp.toLocaleString()} XP</div>
                 {level.next !== "Máximo" && (
-                  <div className="text-sm text-muted-foreground">de {level.nextMin.toLocaleString()} XP</div>
+                  <div className="text-xs sm:text-sm text-muted-foreground">de {level.nextMin.toLocaleString()} XP</div>
                 )}
               </div>
             </div>
@@ -116,9 +116,9 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Atividade Recente */}
             <div className="lg:col-span-2">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-foreground">Casos Iniciados</h2>
-                <Link href="/mystery" className="text-sm text-primary hover:underline font-medium">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-2xl font-bold text-foreground">Casos Iniciados</h2>
+                <Link href="/mystery" className="text-xs sm:text-sm text-primary hover:underline font-medium">
                   Ver todos →
                 </Link>
               </div>
@@ -152,9 +152,9 @@ export default function DashboardPage() {
 
             {/* Conquistas */}
             <div>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-foreground">Conquistas</h2>
-                <Link href="/conquistas" className="text-sm text-primary hover:underline font-medium">
+              <div className="flex items-center justify-between mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-2xl font-bold text-foreground">Conquistas</h2>
+                <Link href="/conquistas" className="text-xs sm:text-sm text-primary hover:underline font-medium">
                   {unlockedCount}/6 →
                 </Link>
               </div>

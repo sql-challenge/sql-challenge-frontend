@@ -9,11 +9,11 @@ interface ResultsPanelProps {
 export function ResultsPanel({ results, error, isRunning }: ResultsPanelProps) {
   return (
     <div className="flex flex-col h-full">
-      <div className="border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold text-foreground">Resultados</h2>
+      <div className="border-b border-border px-3 sm:px-4 py-2 sm:py-3">
+        <h2 className="text-xs sm:text-sm font-semibold text-foreground">Resultados</h2>
       </div>
 
-      <div className="flex-1 overflow-auto p-4" aria-live="polite" aria-atomic="true">
+      <div className="flex-1 overflow-auto p-3 sm:p-4" aria-live="polite" aria-atomic="true">
         {isRunning && (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">

@@ -101,35 +101,35 @@ export default function ConquistasPage() {
           {!isLoading && (
           <>
           {/* ── Header ──────────────────────────────────────────────── */}
-          <div className="flex items-start justify-between mb-8 flex-wrap gap-4">
+          <div className="flex items-start justify-between mb-6 sm:mb-8 flex-wrap gap-3 sm:gap-4">
             <div>
-              <Award className="w-10 h-10 text-primary mb-2" />
-              <h1 className="text-3xl font-extrabold text-foreground">Conquistas</h1>
-              <p className="text-muted-foreground mt-1">Sua jornada como detetive SQL</p>
+              <Award className="w-8 sm:w-10 h-8 sm:h-10 text-primary mb-1 sm:mb-2" />
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground">Conquistas</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">Sua jornada como detetive SQL</p>
             </div>
             <div className="text-right">
-              <p className="text-4xl font-black text-primary">
+              <p className="text-2xl sm:text-4xl font-black text-primary">
                 {unlocked}
-                <span className="text-xl text-muted-foreground">/{achievements.length}</span>
+                <span className="text-base sm:text-xl text-muted-foreground">/{achievements.length}</span>
               </p>
-              <p className="text-sm text-muted-foreground">conquistadas</p>
-              <div className="mt-2 h-2 w-40 bg-muted rounded-full overflow-hidden">
+              <p className="text-xs sm:text-sm text-muted-foreground">conquistadas</p>
+              <div className="mt-1 sm:mt-2 h-1.5 sm:h-2 w-28 sm:w-40 bg-muted rounded-full overflow-hidden">
                 <div
                   className="h-full bg-primary rounded-full transition-all duration-700"
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <p className="text-xs text-muted-foreground mt-1">{pct}% completo</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">{pct}% completo</p>
             </div>
           </div>
 
           {/* ── Stats ───────────────────────────────────────────────── */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-6 sm:mb-8">
             {stats.map(({ Icon, label, value }) => (
-              <div key={label} className="rounded-xl border border-border bg-card px-4 py-3 text-center">
-                <Icon className="w-5 h-5 mx-auto mb-1 text-primary" />
-                <p className="text-lg font-black text-foreground">{value}</p>
-                <p className="text-xs text-muted-foreground">{label}</p>
+              <div key={label} className="rounded-xl border border-border bg-card px-2 sm:px-4 py-2 sm:py-3 text-center">
+                <Icon className="w-4 sm:w-5 h-4 sm:h-5 mx-auto mb-0.5 sm:mb-1 text-primary" />
+                <p className="text-sm sm:text-lg font-black text-foreground truncate">{value}</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{label}</p>
               </div>
             ))}
           </div>
