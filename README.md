@@ -29,6 +29,8 @@ npm run dev
 
 Acesse [http://localhost:3000](http://localhost:3000).
 
+> 📖 Setup completo (pré-requisitos, fluxo com backend/banco, variáveis, troubleshooting): [DEVELOPMENT.md](./DEVELOPMENT.md).
+
 ### Variáveis de ambiente (`.env.local`)
 
 ```env
