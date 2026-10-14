@@ -47,14 +47,14 @@ export default function LoginPage() {
           <div className="mb-6 flex justify-center">
             <Logo size="lg"/>
           </div>
-          <h1 className="text-3xl font-bold text-balance">Bem-vindo de volta, Detetive</h1>
+          <h1 className="text-2xl font-display tracking-wide text-balance">Bem-vindo de volta, Detetive</h1>
           <p className="mt-2 text-muted-foreground">Acesse para continuar sua investigação em SQL</p>
         </div>
 
         <AuthCard>
           <form className="space-y-6" onSubmit={handleSubmit}>
             {error && (
-              <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+              <div className="border-2 border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
                 {error}
               </div>
             )}
@@ -85,7 +85,7 @@ export default function LoginPage() {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-border" />
+                <div className="w-full border-t-2 border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-card px-2 text-muted-foreground">Ou continue com</span>

@@ -64,7 +64,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   if (showSpinner) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <div className="flex items-center gap-1.5">
+          <span className="h-3 w-3 bg-primary animate-blink-pixel" />
+          <span className="h-3 w-3 bg-primary animate-blink-pixel [animation-delay:200ms]" />
+          <span className="h-3 w-3 bg-primary animate-blink-pixel [animation-delay:400ms]" />
+        </div>
       </div>
     );
   }

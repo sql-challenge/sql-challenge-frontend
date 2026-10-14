@@ -13,7 +13,7 @@ const Badge = forwardRef<HTMLDivElement, BadgeProps>(({ className, variant = "de
     <div
       ref={ref}
       className={twMerge(
-        "inline-flex items-center px-2.5 py-1 text-xs font-semibold transition-colors border-2",
+        "inline-flex items-center px-2.5 py-1 text-xs font-semibold tracking-wide transition-colors border-2 whitespace-nowrap",
         variant === "default" && "bg-secondary text-secondary-foreground border-secondary",
         variant === "primary" && "bg-primary text-primary-foreground border-primary",
         variant === "success" && "bg-success text-success-foreground border-success",

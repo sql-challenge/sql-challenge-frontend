@@ -14,7 +14,7 @@ export function SqlEditor({ value, onChange, readOnly = false }: SqlEditorProps)
   const {theme} = useTheme()
   //
   return (
-    <div className="flex-1 relative border border-border overflow-hidden">
+    <div className="flex-1 relative border-2 border-border overflow-hidden bg-card">
       <CodeMirror
         value={value}
         height="100%"

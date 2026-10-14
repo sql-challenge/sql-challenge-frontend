@@ -8,10 +8,10 @@ interface AchievementCardProps {
 export function AchievementCard({ achievement }: AchievementCardProps) {
   return (
     <div
-      className={`rounded-xl border p-4 transition-all ${
+      className={`pixel-panel p-4 transition-all ${
         achievement.unlocked
-          ? "border-primary/50 bg-gradient-to-br from-primary/5 to-accent/5 hover:border-primary hover:shadow-lg hover:-translate-y-1 cursor-pointer"
-          : "border-border bg-muted/30 opacity-60"
+          ? "border-primary/50 bg-primary/5 hover:border-primary hover:shadow-pixel hover:-translate-y-0.5 cursor-pointer"
+          : "border-border opacity-60"
       }`}
     >
       <div className="flex items-center justify-between mb-3">

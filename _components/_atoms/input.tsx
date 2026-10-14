@@ -11,11 +11,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(({ className, type, error
     <input
       type={type}
       className={twMerge(
-        "flex h-11 w-full rounded-lg border border-input bg-input px-4 py-2 text-base",
+        "flex h-11 w-full border-2 border-input bg-input px-4 py-2 text-base",
         "placeholder:text-muted-foreground",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
         "disabled:cursor-not-allowed disabled:opacity-50",
-        "transition-all",
+        "transition-colors",
         error && "border-destructive focus-visible:ring-destructive",
         className,
       )}

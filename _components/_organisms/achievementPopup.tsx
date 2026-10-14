@@ -24,7 +24,7 @@ export function AchievementPopup({ achievements, onClose, onNavigateNext }: Achi
       <style>{popInKeyframes}</style>
       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div
-        className="bg-card border border-border rounded-2xl p-6 max-w-md w-full shadow-2xl"
+        className="border-2 border-border bg-card p-6 max-w-md w-full shadow-pixel"
         style={{ animation: "pop-in 0.2s ease-out 1 forwards" }}
       >
         <div className="flex items-center justify-between mb-4">
@@ -55,9 +55,9 @@ export function AchievementPopup({ achievements, onClose, onNavigateNext }: Achi
             return (
               <div
                 key={ach.id}
-                className={`flex items-center gap-3 rounded-xl border p-3 ${style.border} ${style.bg}`}
+                className={`flex items-center gap-3 border-2 p-3 ${style.border} ${style.bg}`}
               >
-                <div className={`w-10 h-10 shrink-0 flex items-center justify-center rounded-lg border ${style.border} ${style.bg}`}>
+                <div className={`w-10 h-10 shrink-0 flex items-center justify-center border-2 ${style.border} ${style.bg}`}>
                   <Icon className={`w-5 h-5 ${style.icon}`} />
                 </div>
                 <div className="flex-1 min-w-0">
@@ -65,8 +65,8 @@ export function AchievementPopup({ achievements, onClose, onNavigateNext }: Achi
                   <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{ach.desc}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-sm font-black text-yellow-400">+{xp} XP</p>
-                  <span className={`text-xs px-1.5 py-0.5 rounded border font-semibold ${style.badge}`}>
+                  <p className="text-sm font-black text-warning tabular-nums">+{xp} XP</p>
+                  <span className={`text-xs px-1.5 py-0.5 border-2 font-semibold ${style.badge}`}>
                     {style.label}
                   </span>
                 </div>
@@ -80,7 +80,7 @@ export function AchievementPopup({ achievements, onClose, onNavigateNext }: Achi
             onClose();
             onNavigateNext?.();
           }}
-          className="mt-4 w-full px-4 py-2.5 bg-primary text-primary-foreground rounded-xl font-bold text-sm hover:bg-primary/90 transition-colors"
+          className="pixel-press mt-4 w-full px-4 py-2.5 border-2 border-primary bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 shadow-pixel-sm"
         >
           Incrível!
         </button>

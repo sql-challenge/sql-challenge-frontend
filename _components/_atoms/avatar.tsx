@@ -20,7 +20,7 @@ const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
     return (
       <div
         ref={ref}
-        className={twMerge("relative flex shrink-0 overflow-hidden rounded-full bg-secondary", sizeClasses[size], className)}
+        className={twMerge("relative flex shrink-0 overflow-hidden border-2 border-border bg-secondary", sizeClasses[size], className)}
         {...props}
       >
         {src ? (

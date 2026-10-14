@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Mistérios e desafios SQL — aprenda SQL resolvendo casos detectivescos",
     start_url: "/",
     display: "standalone",
-    background_color: "#0a0a14",
-    theme_color: "#7c3aed",
+    background_color: "#07070d",
+    theme_color: "#00e5ff",
     icons: [
       {
         src: "/icon.svg",
