@@ -7,6 +7,7 @@ import { ProtectedRoute } from "@/_components/_organisms/protectedRoute"
 import { useUser } from "@/_context/userContext"
 import { getQuickAchievements } from "@/_lib/achievements"
 import Link from "next/link"
+import { Search, Lock, Check, Zap, CheckCircle, Award, Clock } from "feather-icons-react"
 
 // ── Sistema de níveis ─────────────────────────────────────
 const XP_LEVELS = [
@@ -52,8 +53,8 @@ export default function DashboardPage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
           {/* Welcome */}
           <div className="mb-6 sm:mb-8">
-            <h1 className="text-xl sm:text-3xl font-bold text-foreground mb-1 sm:mb-2">
-              Bem-vindo de volta, {user?.nick || user?.username || "Detetive"}! 🔍
+            <h1 className="text-lg sm:text-2xl font-display tracking-wide text-foreground mb-2">
+              Bem-vindo de volta, {user?.nick || user?.username || "Detetive"}
             </h1>
             <p className="text-xs sm:text-base text-muted-foreground">
               Continue sua jornada para dominar SQL através de mistérios envolventes
@@ -63,28 +64,28 @@ export default function DashboardPage() {
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <StatCard
-              icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
+              icon={<Zap className="w-6 h-6" />}
               label="XP Total"
               value={xp.toLocaleString()}
               subtitle={level.next !== "Máximo" ? `${(level.nextMin - xp).toLocaleString()} XP para ${level.next}` : "Nível máximo!"}
             />
 
             <StatCard
-              icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" /></svg>}
+              icon={<CheckCircle className="w-6 h-6" />}
               label="Capítulos Completos"
               value={`${totalCaps}`}
               subtitle={`Em ${progress.length} caso${progress.length !== 1 ? "s" : ""}`}
             />
 
             <StatCard
-              icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
+              icon={<Award className="w-6 h-6" />}
               label="Ranking Global"
               value={user?.rankingPosition ? `#${user.rankingPosition}` : "—"}
               subtitle="Posição no ranking de XP"
             />
 
             <StatCard
-              icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+              icon={<Clock className="w-6 h-6" />}
               label="Tempo Jogado"
               value={totalMins < 60 ? `${totalMins}min` : `${Math.floor(totalMins / 60)}h ${totalMins % 60}min`}
               subtitle="Tempo total de investigação"
@@ -92,16 +93,16 @@ export default function DashboardPage() {
           </div>
 
           {/* Progresso de Nível */}
-          <div className="rounded-xl border border-border bg-card p-4 sm:p-6 mb-6 sm:mb-8">
+          <div className="pixel-panel p-4 sm:p-6 mb-6 sm:mb-8">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <div className="min-w-0">
-                <h2 className="text-base sm:text-xl font-bold text-foreground truncate">Nível: {level.current}</h2>
-                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                <h2 className="text-sm sm:text-lg font-display tracking-wide text-foreground truncate">Nível: {level.current}</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate mt-1">
                   {level.next !== "Máximo" ? `Próximo: ${level.next} (${level.nextMin.toLocaleString()} XP)` : "Você atingiu o nível máximo!"}
                 </p>
               </div>
               <div className="text-right shrink-0 ml-2">
-                <div className="text-lg sm:text-2xl font-bold text-primary">{xp.toLocaleString()} XP</div>
+                <div className="font-mono text-lg sm:text-2xl font-bold text-primary tabular-nums">{xp.toLocaleString()} XP</div>
                 {level.next !== "Máximo" && (
                   <div className="text-xs sm:text-sm text-muted-foreground">de {level.nextMin.toLocaleString()} XP</div>
                 )}
@@ -117,33 +118,33 @@ export default function DashboardPage() {
             {/* Atividade Recente */}
             <div className="lg:col-span-2">
               <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-2xl font-bold text-foreground">Casos Iniciados</h2>
+                <h2 className="text-base sm:text-xl font-display tracking-wide text-foreground">Casos Iniciados</h2>
                 <Link href="/mystery" className="text-xs sm:text-sm text-primary hover:underline font-medium">
                   Ver todos →
                 </Link>
               </div>
 
               {recentActivity.length === 0 ? (
-                <div className="rounded-xl border border-border bg-card p-8 text-center text-muted-foreground">
-                  <p className="text-4xl mb-3">🕵️</p>
+                <div className="pixel-panel p-8 text-center text-muted-foreground">
+                  <Search className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
                   <p className="font-semibold text-foreground">Nenhum caso em andamento</p>
                   <p className="text-sm mt-1">Um arquivo vazio espera por um detetive. Pronto para começar?</p>
-                  <Link href="/mystery" className="mt-4 inline-block px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
+                  <Link href="/mystery" className="pixel-press mt-4 inline-block border-2 border-primary bg-primary px-4 py-2 text-primary-foreground text-sm font-semibold hover:bg-primary/90 shadow-pixel-sm">
                     Explorar mistérios
                   </Link>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {recentActivity.map((p, i) => (
-                    <div key={i} className="flex items-center gap-4 rounded-xl border border-border bg-card px-4 py-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-lg shrink-0">
-                        🕵️
+                    <div key={i} className="pixel-panel flex items-center gap-4 px-4 py-3">
+                      <div className="w-10 h-10 border-2 border-primary/30 bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                        <Search className="w-5 h-5" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm text-foreground truncate">{p.nameChallenge}</p>
                         <p className="text-xs text-muted-foreground">{p.capFinish ?? 0} cap{(p.capFinish ?? 0) !== 1 ? "ítulos" : "ítulo"} · {(p.xpObtido ?? 0).toLocaleString()} XP obtido</p>
                       </div>
-                      <span className="text-xs font-bold text-primary shrink-0">+{(p.xpObtido ?? 0)} XP</span>
+                      <span className="font-mono text-xs font-bold text-primary shrink-0 tabular-nums">+{(p.xpObtido ?? 0)} XP</span>
                     </div>
                   ))}
                 </div>
@@ -153,7 +154,7 @@ export default function DashboardPage() {
             {/* Conquistas */}
             <div>
               <div className="flex items-center justify-between mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-2xl font-bold text-foreground">Conquistas</h2>
+                <h2 className="text-base sm:text-xl font-display tracking-wide text-foreground">Conquistas</h2>
                 <Link href="/conquistas" className="text-xs sm:text-sm text-primary hover:underline font-medium">
                   {unlockedCount}/6 →
                 </Link>
@@ -162,15 +163,15 @@ export default function DashboardPage() {
                 {quickAchievements.map((a) => (
                   <div
                     key={a.id}
-                    className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all ${
+                    className={`flex items-center gap-3 border-2 px-3 py-2.5 transition-all ${
                       a.unlocked
                         ? "border-primary/30 bg-primary/5"
                         : "border-border bg-card opacity-50 grayscale"
                     }`}
                   >
-                    <span className="text-xl">{a.unlocked ? a.icon : "🔒"}</span>
+                    <span className="text-xl">{a.unlocked ? a.icon : <Lock className="w-5 h-5 text-muted-foreground" />}</span>
                     <p className="text-sm font-semibold text-foreground">{a.title}</p>
-                    {a.unlocked && <span className="ml-auto text-emerald-400 text-xs font-bold">✓</span>}
+                    {a.unlocked && <Check className="ml-auto w-4 h-4 text-success" />}
                   </div>
                 ))}
                 <Link href="/conquistas" className="block text-center text-xs text-primary hover:underline mt-1">

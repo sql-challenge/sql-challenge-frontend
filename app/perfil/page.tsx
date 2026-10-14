@@ -3,16 +3,17 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/_components/_organisms/header";
 import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
+import { FormField } from "@/_components/_molecules/form-field";
 import { useUser } from "@/_context/userContext";
 import { User } from "@/_lib/types/user";
 
 // ── Spider Chart SVG customizado ──────────────────────────
 const AXES = [
-  { key: "value",  icon: "⌨️", label: "Queries"    },
-  { key: "value",  icon: "⏱️", label: "Tempo"      },
-  { key: "value",  icon: "⚡", label: "XP"         },
-  { key: "value",  icon: "📖", label: "Capítulos"  },
-  { key: "value",  icon: "💡", label: "Dicas"      },
+  { label: "Queries"    },
+  { label: "Tempo"      },
+  { label: "XP"         },
+  { label: "Capítulos"  },
+  { label: "Dicas"      },
 ];
 const N = AXES.length;
 const SIZE   = 220;
@@ -47,35 +48,31 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
   const axisAngles = Array.from({ length: N }, (_, i) => (360 / N) * i);
 
   return (
-    <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-background p-3 sm:p-5 relative overflow-hidden">
-      {/* glow decorativo */}
-      <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-10 -left-10 w-32 h-32 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
-
+    <div className="pixel-panel p-3 sm:p-5 relative overflow-hidden">
       {/* header */}
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-bold text-foreground">Radar de Habilidades</h2>
+        <h2 className="text-sm font-display tracking-wide text-foreground">Radar de Habilidades</h2>
         {compareUser && (
           <div className="flex items-center gap-3 text-xs">
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-primary inline-block" />Você</span>
-            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block" />{compareUser.nick || compareUser.username}</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-primary inline-block" />Você</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 bg-accent inline-block" />{compareUser.nick || compareUser.username}</span>
           </div>
         )}
       </div>
 
-      <svg width="100%" viewBox={`0 0 ${SIZE} ${SIZE}`} className="overflow-visible text-blue-300">
+      <svg width="100%" viewBox={`0 0 ${SIZE} ${SIZE}`} className="overflow-visible text-primary">
         <defs>
           <radialGradient id="radarGradMe" cx="50%" cy="50%" r="50%">
-            <stop offset="0%"   stopColor="#3b82f6" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.05" />
+            <stop offset="0%"   stopColor="var(--primary)" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.05" />
           </radialGradient>
           <radialGradient id="radarGradFriend" cx="50%" cy="50%" r="50%">
-            <stop offset="0%"   stopColor="#60a5fa" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.05" />
+            <stop offset="0%"   stopColor="var(--accent)" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="var(--accent)" stopOpacity="0.05" />
           </radialGradient>
           <radialGradient id="radarGridBg" cx="50%" cy="50%" r="60%">
-            <stop offset="0%"   stopColor="#60a5fa" stopOpacity="0.10" />
-            <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.02" />
+            <stop offset="0%"   stopColor="var(--primary)" stopOpacity="0.10" />
+            <stop offset="100%" stopColor="var(--primary)" stopOpacity="0.02" />
           </radialGradient>
           <filter id="glow">
             <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
@@ -103,9 +100,9 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
             <polygon
               key={lvl}
               points={pts}
-              fill={lvl % 2 === 0 ? "#60a5fa" : "none"}
+              fill={lvl % 2 === 0 ? "var(--primary)" : "none"}
               fillOpacity={lvl % 2 === 0 ? 0.04 : 0}
-              stroke="#60a5fa"
+              stroke="var(--primary)"
               strokeWidth={lvl === LEVELS - 1 ? 0.8 : 0.5}
               strokeOpacity={lvl === LEVELS - 1 ? 0.35 : 0.2}
             />
@@ -120,7 +117,7 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
               key={i}
               x1={CX} y1={CY}
               x2={outer.x} y2={outer.y}
-              stroke="#60a5fa"
+              stroke="var(--primary)"
               strokeWidth={0.5}
               strokeOpacity={0.22}
             />
@@ -132,9 +129,9 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
           <>
             <polygon
               points={polyPoints(friendValues)}
-              fill="#60a5fa"
+              fill="var(--accent)"
               fillOpacity={0.12}
-              stroke="#60a5fa"
+              stroke="var(--accent)"
               strokeWidth={1.6}
               strokeOpacity={0.8}
               strokeLinejoin="round"
@@ -145,9 +142,9 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
         {/* área do usuário */}
         <polygon
           points={polyPoints(myValues)}
-          fill="#3b82f6"
+          fill="var(--primary)"
           fillOpacity={0.2}
-          stroke="#3b82f6"
+          stroke="var(--primary)"
           strokeWidth={2.2}
           strokeOpacity={0.95}
           strokeLinejoin="round"
@@ -165,11 +162,11 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
               y={p.y}
               textAnchor="middle"
               dominantBaseline="middle"
-              fontSize={9}
+              fontSize={10}
               fontWeight="700"
               fill="currentColor"
             >
-              {AXES[i].icon} {AXES[i].label}
+              {AXES[i].label}
             </text>
           );
         })}
@@ -179,10 +176,10 @@ function SpiderChart({ data, compareUser }: SpiderChartProps) {
       <div className="grid grid-cols-5 gap-0.5 sm:gap-1 mt-1">
         {data.map((d, i) => (
           <div key={i} className="text-center">
-            <p className="text-[10px] text-muted-foreground">{AXES[i].label}</p>
-            <p className="text-xs font-black text-blue-400">{d.raw}</p>
+            <p className="text-[11px] text-muted-foreground">{AXES[i].label}</p>
+            <p className="font-mono text-xs font-black text-primary tabular-nums">{d.raw}</p>
             {compareUser && (
-              <p className="text-[10px] text-blue-400">{('friend' in d ? (d as { friend?: number }).friend : 0) ?? 0}%</p>
+              <p className="text-[11px] text-accent tabular-nums">{('friend' in d ? (d as { friend?: number }).friend : 0) ?? 0}%</p>
             )}
           </div>
         ))}
@@ -381,24 +378,24 @@ export default function PerfilPage() {
         <>
         {/* Avatar + nome */}
         <div className="flex items-center gap-3 sm:gap-5 mb-6 sm:mb-8">
-          <div className="w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center text-xl sm:text-3xl font-bold text-primary">
+          <div className="w-12 sm:w-16 h-12 sm:h-16 border-2 border-primary bg-primary/20 flex items-center justify-center text-xl sm:text-3xl font-bold text-primary">
             {(user?.nick || user?.username || "?")[0].toUpperCase()}
           </div>
           <div className="min-w-0">
-            <h1 className="text-lg sm:text-2xl font-extrabold text-foreground truncate">{user?.nick || user?.username}</h1>
-            <p className="text-muted-foreground text-xs sm:text-sm truncate">@{user?.username} · {(user?.xp ?? 0).toLocaleString()} XP</p>
+            <h1 className="text-base sm:text-2xl font-display tracking-wide text-foreground truncate">{user?.nick || user?.username}</h1>
+            <p className="text-muted-foreground text-xs sm:text-sm truncate">@{user?.username} · <span className="font-mono tabular-nums">{(user?.xp ?? 0).toLocaleString()}</span> XP</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 border-b border-border mb-6 sm:mb-8">
+        <div className="flex gap-1 border-b-2 border-border mb-6 sm:mb-8">
           {TABS.map(t => (
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
-              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-t-lg transition-colors ${
+              className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium transition-colors border-b-2 border-transparent -mb-[2px] ${
                 tab === t.id
-                  ? "bg-primary/10 text-primary border-b-2 border-primary"
+                  ? "text-primary border-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -413,34 +410,26 @@ export default function PerfilPage() {
 
             {/* Formulário */}
             <div className="space-y-4">
-              <h2 className="text-lg font-bold text-foreground">Editar perfil</h2>
+              <h2 className="text-lg font-display tracking-wide text-foreground">Editar perfil</h2>
 
-              <div>
-                <label className="text-sm text-muted-foreground">Nome de usuário</label>
-                <input
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
-                />
-              </div>
+              <FormField
+                label="Nome de usuário"
+                value={username}
+                onChange={e => setUsername(e.target.value)}
+              />
 
-              <div>
-                <label className="text-sm text-muted-foreground">Apelido (nick)</label>
-                <input
-                  value={nick}
-                  onChange={e => setNick(e.target.value)}
-                  className="mt-1 w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground outline-none focus:border-primary"
-                />
-              </div>
+              <FormField
+                label="Apelido (nick)"
+                value={nick}
+                onChange={e => setNick(e.target.value)}
+              />
 
-              <div>
-                <label className="text-sm text-muted-foreground">E-mail</label>
-                <input
-                  value={user?.email ?? ""}
-                  disabled
-                  className="mt-1 w-full rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground cursor-not-allowed"
-                />
-              </div>
+              <FormField
+                label="E-mail"
+                value={user?.email ?? ""}
+                disabled
+                helperText="O e-mail identifica sua conta e não pode ser alterado."
+              />
 
               {/* Notificações por e-mail — disabled, backend notify endpoint preserved for future */}
               {/* <div className="flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3">
@@ -468,7 +457,7 @@ export default function PerfilPage() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-50"
+                className="pixel-press w-full py-2.5 border-2 border-primary bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 shadow-pixel-sm disabled:opacity-50"
               >
                 {saving ? "Salvando..." : saved ? "✓ Salvo!" : "Salvar alterações"}
               </button>

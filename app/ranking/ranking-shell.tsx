@@ -6,15 +6,21 @@ import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import { useUser } from "@/_context/userContext";
 import { User } from "@/_lib/types/user";
 import { api } from "@/_lib/api";
+import { Award, TrendingUp } from "feather-icons-react";
 
-const MEDAL = ["🥇", "🥈", "🥉"];
 const LEVEL_FROM_XP = (xp: number) => {
-  if (xp >= 10000) return { label: "Mestre SQL",    color: "text-yellow-400"  };
-  if (xp >= 5000)  return { label: "Detetive Sênior",color: "text-purple-400" };
-  if (xp >= 2000)  return { label: "Investigador",  color: "text-blue-400"    };
-  if (xp >= 500)   return { label: "Recruta",       color: "text-emerald-400" };
-  return               { label: "Novato",           color: "text-muted-foreground" };
+  if (xp >= 10000) return { label: "Mestre SQL",     color: "text-warning" };
+  if (xp >= 5000)  return { label: "Detetive Sênior", color: "text-accent" };
+  if (xp >= 2000)  return { label: "Investigador",    color: "text-primary" };
+  if (xp >= 500)   return { label: "Recruta",         color: "text-success" };
+  return                 { label: "Novato",           color: "text-muted-foreground" };
 };
+
+const PODIUM = {
+  0: { color: "text-warning",  block: "border-warning/50 bg-warning/15" },
+  1: { color: "text-muted-foreground", block: "border-border bg-muted/50" },
+  2: { color: "text-accent",   block: "border-accent/40 bg-accent/10" },
+} as const;
 
 const POLL_INTERVAL_MS = 60_000;
 
@@ -57,12 +63,12 @@ export function RankingShell({ initialPlayers }: { initialPlayers: Record<string
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="text-5xl mb-3">🏆</div>
-          <h1 className="text-4xl font-extrabold text-foreground mb-2">Ranking Global</h1>
+          <Award className="w-12 h-12 mx-auto mb-3 text-primary" />
+          <h1 className="text-2xl sm:text-4xl font-display tracking-wide text-foreground mb-2">Ranking Global</h1>
           <p className="text-muted-foreground">Os melhores detetives SQL do mundo mágico</p>
           {me && myPosition > 0 && (
-            <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 text-primary text-sm font-semibold">
-              Você está em <span className="text-lg font-black">#{myPosition}</span>
+            <div className="mt-4 inline-flex items-center gap-2 border-2 border-primary/40 bg-primary/10 px-4 py-2 text-primary text-sm font-semibold">
+              Você está em <span className="font-mono text-lg font-black tabular-nums">#{myPosition}</span>
             </div>
           )}
         </div>
@@ -75,17 +81,18 @@ export function RankingShell({ initialPlayers }: { initialPlayers: Record<string
               const height = idx === 0 ? "h-24 sm:h-32" : idx === 1 ? "h-20 sm:h-24" : "h-16 sm:h-20";
               const pos = idx + 1;
               const lvl = LEVEL_FROM_XP(p.xp);
+              const podium = PODIUM[idx as 0 | 1 | 2];
               return (
                 <div key={p.uid} className="flex flex-col items-center gap-1 sm:gap-2 flex-1 max-w-[90px] sm:max-w-[140px]">
-                  <div className="text-lg sm:text-2xl">{MEDAL[idx]}</div>
-                  <div className="w-8 sm:w-12 h-8 sm:h-12 rounded-full bg-gradient-to-br from-primary/40 to-primary/10 border-2 border-primary/40 flex items-center justify-center text-sm sm:text-xl font-black text-primary">
+                  <Award className={`w-5 h-5 sm:w-6 sm:h-6 ${podium.color}`} />
+                  <div className="w-8 sm:w-12 h-8 sm:h-12 border-2 border-primary/40 bg-primary/10 flex items-center justify-center text-sm sm:text-xl font-black text-primary">
                     {p.username?.[0]?.toUpperCase() ?? "?"}
                   </div>
-                  <p className="text-[10px] sm:text-xs font-bold text-foreground text-center line-clamp-1">{p.username}</p>
-                  <p className={`text-[10px] sm:text-xs ${lvl.color}`}>{lvl.label}</p>
-                  <p className="text-[11px] sm:text-sm font-black text-primary">{p.xp.toLocaleString()} XP</p>
-                  <div className={`w-full ${height} rounded-t-lg ${idx === 0 ? "bg-yellow-500/20 border border-yellow-500/30" : idx === 1 ? "bg-slate-400/20 border border-slate-400/30" : "bg-amber-700/20 border border-amber-700/30"} flex items-center justify-center`}>
-                    <span className="text-base sm:text-2xl font-black text-muted-foreground">#{pos}</span>
+                  <p className="text-[11px] sm:text-xs font-bold text-foreground text-center line-clamp-1">{p.username}</p>
+                  <p className={`text-[11px] sm:text-xs ${lvl.color}`}>{lvl.label}</p>
+                  <p className="font-mono text-[11px] sm:text-sm font-black text-primary tabular-nums">{p.xp.toLocaleString()} XP</p>
+                  <div className={`w-full ${height} border-2 ${podium.block} flex items-center justify-center`}>
+                    <span className="font-mono text-base sm:text-2xl font-black text-muted-foreground tabular-nums">#{pos}</span>
                   </div>
                 </div>
               );
@@ -95,7 +102,7 @@ export function RankingShell({ initialPlayers }: { initialPlayers: Record<string
 
         {/* Error */}
         {error && (
-          <div className="text-center py-12 text-red-400">{error}</div>
+          <div className="text-center py-12 text-destructive">{error}</div>
         )}
 
         {/* Full list */}
@@ -108,17 +115,21 @@ export function RankingShell({ initialPlayers }: { initialPlayers: Record<string
               return (
                 <div
                   key={p.uid}
-                  className={`flex items-center gap-2 sm:gap-4 rounded-xl border px-3 sm:px-4 py-2.5 sm:py-3 transition-all ${
+                  className={`flex items-center gap-2 sm:gap-4 border-2 px-3 sm:px-4 py-2.5 sm:py-3 transition-all ${
                     isMe
-                      ? "border-primary/50 bg-primary/5 shadow-sm shadow-primary/10"
+                      ? "border-primary/50 bg-primary/5 shadow-pixel-sm"
                       : "border-border bg-card"
                   }`}
                 >
-                  <div className="w-6 sm:w-8 text-center font-black text-base sm:text-lg shrink-0">
-                    {i < 3 ? MEDAL[i] : <span className="text-muted-foreground text-[11px] sm:text-sm">#{i + 1}</span>}
+                  <div className="w-6 sm:w-8 text-center font-mono font-black text-base sm:text-lg shrink-0">
+                    {i < 3 ? (
+                      <Award className={`w-4 h-4 sm:w-5 sm:h-5 mx-auto ${PODIUM[i as 0 | 1 | 2].color}`} />
+                    ) : (
+                      <span className="text-muted-foreground text-[11px] sm:text-sm tabular-nums">#{i + 1}</span>
+                    )}
                   </div>
 
-                  <div className={`w-8 sm:w-10 h-8 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-base font-black border-2 shrink-0 ${isMe ? "border-primary bg-primary/20 text-primary" : "border-border bg-muted text-muted-foreground"}`}>
+                  <div className={`w-8 sm:w-10 h-8 sm:h-10 flex items-center justify-center text-xs sm:text-base font-black border-2 shrink-0 ${isMe ? "border-primary bg-primary/20 text-primary" : "border-border bg-muted text-muted-foreground"}`}>
                     {p.username?.[0]?.toUpperCase() ?? "?"}
                   </div>
 
@@ -126,14 +137,14 @@ export function RankingShell({ initialPlayers }: { initialPlayers: Record<string
                     <div className="flex items-center gap-2">
                       <p className={`font-bold text-xs sm:text-sm truncate ${isMe ? "text-primary" : "text-foreground"}`}>
                         {p.username}
-                        {isMe && <span className="ml-1 text-[10px] sm:text-xs opacity-60">(você)</span>}
+                        {isMe && <span className="ml-1 text-[11px] sm:text-xs opacity-60">(você)</span>}
                       </p>
                     </div>
                     <div className="flex items-center gap-1 sm:gap-2 mt-0.5">
-                      <span className={`text-[10px] sm:text-xs ${lvl.color}`}>{lvl.label}</span>
-                      <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden max-w-[60px] sm:max-w-[80px]">
+                      <span className={`text-[11px] sm:text-xs ${lvl.color}`}>{lvl.label}</span>
+                      <div className="pixel-inset h-2 flex-1 max-w-[60px] sm:max-w-[80px] overflow-hidden">
                         <div
-                          className="h-full bg-primary rounded-full transition-all"
+                          className="h-full bg-primary transition-all"
                           style={{ width: `${progressPct}%` }}
                         />
                       </div>
@@ -141,8 +152,8 @@ export function RankingShell({ initialPlayers }: { initialPlayers: Record<string
                   </div>
 
                   <div className="text-right shrink-0">
-                    <p className="font-black text-xs sm:text-sm text-primary">{p.xp.toLocaleString()}</p>
-                    <p className="text-[10px] sm:text-xs text-muted-foreground">XP</p>
+                    <p className="font-mono font-black text-xs sm:text-sm text-primary tabular-nums">{p.xp.toLocaleString()}</p>
+                    <p className="text-[11px] sm:text-xs text-muted-foreground">XP</p>
                   </div>
                 </div>
               );
@@ -150,7 +161,7 @@ export function RankingShell({ initialPlayers }: { initialPlayers: Record<string
 
             {players.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
-                <p className="text-4xl mb-3">📊</p>
+                <TrendingUp className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
                 <p className="text-base font-semibold text-foreground">Ranking vazio</p>
                 <p className="text-sm mt-1">Ainda não há detetives registrados. Seja o primeiro a investigar!</p>
               </div>

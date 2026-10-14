@@ -70,7 +70,7 @@ export default function ConquistasPage() {
 
   const stats = [
     { Icon: Zap,        label: "XP Total",        value: (user?.xp ?? 0).toLocaleString() },
-    { Icon: BookOpen,   label: "Caps Completos",  value: totalCaps },
+    { Icon: BookOpen,   label: "Capítulos",       value: totalCaps },
     { Icon: Clipboard,  label: "Casos Iniciados", value: progress.length },
     { Icon: Terminal,   label: "Queries",         value: totalQueries.toLocaleString() },
     { Icon: Clock,      label: "Tempo Jogado",    value: formatTime(totalMinutes) },
@@ -94,7 +94,11 @@ export default function ConquistasPage() {
 
           {isLoading && (
             <div className="flex items-center justify-center py-20">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <div className="flex items-center gap-1.5">
+                <span className="h-3 w-3 bg-primary animate-blink-pixel" />
+                <span className="h-3 w-3 bg-primary animate-blink-pixel [animation-delay:200ms]" />
+                <span className="h-3 w-3 bg-primary animate-blink-pixel [animation-delay:400ms]" />
+              </div>
             </div>
           )}
 
@@ -104,32 +108,32 @@ export default function ConquistasPage() {
           <div className="flex items-start justify-between mb-6 sm:mb-8 flex-wrap gap-3 sm:gap-4">
             <div>
               <Award className="w-8 sm:w-10 h-8 sm:h-10 text-primary mb-1 sm:mb-2" />
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-foreground">Conquistas</h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 sm:mt-1">Sua jornada como detetive SQL</p>
+              <h1 className="text-xl sm:text-3xl font-display tracking-wide text-foreground">Conquistas</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground mt-1">Sua jornada como detetive SQL</p>
             </div>
             <div className="text-right">
-              <p className="text-2xl sm:text-4xl font-black text-primary">
+              <p className="font-mono text-2xl sm:text-4xl font-black text-primary tabular-nums">
                 {unlocked}
                 <span className="text-base sm:text-xl text-muted-foreground">/{achievements.length}</span>
               </p>
               <p className="text-xs sm:text-sm text-muted-foreground">conquistadas</p>
-              <div className="mt-1 sm:mt-2 h-1.5 sm:h-2 w-28 sm:w-40 bg-muted rounded-full overflow-hidden">
+              <div className="pixel-inset mt-1 sm:mt-2 h-2 w-28 sm:w-40 overflow-hidden">
                 <div
-                  className="h-full bg-primary rounded-full transition-all duration-700"
+                  className="h-full bg-primary transition-all duration-700"
                   style={{ width: `${pct}%` }}
                 />
               </div>
-              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">{pct}% completo</p>
+              <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">{pct}% completo</p>
             </div>
           </div>
 
           {/* ── Stats ───────────────────────────────────────────────── */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mb-6 sm:mb-8">
             {stats.map(({ Icon, label, value }) => (
-              <div key={label} className="rounded-xl border border-border bg-card px-2 sm:px-4 py-2 sm:py-3 text-center">
+              <div key={label} className="border-2 border-border bg-card px-2 sm:px-4 py-2 sm:py-3 text-center">
                 <Icon className="w-4 sm:w-5 h-4 sm:h-5 mx-auto mb-0.5 sm:mb-1 text-primary" />
-                <p className="text-sm sm:text-lg font-black text-foreground truncate">{value}</p>
-                <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{label}</p>
+                <p className="font-mono text-sm sm:text-lg font-black text-foreground truncate tabular-nums">{value}</p>
+                <p className="text-[11px] sm:text-xs text-muted-foreground truncate">{label}</p>
               </div>
             ))}
           </div>
@@ -145,14 +149,14 @@ export default function ConquistasPage() {
                 return (
                   <div
                     key={ach.id}
-                    className={`flex items-start gap-4 rounded-xl border p-4 transition-all duration-300 ${
+                    className={`flex items-start gap-4 border-2 p-4 transition-all duration-300 ${
                       ach.unlocked
                         ? `${style.border} ${style.bg}`
                         : "border-border bg-card opacity-50 grayscale"
                     }`}
                   >
                     <div
-                      className={`shrink-0 w-12 h-12 flex items-center justify-center rounded-xl border ${
+                      className={`shrink-0 w-12 h-12 flex items-center justify-center border-2 ${
                         ach.unlocked ? `${style.border} ${style.bg}` : "border-border bg-muted"
                       }`}
                     >
@@ -164,7 +168,7 @@ export default function ConquistasPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <p className="font-bold text-sm text-foreground">{ach.title}</p>
-                        <span className={`text-xs px-1.5 py-0.5 rounded border font-semibold ${style.badge}`}>
+                        <span className={`text-xs px-1.5 py-0.5 border-2 font-semibold ${style.badge}`}>
                           {style.label}
                         </span>
                       </div>
@@ -174,8 +178,8 @@ export default function ConquistasPage() {
                       </p>
                       {ach.unlocked && (
                         <div className="flex items-center gap-1 mt-1">
-                          <CheckCircle className="w-3 h-3 text-emerald-400" />
-                          <p className="text-xs text-emerald-400 font-semibold">Conquistada</p>
+                          <CheckCircle className="w-3 h-3 text-success" />
+                          <p className="text-xs text-success font-semibold">Conquistada</p>
                         </div>
                       )}
                     </div>

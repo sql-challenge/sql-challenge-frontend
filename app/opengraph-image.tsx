@@ -5,9 +5,9 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function OGImage() {
-  const [pressStart2P, vt323] = await Promise.all([
+  const [pressStart2P, pixelifySans] = await Promise.all([
     fetch(new URL("https://fonts.gstatic.com/s/pressstart2p/v15/e3t4euO8T-267oIAQAu6jDQyK3nVivM4.woff2")).then((r) => r.arrayBuffer()),
-    fetch(new URL("https://fonts.gstatic.com/s/vt323/v17/pxiKyp0ihIEF2isfFJA.woff2")).then((r) => r.arrayBuffer()),
+    fetch(new URL("https://fonts.gstatic.com/s/pixelifysans/v3/CHylV-3HFUT7aC4iv1TxGDR9Jn0Ei0tSaJ0.woff2")).then((r) => r.arrayBuffer()),
   ]);
 
   return new ImageResponse(
@@ -20,7 +20,7 @@ export default async function OGImage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #0a0a14 0%, #12101e 50%, #0a0a14 100%)",
+          background: "linear-gradient(135deg, #07070d 0%, #12101e 50%, #07070d 100%)",
           fontFamily: '"Press Start 2P"',
           position: "relative",
           overflow: "hidden",
@@ -32,7 +32,7 @@ export default async function OGImage() {
             position: "absolute",
             inset: 0,
             backgroundImage:
-              "linear-gradient(rgba(168, 85, 247, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(168, 85, 247, 0.04) 1px, transparent 1px)",
+              "linear-gradient(rgba(0, 229, 255, 0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 229, 255, 0.04) 1px, transparent 1px)",
             backgroundSize: "48px 48px",
           }}
         />
@@ -47,7 +47,7 @@ export default async function OGImage() {
           }}
         />
 
-        {/* Purple glow top-right */}
+        {/* Magenta glow top-right */}
         <div
           style={{
             position: "absolute",
@@ -57,7 +57,7 @@ export default async function OGImage() {
             height: 640,
             borderRadius: "50%",
             background:
-              "radial-gradient(circle, rgba(168, 85, 247, 0.12), transparent 70%)",
+              "radial-gradient(circle, rgba(255, 0, 255, 0.10), transparent 70%)",
           }}
         />
 
@@ -71,7 +71,7 @@ export default async function OGImage() {
             height: 480,
             borderRadius: "50%",
             background:
-              "radial-gradient(circle, rgba(6, 182, 212, 0.08), transparent 70%)",
+              "radial-gradient(circle, rgba(0, 229, 255, 0.08), transparent 70%)",
           }}
         />
 
@@ -93,7 +93,7 @@ export default async function OGImage() {
             cx="19"
             cy="19"
             r="13.5"
-            stroke="#c084fc"
+            stroke="#00e5ff"
             strokeWidth="2.5"
             fill="none"
           />
@@ -102,7 +102,7 @@ export default async function OGImage() {
             y1="29.5"
             x2="39"
             y2="39"
-            stroke="#a855f7"
+            stroke="#ff00ff"
             strokeWidth="5"
             strokeLinecap="round"
           />
@@ -122,10 +122,10 @@ export default async function OGImage() {
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
-          <ellipse cx="12" cy="6" rx="10" ry="3" stroke="#06b6d4" strokeWidth="1.5" fill="none" />
-          <path d="M2 6v4c0 1.66 4.48 3 10 3s10-1.34 10-3V6" stroke="#06b6d4" strokeWidth="1.5" fill="none" />
-          <path d="M2 10v4c0 1.66 4.48 3 10 3s10-1.34 10-3v-4" stroke="#06b6d4" strokeWidth="1.5" fill="none" />
-          <path d="M2 14v4c0 1.66 4.48 3 10 3s10-1.34 10-3v-4" stroke="#06b6d4" strokeWidth="1.5" fill="none" />
+          <ellipse cx="12" cy="6" rx="10" ry="3" stroke="#00e5ff" strokeWidth="1.5" fill="none" />
+          <path d="M2 6v4c0 1.66 4.48 3 10 3s10-1.34 10-3V6" stroke="#00e5ff" strokeWidth="1.5" fill="none" />
+          <path d="M2 10v4c0 1.66 4.48 3 10 3s10-1.34 10-3v-4" stroke="#00e5ff" strokeWidth="1.5" fill="none" />
+          <path d="M2 14v4c0 1.66 4.48 3 10 3s10-1.34 10-3v-4" stroke="#00e5ff" strokeWidth="1.5" fill="none" />
         </svg>
 
         {/* Main content */}
@@ -144,10 +144,10 @@ export default async function OGImage() {
               fontSize: 60,
               fontWeight: 400,
               letterSpacing: 4,
-              color: "#c084fc",
+              color: "#00e5ff",
               textAlign: "center",
               lineHeight: 1.15,
-              textShadow: "0 0 40px rgba(192, 132, 252, 0.3)",
+              textShadow: "0 0 40px rgba(0, 229, 255, 0.3)",
               marginBottom: 8,
             }}
           >
@@ -157,8 +157,8 @@ export default async function OGImage() {
           <div
             style={{
               fontSize: 24,
-              fontFamily: "VT323",
-              color: "#64748b",
+              fontFamily: "Pixelify Sans",
+              color: "#888899",
               letterSpacing: 6,
               textAlign: "center",
               marginTop: 8,
@@ -172,7 +172,7 @@ export default async function OGImage() {
             style={{
               width: 160,
               height: 2,
-              background: "linear-gradient(90deg, transparent, #a855f7, #06b6d4, transparent)",
+              background: "linear-gradient(90deg, transparent, #ff00ff, #00e5ff, transparent)",
               marginTop: 24,
               marginBottom: 20,
             }}
@@ -181,8 +181,8 @@ export default async function OGImage() {
           <div
             style={{
               fontSize: 16,
-              fontFamily: "VT323",
-              color: "#475569",
+              fontFamily: "Pixelify Sans",
+              color: "#888899",
               letterSpacing: 2,
               textAlign: "center",
             }}
@@ -199,7 +199,7 @@ export default async function OGImage() {
             left: 0,
             right: 0,
             height: 3,
-            background: "linear-gradient(90deg, #a855f7, #06b6d4)",
+            background: "linear-gradient(90deg, #ff00ff, #00e5ff)",
           }}
         />
 
@@ -211,7 +211,7 @@ export default async function OGImage() {
             left: 0,
             right: 0,
             height: 3,
-            background: "linear-gradient(90deg, #06b6d4, #a855f7)",
+            background: "linear-gradient(90deg, #00e5ff, #ff00ff)",
           }}
         />
       </div>
@@ -226,8 +226,8 @@ export default async function OGImage() {
           weight: 400,
         },
         {
-          name: "VT323",
-          data: vt323,
+          name: "Pixelify Sans",
+          data: pixelifySans,
           style: "normal",
           weight: 400,
         },

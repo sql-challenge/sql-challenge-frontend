@@ -149,9 +149,9 @@ export function TerminalEditor() {
             role="tab"
             aria-selected={i === activeTab}
             onClick={() => setActiveTab(i)}
-            className={`px-2 sm:px-4 py-2 text-[11px] sm:text-xs tracking-wide whitespace-nowrap transition-colors cursor-pointer border-b-2 -mb-[2px] ${
+            className={`px-2 sm:px-4 py-2 text-xs tracking-wide whitespace-nowrap transition-colors cursor-pointer border-b-2 -mb-[2px] ${
               i === activeTab
-                ? "text-primary border-primary bg-primary/10"
+                ? "text-primary border-primary"
                 : "text-muted-foreground border-transparent hover:text-foreground"
             }`}
           >
@@ -173,7 +173,7 @@ export function TerminalEditor() {
 
         {/* SQL Code */}
         <div className="px-4 py-3 overflow-x-auto">
-          <pre className="text-sm leading-relaxed">
+          <pre className="font-mono text-sm leading-relaxed tabular-nums">
             {example.code.map((line, li) => (
               <div key={li} className="whitespace-pre">
                 {li === example.code.length - 1 ? (

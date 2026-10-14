@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Badge } from "@/_components/_atoms/badge";
 import { Divider } from "@/_components/_atoms/divider";
 import { DatabaseSchema, VisaoTabela } from "@/_lib/types/capitulo";
-import { ChevronDown, ChevronRight, Database } from "feather-icons-react";
+import { ChevronDown, ChevronRight, Database, Link2, BarChart2 } from "feather-icons-react";
 
 interface DatabaseExplorerProps {
   database: DatabaseSchema;
@@ -55,7 +55,7 @@ export function DatabaseExplorer({ database }: DatabaseExplorerProps) {
           <Divider />
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-xl">🔗</span>
+              <Link2 className="w-4 h-4 text-accent" />
               <h4 className="text-sm font-semibold text-foreground">
                 Relacionamentos
               </h4>
@@ -64,7 +64,7 @@ export function DatabaseExplorer({ database }: DatabaseExplorerProps) {
               {database.visaoRelacionamentos.map((rel, index) => (
                 <div
                   key={index}
-                  className="bg-secondary/50 rounded-lg p-3 text-xs font-mono"
+                  className="border-2 border-border bg-secondary/50 p-3 text-xs font-mono"
                 >
                   <span className="text-primary">{rel.tabela_origem}</span>
                   <span className="text-muted-foreground">. {rel.coluna_origem}</span>
@@ -92,7 +92,7 @@ interface TableCardProps {
 
 function TableCard({ table, isExpanded, onToggle }: TableCardProps) {
   return (
-    <div className="border border-border rounded-lg overflow-hidden bg-card">
+    <div className="border-2 border-border overflow-hidden bg-card">
       {/* Table Header */}
       <button
         onClick={onToggle}
@@ -108,7 +108,7 @@ function TableCard({ table, isExpanded, onToggle }: TableCardProps) {
             {table.nome}
           </span>
           <Badge variant="outline" className="text-xs">
-            {table.colunas.length} colunas
+            {table.colunas.length} {table.colunas.length === 1 ? "coluna" : "colunas"}
           </Badge>
         </div>
       </button>
@@ -122,7 +122,7 @@ function TableCard({ table, isExpanded, onToggle }: TableCardProps) {
 
       {/* Columns */}
       {isExpanded && (
-        <div className="border-t border-border">
+        <div className="border-t-2 border-border">
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
@@ -150,31 +150,31 @@ function TableCard({ table, isExpanded, onToggle }: TableCardProps) {
                           {column.nome}
                         </span>
                         {column.descricao && (
-                          <span className="text-muted-foreground text-[10px]">
+                          <span className="text-muted-foreground text-[11px]">
                             {column.descricao}
                           </span>
                         )}
                       </div>
                     </td>
                     <td className="p-2">
-                      <code className="text-accent text-[11px]">
+                      <code className="text-accent text-xs">
                         {column.tipo}
                       </code>
                     </td>
                     <td className="p-2">
                       <div className="flex gap-1 flex-wrap">
                         {column.chave_primaria && (
-                          <Badge variant="primary" className="text-[9px] px-1. 5 py-0.5">
+                          <Badge variant="primary" className="text-[10px] px-1.5 py-0.5">
                             PK
                           </Badge>
                         )}
                         {column.fk_tabela && (
-                          <Badge variant="success" className="text-[9px] px-1.5 py-0.5">
+                          <Badge variant="success" className="text-[10px] px-1.5 py-0.5">
                             FK
                           </Badge>
                         )}
                         {! column.nulavel && (
-                          <Badge variant="warning" className="text-[9px] px-1.5 py-0.5">
+                          <Badge variant="warning" className="text-[10px] px-1.5 py-0.5">
                             NOT NULL
                           </Badge>
                         )}
@@ -188,9 +188,9 @@ function TableCard({ table, isExpanded, onToggle }: TableCardProps) {
 
           {/* Sample Data */}
           {table.exemplos && table.exemplos.length > 0 && (
-            <div className="border-t border-border p-3 bg-muted/20">
-              <p className="text-xs font-semibold text-foreground mb-2">
-                📊 Dados de Exemplo:
+            <div className="border-t-2 border-border p-3 bg-muted/20">
+              <p className="text-xs font-semibold text-foreground mb-2 inline-flex items-center gap-1.5">
+                <BarChart2 className="w-3.5 h-3.5 text-primary" /> Dados de Exemplo:
               </p>
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
@@ -199,7 +199,7 @@ function TableCard({ table, isExpanded, onToggle }: TableCardProps) {
                       {table.colunas.map((column) => (
                         <th
                           key={column.nome}
-                          className="text-left p-2 font-mono text-[10px] font-semibold text-foreground"
+                          className="text-left p-2 font-mono text-[11px] font-semibold text-foreground"
                         >
                           {column.nome}
                         </th>
@@ -212,7 +212,7 @@ function TableCard({ table, isExpanded, onToggle }: TableCardProps) {
                         {table.colunas.map((column) => (
                           <td
                             key={column.nome}
-                            className="p-2 font-mono text-[10px] text-muted-foreground"
+                            className="p-2 font-mono text-[11px] text-muted-foreground"
                           >
                             {String(row.dados || "NULL")}
                           </td>
@@ -223,7 +223,7 @@ function TableCard({ table, isExpanded, onToggle }: TableCardProps) {
                 </table>
               </div>
               {table.exemplos.length > 3 && (
-                <p className="text-[10px] text-muted-foreground mt-2 italic">
+                <p className="text-[11px] text-muted-foreground mt-2">
                   ...  e mais {table.exemplos.length - 3} linhas
                 </p>
               )}

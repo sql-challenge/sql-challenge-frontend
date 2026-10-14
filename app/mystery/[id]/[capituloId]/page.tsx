@@ -17,7 +17,7 @@ import { useUser } from "@/_context/userContext";
 import { NARRATIVAS } from "@/_lib/narrativas";
 import { useAchievements } from "@/_hooks/useAchievements";
 import { AchievementPopup } from "@/_components/_organisms/achievementPopup";
-import { CheckCircle, PlayCircle, Lock } from "feather-icons-react";
+import { CheckCircle, PlayCircle, Lock, Search, Clock } from "feather-icons-react";
 
 // Faixas de tempo por capítulo (em segundos)
 // Calibradas para refletir dificuldade crescente: SELECT → GROUP BY → JOIN → CTE → ENCODE
@@ -41,10 +41,10 @@ interface Tier {
 
 function getTimeTier(seconds: number, capituloNumero: number): Tier {
   const t = TIME_TIERS[Math.min(capituloNumero - 1, TIME_TIERS.length - 1)];
-  if (seconds <= t.gold)   return { tier: "gold",   label: "Ouro",      multiplier: 1.5,  icon: "🥇", timerColor: "text-yellow-400", badgeClass: "bg-yellow-400/10 border-yellow-400/40 text-yellow-400" };
-  if (seconds <= t.silver) return { tier: "silver", label: "Prata",     multiplier: 1.25, icon: "🥈", timerColor: "text-slate-300",  badgeClass: "bg-slate-300/10  border-slate-300/40  text-slate-300"  };
-  if (seconds <= t.bronze) return { tier: "bronze", label: "Bronze",    multiplier: 1.0,  icon: "🥉", timerColor: "text-amber-600", badgeClass: "bg-amber-600/10  border-amber-600/40  text-amber-600"  };
-  return                         { tier: "none",   label: "Sem bônus", multiplier: 1.0,  icon: "⏰", timerColor: "text-red-500",   badgeClass: "bg-red-500/10    border-red-500/40    text-red-500"    };
+  if (seconds <= t.gold)   return { tier: "gold",   label: "Ouro",      multiplier: 1.5,  icon: "🥇", timerColor: "text-warning",            badgeClass: "bg-warning/10 border-warning/40 text-warning" };
+  if (seconds <= t.silver) return { tier: "silver", label: "Prata",     multiplier: 1.25, icon: "🥈", timerColor: "text-muted-foreground",    badgeClass: "bg-muted border-border text-muted-foreground" };
+  if (seconds <= t.bronze) return { tier: "bronze", label: "Bronze",    multiplier: 1.0,  icon: "🥉", timerColor: "text-accent",              badgeClass: "bg-accent/10 border-accent/40 text-accent" };
+  return                         { tier: "none",   label: "Sem bônus", multiplier: 1.0,  icon: "⏰", timerColor: "text-destructive",         badgeClass: "bg-destructive/10 border-destructive/40 text-destructive" };
 }
 
 export default function CapituloEditorPage() {
@@ -428,15 +428,15 @@ export default function CapituloEditorPage() {
   const VictoryBanner = () =>
     !isVictorious ? null : (
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-card border-2 border-green-500 rounded-xl p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-300 ease-out-expo">
+        <div className="border-2 border-success bg-card p-5 sm:p-8 max-w-md w-full shadow-pixel animate-in zoom-in-95 duration-300 ease-out-expo">
           <div className="text-center space-y-4">
             <div className="text-6xl animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out-expo">{earnedTier?.tier === "gold" ? "🏆" : "🎉"}</div>
-            <h2 className="text-3xl font-bold text-green-500">Capítulo Resolvido!</h2>
+            <h2 className="text-2xl font-display tracking-wide text-success">Capítulo Resolvido!</h2>
             <p className="text-muted-foreground">{feedback}</p>
 
             {/* Tier conquistada */}
             {earnedTier && (
-              <div className={`rounded-lg border px-4 py-2 text-sm font-semibold ${earnedTier.badgeClass}`}>
+              <div className={`border-2 px-4 py-2 text-sm font-semibold ${earnedTier.badgeClass}`}>
                 {earnedTier.icon} Classificação: {earnedTier.label}
                 {earnedTier.multiplier > 1 && (
                   <span className="ml-2 opacity-80">(×{earnedTier.multiplier} de bônus!)</span>
@@ -445,12 +445,14 @@ export default function CapituloEditorPage() {
             )}
 
             {score > 0 && (
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+              <div className="border-2 border-success/30 bg-success/10 p-4">
                 <p className="text-sm text-muted-foreground mb-1">XP Ganho</p>
-                <p className="text-4xl font-bold text-green-500">+{score} XP</p>
-                <p className="text-xs text-muted-foreground mt-1">⏱ Tempo: {formatSeconds(totalSeconds)}</p>
+                <p className="font-mono text-4xl font-bold text-success tabular-nums">+{score} XP</p>
+                <p className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1.5">
+                  <Clock className="w-3.5 h-3.5" /> Tempo: {formatSeconds(totalSeconds)}
+                </p>
                 {hintsRevealed.length > 0 && (
-                  <p className="text-xs text-yellow-500 mt-1">
+                  <p className="text-xs text-warning mt-1">
                     {hintsRevealed.length} dica(s) usada(s)
                   </p>
                 )}
@@ -462,7 +464,7 @@ export default function CapituloEditorPage() {
                 onClick={() =>
                   router.push(`/mystery/${desafioId}/${Number(capituloId) + 1}`)
                 }
-                className="flex-1 px-4 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                className="pixel-press flex-1 px-4 py-3 border-2 border-primary bg-primary text-primary-foreground font-medium hover:bg-primary/90 shadow-pixel-sm"
               >
                 Próximo Capítulo
               </button>
@@ -473,7 +475,7 @@ export default function CapituloEditorPage() {
                     setShowAchievementPopup(true);
                   }
                 }}
-                className="px-4 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
+                className="pixel-press px-4 py-3 border-2 border-secondary bg-secondary text-secondary-foreground font-medium hover:bg-secondary/80 shadow-pixel-sm"
               >
                 Revisar
               </button>
@@ -492,17 +494,17 @@ export default function CapituloEditorPage() {
         return (
           <li
             key={obj.id}
-            className={`flex items-start gap-2 rounded-lg p-3 text-sm transition-colors ${
+            className={`flex items-start gap-2 border-2 p-3 text-sm transition-colors ${
               isDone
-                ? "bg-green-500/10 border border-green-500/20 text-green-400"
+                ? "bg-success/10 border-success/30 text-success"
                 : isCurrent
-                ? "bg-primary/10 border border-primary/30 text-foreground font-medium"
-                : "border border-border/40 text-muted-foreground opacity-50"
+                ? "bg-primary/10 border-primary/30 text-foreground font-medium"
+                : "border-border/40 text-muted-foreground opacity-50"
             }`}
           >
             <span className="mt-0.5 shrink-0">
               {isDone
-                ? <CheckCircle className="w-4 h-4 text-green-400" />
+                ? <CheckCircle className="w-4 h-4 text-success" />
                 : isCurrent
                 ? <PlayCircle className="w-4 h-4 text-primary" />
                 : <Lock className="w-4 h-4 text-muted-foreground" />
@@ -525,7 +527,7 @@ export default function CapituloEditorPage() {
           <h2 className="text-2xl font-bold text-destructive mb-2">{loadError}</h2>
           <button
             onClick={() => router.push("/mystery")}
-            className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-md"
+            className="pixel-press mt-4 px-4 py-2 border-2 border-primary bg-primary text-primary-foreground shadow-pixel-sm"
           >
             Voltar para Mistérios
           </button>
@@ -555,23 +557,23 @@ export default function CapituloEditorPage() {
 
   return (
     <ProtectedRoute>
-      <div className="h-screen bg-background flex flex-col overflow-hidden">
+      <div className="min-h-screen lg:h-screen bg-background flex flex-col lg:overflow-hidden">
         <Header />
-      <div className="flex-1 flex flex-col lg:flex-row gap-3 lg:gap-4 p-3 lg:p-4 overflow-hidden min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row gap-3 lg:gap-4 p-3 lg:p-4 lg:overflow-hidden lg:min-h-0">
         {/* LEFT: Info */}
-        <div className="lg:w-1/3 flex flex-col gap-4 overflow-hidden min-h-0">
+        <div className="lg:w-1/3 flex flex-col gap-3 sm:gap-4 lg:overflow-hidden lg:min-h-0">
           {(() => {
             const currentTier = capituloView ? getTimeTier(totalSeconds, capituloView.capitulo.numero) : null;
             const tiers = capituloView ? TIME_TIERS[Math.min(capituloView.capitulo.numero - 1, TIME_TIERS.length - 1)] : null;
             const xpBase = capituloView?.capitulo.xpRecompensa ?? 0;
             return (
-              <div className="bg-card border border-border rounded-lg p-3 sm:p-4">
+              <div className="pixel-panel p-3 sm:p-4">
                 <p className="text-[11px] sm:text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-0.5">Capítulo {capitulo.numero}</p>
 
                 {/* Timer em destaque */}
-                <div className={`flex items-center justify-between rounded-lg border px-3 sm:px-4 py-2 sm:py-2.5 mb-2 sm:mb-3 ${currentTier?.badgeClass ?? ""} ${currentTier?.tier === "gold" ? "animate-gold-pulse" : ""}`}>
+                <div className={`flex items-center justify-between border-2 px-3 sm:px-4 py-2 sm:py-2.5 mb-2 sm:mb-3 ${currentTier?.badgeClass ?? ""} ${currentTier?.tier === "gold" ? "animate-gold-pulse" : ""}`}>
                   <div>
-                    <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest opacity-70">Tempo</p>
+                    <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-widest opacity-70">Tempo</p>
                     <p className={`text-xl sm:text-2xl font-mono font-bold tabular-nums leading-none ${currentTier?.timerColor}`}>
                       {formatSeconds(totalSeconds)}
                     </p>
@@ -594,16 +596,16 @@ export default function CapituloEditorPage() {
                       const isBronze = key === "bronze";
                       const bonusPercent = Math.round((mult - 1) * 100);
                       return (
-                        <div key={key} className={`rounded-md border px-2 sm:px-2.5 py-1.5 sm:py-2 transition-all ${active ? "border-primary/50 bg-primary/10" : "border-border/70 opacity-80"}`}>
+                        <div key={key} className={`border-2 px-2 sm:px-2.5 py-1.5 sm:py-2 transition-all ${active ? "border-primary/50 bg-primary/10" : "border-border/70 opacity-80"}`}>
                           <div className="flex items-center justify-between gap-1.5 sm:gap-2">
                             <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
                               <span className="text-sm leading-none shrink-0">{icon}</span>
                               <div className="min-w-0">
                                 <p className="font-semibold leading-none text-[11px] sm:text-xs">{label}</p>
-                                <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-0.5 sm:mt-1 leading-none">até {formatSeconds(limit)}</p>
+                                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 leading-none">até {formatSeconds(limit)}</p>
                               </div>
                             </div>
-                            <p className={`text-[10px] sm:text-[11px] font-bold whitespace-nowrap shrink-0 ${active ? "text-primary" : "text-muted-foreground"}`}>
+                            <p className={`text-[11px] sm:text-xs font-bold whitespace-nowrap shrink-0 ${active ? "text-primary" : "text-muted-foreground"}`}>
                               {isBronze ? `${Math.round(xpBase)} XP` : `+${bonusPercent}% XP`}
                             </p>
                           </div>
@@ -618,7 +620,7 @@ export default function CapituloEditorPage() {
                   <span>Progresso</span>
                   <span className="font-semibold text-foreground">{completedObjetivos.length}/{totalObjetivos}</span>
                 </div>
-                <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                <div className="pixel-inset h-2 overflow-hidden">
                   <div
                     className="h-full bg-primary transition-all duration-500"
                     style={{ width: `${(completedObjetivos.length / totalObjetivos) * 100}%` }}
@@ -629,14 +631,14 @@ export default function CapituloEditorPage() {
           })()}
 
           {/* Tabs */}
-          <div className="bg-card border border-border rounded-lg flex-1 flex flex-col min-h-0">
-            <div className="flex border-b border-border">
+          <div className="pixel-panel flex flex-col lg:flex-1 lg:min-h-0">
+            <div className="flex border-b-2 border-border">
               <button
                 onClick={() => setActiveTab("story")}
-                className={`flex-1 px-2 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-sm font-medium transition-colors ${
+                className={`flex-1 px-2 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-[2px] ${
                   activeTab === "story"
-                    ? "text-primary border-b-2 border-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-primary border-primary"
+                    : "text-muted-foreground border-transparent hover:text-foreground"
                 } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
                 aria-current={activeTab === "story" ? "page" : undefined}
               >
@@ -644,10 +646,10 @@ export default function CapituloEditorPage() {
               </button>
               <button
                 onClick={() => setActiveTab("database")}
-                className={`flex-1 px-2 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-sm font-medium transition-colors ${
+                className={`flex-1 px-2 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-[2px] ${
                   activeTab === "database"
-                    ? "text-primary border-b-2 border-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-primary border-primary"
+                    : "text-muted-foreground border-transparent hover:text-foreground"
                 } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
                 aria-current={activeTab === "database" ? "page" : undefined}
               >
@@ -655,17 +657,17 @@ export default function CapituloEditorPage() {
               </button>
               <button
                 onClick={() => setActiveTab("hints")}
-                className={`flex-1 px-2 sm:px-4 py-2.5 sm:py-3 text-[11px] sm:text-sm font-medium transition-colors ${
+                className={`flex-1 px-2 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-[2px] ${
                   activeTab === "hints"
-                    ? "text-primary border-b-2 border-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-primary border-primary"
+                    : "text-muted-foreground border-transparent hover:text-foreground"
                 } focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
                 aria-current={activeTab === "hints" ? "page" : undefined}
               >
                 Dicas ({hintsRevealed.length}/{capituloView.dicas.length})
               </button>
             </div>
-            <div className="flex-1 overflow-auto p-3 sm:p-4">
+            <div className="p-3 sm:p-4 lg:flex-1 lg:overflow-auto">
               {activeTab === "story" && (
                 <div>
                   <p className="text-sm text-muted-foreground mb-4">
@@ -689,10 +691,10 @@ export default function CapituloEditorPage() {
         </div>
 
         {/* RIGHT: Editor */}
-        <div className="lg:w-2/3 flex flex-col gap-4 min-h-0">
+        <div className="lg:w-2/3 flex flex-col gap-3 sm:gap-4 lg:min-h-0">
           {/* Objetivo atual */}
           {!isVictorious && currentObjetivo && (
-            <div className="bg-primary/10 border border-primary/30 rounded-lg px-3 sm:px-4 py-2 sm:py-3">
+            <div className="border-2 border-primary/30 bg-primary/10 px-3 sm:px-4 py-2 sm:py-3">
               <p className="text-[11px] sm:text-xs font-semibold text-primary uppercase tracking-wide mb-0.5 sm:mb-1">
                 Objetivo {currentObjetivoIndex + 1} de {totalObjetivos}
               </p>
@@ -704,50 +706,50 @@ export default function CapituloEditorPage() {
 
           {/* Feedback de erro no objetivo atual */}
           {objetivoFeedback && !isVictorious && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-3 sm:px-4 py-2 sm:py-3" role="alert">
-              <p className="text-xs sm:text-sm text-red-400">{objetivoFeedback}</p>
+            <div className="border-2 border-destructive/30 bg-destructive/10 px-3 sm:px-4 py-2 sm:py-3" role="alert">
+              <p className="text-xs sm:text-sm text-destructive">{objetivoFeedback}</p>
             </div>
           )}
 
           {/* Editor SQL */}
           <div
-            className="bg-card border border-border rounded-lg flex flex-col min-h-[220px] lg:min-h-0 lg:h-[42%]"
+            className="pixel-panel flex flex-col h-[45vh] min-h-[240px] lg:h-[42%] lg:min-h-0"
           >
-            <div className="flex items-center justify-between border-b border-border px-3 sm:px-4 py-3">
+            <div className="flex items-center justify-between border-b-2 border-border px-3 sm:px-4 py-3">
               <div className="flex items-center gap-2 min-w-0">
                 <h2 className="text-sm font-semibold text-foreground truncate">Editor SQL</h2>
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-border bg-muted text-muted-foreground shrink-0">SQLite</span>
+                <span className="text-[11px] font-mono px-1.5 py-0.5 border border-border bg-muted text-muted-foreground shrink-0">SQLite</span>
               </div>
               <button
                 onClick={handleRunQuery}
                 disabled={isRunning || !isReady || isVictorious || !!pendingAdvance}
-                className="px-3 sm:px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                className="pixel-press px-3 sm:px-4 py-2 border-2 border-primary bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed shadow-pixel-sm whitespace-nowrap"
               >
-                {isRunning ? "Executando..." : <><span className="hidden sm:inline">▶ Executar Consulta</span><span className="sm:hidden">▶ Exec.</span> <span className="hidden md:inline">⌘⏎</span></>}
+                {isRunning ? "Executando..." : <><PlayCircle className="inline w-4 h-4 mr-1 -mt-0.5" /><span className="hidden sm:inline">Executar Consulta</span><span className="sm:hidden">Exec.</span> <span className="hidden md:inline">⌘⏎</span></>}
               </button>
             </div>
             <SqlEditor value={query} onChange={setQuery} />
           </div>
 
           {error && (
-            <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3" role="alert">
-              <p className="text-sm text-red-400">{error}</p>
+            <div className="border-2 border-destructive/30 bg-destructive/10 px-4 py-3" role="alert">
+              <p className="text-sm text-destructive">{error}</p>
             </div>
           )}
 
           {/* Painel de narrativa + confirmação de avanço */}
           {(narrativa || pendingAdvance) && (
-            <div className="bg-emerald-950/60 border border-emerald-500/40 rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 flex gap-2 sm:gap-3 items-start">
-              <span className="text-lg sm:text-xl shrink-0 mt-0.5">🔍</span>
+            <div className="border-2 border-success/40 bg-success/10 px-3 sm:px-4 py-2.5 sm:py-3 flex gap-2 sm:gap-3 items-start">
+              <Search className="w-5 h-5 shrink-0 mt-0.5 text-success" />
               <div className="flex-1 min-w-0">
-                <p className="text-[11px] sm:text-xs font-bold text-emerald-400 uppercase tracking-widest mb-0.5 sm:mb-1">Dedução do investigador</p>
-                <p className="text-xs sm:text-sm text-emerald-100 leading-relaxed">
+                <p className="text-[11px] sm:text-xs font-bold text-success uppercase tracking-widest mb-0.5 sm:mb-1">Dedução do investigador</p>
+                <p className="text-xs sm:text-sm text-foreground leading-relaxed">
                   {narrativa ?? "Objetivo concluído! Pronto para continuar a investigação?"}
                 </p>
                 {pendingAdvance && (
                   <button
                     onClick={handleContinue}
-                    className="mt-2 sm:mt-3 px-3 sm:px-4 py-1.5 sm:py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs sm:text-sm font-semibold rounded-lg transition-colors"
+                    className="pixel-press mt-2 sm:mt-3 px-3 sm:px-4 py-1.5 sm:py-2 border-2 border-success bg-success text-success-foreground text-xs sm:text-sm font-semibold shadow-pixel-sm"
                   >
                     {pendingAdvance.type === "victory" ? "Ver resultado final →" : "Continuar →"}
                   </button>
@@ -756,14 +758,14 @@ export default function CapituloEditorPage() {
               {!pendingAdvance && (
                 <button
                   onClick={() => setNarrativa(null)}
-                  className="shrink-0 text-emerald-500 hover:text-emerald-300 text-lg leading-none ml-auto"
+                  className="shrink-0 text-success hover:text-success/70 text-lg leading-none ml-auto"
                   aria-label="Fechar"
                 >×</button>
               )}
             </div>
           )}
 
-          <div className="bg-card border border-border rounded-lg flex-1 min-h-0 overflow-hidden">
+          <div className="pixel-panel flex-1 min-h-[240px] lg:min-h-0 overflow-hidden">
             <ResultsPanel results={results} error={null} isRunning={isRunning} />
           </div>
         </div>

@@ -5,7 +5,7 @@ import { Button } from "@/_components/_atoms/button";
 import { Badge } from "@/_components/_atoms/badge";
 import { Divider } from "@/_components/_atoms/divider";
 import type { Dica } from "@/_lib/types/capitulo";
-import { AlertCircle, Eye, Lock } from "feather-icons-react";
+import { AlertCircle, Eye, Lock, Zap } from "feather-icons-react";
 
 interface HintsPanelProps {
   dicas: Dica[];
@@ -44,7 +44,7 @@ export function HintsPanel({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">💡</span>
+            <Zap className="w-6 h-6 text-warning" />
             <h3 className="text-lg font-bold text-foreground">Dicas</h3>
           </div>
           <Badge variant={totalRevealed > 0 ? "warning" : "default"}>
@@ -58,7 +58,7 @@ export function HintsPanel({
       </div>
 
       {totalRevealed > 0 && (
-        <div className="bg-warning/10 border border-warning/20 rounded-lg p-3 flex items-start gap-2">
+        <div className="border-2 border-warning/30 bg-warning/10 p-3 flex items-start gap-2">
           <AlertCircle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
           <p className="text-xs text-warning">
             Você já revelou {totalRevealed}{" "}
@@ -86,7 +86,7 @@ export function HintsPanel({
             return (
               <div
                 key={dica.id}
-                className={`border rounded-lg p-4 transition-all ${
+                className={`pixel-panel p-4 transition-all ${
                   isRevealed
                     ? "border-primary/50 bg-primary/5"
                     : "border-border bg-card"
@@ -114,12 +114,12 @@ export function HintsPanel({
                 </div>
 
                 {isRevealed ? (
-                  <p className="text-sm text-foreground leading-relaxed bg-background/50 rounded-md p-3 border border-border">
+                  <p className="text-sm text-foreground leading-relaxed bg-background/50 border-2 border-border p-3">
                     {dica.conteudo}
                   </p>
                 ) : isConfirming ? (
                   <div className="space-y-3">
-                    <div className="bg-warning/10 border border-warning/20 rounded-md p-3">
+                    <div className="border-2 border-warning/30 bg-warning/10 p-3">
                       <p className="text-xs text-warning mb-2">
                         Tem certeza que deseja revelar esta dica?
                       </p>
@@ -148,7 +148,7 @@ export function HintsPanel({
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground italic">
+                    <p className="text-xs text-muted-foreground">
                       Esta dica está bloqueada. Clique no botão abaixo para
                       revelá-la.
                     </p>

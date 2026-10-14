@@ -2,23 +2,20 @@ import Link from "next/link"
 import { Header } from "@/_components/_organisms/header"
 import { Button } from "@/_components/_atoms/button"
 import { Badge } from "@/_components/_atoms/badge"
-import ThreeScene from "@/_components/_organisms/three-path"
+import PixelHero from "@/_components/_organisms/pixelHero"
 import { HeroCta } from "@/_components/_atoms/heroCta"
 import { TerminalEditor } from "@/_components/_molecules/terminalEditor"
 import { Reveal } from "@/_components/_atoms/reveal"
+import { Activity, Award, BookOpen, Clipboard, Terminal } from "feather-icons-react"
 
 export default function HomePage() {
   return (
     <div className="h-full relative flex flex-col gap-y-16">
       <Header />
-      <ThreeScene />
+      <PixelHero />
       {/* Hero Section */}
       <section className="relative mx-auto max-w-7xl sm:mt-12 mt-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <Reveal direction="up" className="relative z-10 text-center space-y-8">
-          <Badge variant="primary" className="text-sm border-2">
-            A forma mais envolvente de aprender SQL
-          </Badge>
-
           <h1 className="text-3xl sm:text-5xl md:text-6xl font-bold text-balance leading-tight font-display tracking-tight">
             Aprenda SQL sem decorar
             <br />
@@ -40,64 +37,43 @@ export default function HomePage() {
               </Button>
             </Link>
           </div>
-
-          {/* Social Proof
-  <div className="flex items-center justify-center gap-2 text-sm">
-    <div className="flex -space-x-2">
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent border-2 border-background" />
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-accent to-success border-2 border-background" />
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-success to-warning border-2 border-background" />
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-warning to-primary border-2 border-background flex items-center justify-center text-xs font-bold">
-        +10k
-      </div>
-    </div>
-    <span className="text-muted-foreground">
-      Desenvolvedores já resolveram mais de <strong className="text-foreground">250k mistérios</strong>
-    </span>
-  </div> */}
         </Reveal>
       </section>
 
       {/* Features Grid */}
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
-        <div className="grid md:grid-cols-3 gap-6">
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:py-16 sm:px-6 lg:px-8">
+        <div className="border-2 border-border bg-card shadow-pixel md:grid md:grid-cols-3 divide-y-2 md:divide-y-0 md:divide-x-2 divide-border/60">
           <Reveal direction="up" delay={0}>
-            <div className="flex flex-col h-full border-2 border-primary/40 bg-card p-5 shadow-pixel hover:border-primary transition-colors">
+            <div className="p-5 sm:p-6 h-full">
               <div className="mb-4 flex items-center justify-center w-10 h-10 bg-primary/10 border-2 border-primary/30">
-                <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
+                <BookOpen className="h-5 w-5 text-primary" />
               </div>
               <h3 className="text-lg font-bold mb-2 font-display tracking-wide">Aprendizado através de Histórias</h3>
-              <p className="text-muted-foreground leading-relaxed text-sm flex-1">
+              <p className="text-muted-foreground leading-relaxed text-sm">
                 Resolva mistérios de SQL por meio de histórias de detetive envolventes que tornam o aprendizado divertido e memorável.
               </p>
             </div>
           </Reveal>
 
           <Reveal direction="up" delay={100}>
-            <div className="flex flex-col h-full border-2 border-accent/40 bg-card p-5 shadow-pixel hover:border-accent transition-colors">
+            <div className="p-5 sm:p-6 h-full">
               <div className="mb-4 flex items-center justify-center w-10 h-10 bg-accent/10 border-2 border-accent/30">
-                <svg className="h-5 w-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                </svg>
+                <Award className="h-5 w-5 text-accent" />
               </div>
               <h3 className="text-lg font-bold mb-2 font-display tracking-wide">Progresso Gamificado</h3>
-              <p className="text-muted-foreground leading-relaxed text-sm flex-1">
+              <p className="text-muted-foreground leading-relaxed text-sm">
                 Ganhe XP, desbloqueie conquistas e suba no ranking enquanto domina conceitos de SQL.
               </p>
             </div>
           </Reveal>
 
           <Reveal direction="up" delay={200}>
-            <div className="flex flex-col h-full border-2 border-success/40 bg-card p-5 shadow-pixel hover:border-success transition-colors">
+            <div className="p-5 sm:p-6 h-full">
               <div className="mb-4 flex items-center justify-center w-10 h-10 bg-success/10 border-2 border-success/30">
-                <svg className="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-                </svg>
+                <Terminal className="h-5 w-5 text-success" />
               </div>
               <h3 className="text-lg font-bold mb-2 font-display tracking-wide">Prática Mão na Massa</h3>
-              <p className="text-muted-foreground leading-relaxed text-sm flex-1">
+              <p className="text-muted-foreground leading-relaxed text-sm">
                 Escreva consultas SQL reais em nosso editor interativo com feedback instantâneo e dicas.
               </p>
             </div>
@@ -106,7 +82,7 @@ export default function HomePage() {
       </section>
 
       {/* How It Works */}
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:py-16 sm:px-6 lg:px-8">
         <div className="text-center space-y-4 mb-8 sm:mb-12">
           <h2 className="text-3xl md:text-4xl font-bold font-display tracking-wide">
             Como Funciona
@@ -119,45 +95,30 @@ export default function HomePage() {
           {[
             {
               step: "01",
-              icon: (
-                <svg className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-                </svg>
-              ),
+              Icon: Clipboard,
               title: "Receba o Caso",
               description: "Cada mistério traz uma história detective e um objetivo SQL claro. Você sabe exatamente o que precisa descobrir.",
             },
             {
               step: "02",
-              icon: (
-                <svg className="h-5 w-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <polyline points="16 18 22 12 16 6" />
-                  <polyline points="8 6 2 12 8 18" />
-                </svg>
-              ),
+              Icon: Terminal,
               title: "Interrogue os Dados",
               description: "Escreva consultas SQL no editor interativo com feedback instantâneo. Errou? Receba dicas e tente de novo sem medo.",
             },
             {
               step: "03",
-              icon: (
-                <svg className="h-5 w-5 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <circle cx="12" cy="8" r="7" />
-                  <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
-                </svg>
-              ),
+              Icon: Award,
               title: "Resolva & Evolua",
               description: "Consulta certa? Ganhe XP, destrave conquistas e suba no ranking. Cada caso resolvido te prepara para o próximo nível.",
             },
           ].map((item, index) => (
             <Reveal key={item.step} direction="up" delay={index * 150}>
               <div className="relative border-2 border-border bg-card p-5 shadow-pixel hover:border-primary/60 transition-colors flex flex-col h-full">
-                <span className="text-3xl font-bold font-display text-muted-foreground/20 absolute top-2 right-3 select-none">
+                <span className="absolute top-3 right-3 text-xs font-mono font-bold text-muted-foreground border-2 border-border/60 px-1.5 py-0.5 select-none tabular-nums">
                   {item.step}
                 </span>
                 <div className="mb-4 flex items-center justify-center w-10 h-10 bg-primary/10 border-2 border-primary/30">
-                  {item.icon}
+                  <item.Icon className="h-5 w-5 text-primary" />
                 </div>
                 <h3 className="text-lg font-bold mb-2 font-display tracking-wide">{item.title}</h3>
                 <p className="text-muted-foreground leading-relaxed text-sm flex-1">{item.description}</p>
@@ -183,7 +144,7 @@ export default function HomePage() {
       </Reveal>
 
       {/* Topics */}
-      <section className="mx-auto max-w-7xl px-4 py-10 sm:py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
+      <section className="mx-auto max-w-7xl px-4 py-10 sm:py-16 sm:px-6 lg:px-8">
         <div className="text-center space-y-4 mb-8 sm:mb-12">
           <h2 className="text-3xl md:text-4xl font-bold font-display tracking-wide">
             O Que Você Vai Aprender
@@ -205,9 +166,7 @@ export default function HomePage() {
                     topic.levelVariant === "warning" ? "bg-warning/10 border-warning/30 text-warning" :
                       "bg-destructive/10 border-destructive/30 text-destructive"
                   }`}>
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                  </svg>
+                  <Activity className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold text-foreground truncate">{topic.name}</p>
@@ -223,7 +182,7 @@ export default function HomePage() {
 
       {/* Final CTA */}
       <Reveal direction="up">
-        <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8 bg-background bg-pixel-grid">
+        <section className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
           <div className="border-2 border-primary/40 bg-card p-6 sm:p-10 md:p-14 text-center shadow-pixel">
             <h2 className="text-3xl md:text-4xl font-bold font-display tracking-wide mb-4">
               Pronto para Resolver seu Primeiro Caso?
@@ -245,7 +204,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <Reveal direction="fade" delay={100}>
-        <footer className="border-t-2 border-border mt-16 bg-background bg-pixel-grid">
+        <footer className="border-t-2 border-border mt-16">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
             <div className="grid sm:grid-cols-3 gap-8">
               <div>

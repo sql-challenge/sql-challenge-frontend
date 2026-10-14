@@ -1,128 +1,149 @@
-# SQL CHALLENGE — Design Tokens
+# SQL CHALLENGE — Design System (Hybrid Pixel)
+
+> **Status:** implemented. Replaces the previous noir/Oswald token doc, which was never
+> shipped. The app uses an 8-bit / CRT detective aesthetic with a hybrid density rule.
+
+## Aesthetic Direction
+
+Retro pixel-art investigation terminal. A detective works a database crime scene inside a
+CRT. The look is intentionally chunky: hard borders, offset pixel shadows, monospaced
+numerals, and a faint scanline overlay.
+
+**Hybrid rule** (the core principle):
+- **Chrome** — header, nav, buttons, badges, tabs, terminal, modals, landing page: hard 8-bit.
+  Square corners (`radius: 0`), `border-2`, `shadow-pixel` (4px hard offset).
+- **Product surfaces** — dense data UI (dashboard cards, ranking rows, editor panels, forms):
+  softened for legibility. `border-2`, small radius (`3px`), `shadow-pixel-sm` (2px offset).
+  Never `rounded-full`, never `shadow-2xl`, never gradients.
 
 ## Colors
 
-### Light Theme
-```css
---background: oklch(0.99 0.005 250)
---foreground: oklch(0.15 0 0)
---card: oklch(1 0.005 250)
---card-foreground: oklch(0.15 0 0)
---primary: oklch(0.52 0.2 250)
---primary-foreground: oklch(0.98 0 0)
---secondary: oklch(0.96 0.005 250)
---secondary-foreground: oklch(0.15 0 0)
---muted: oklch(0.96 0.005 250)
---muted-foreground: oklch(0.5 0 0)
---accent: oklch(0.6 0.22 280)
---accent-foreground: oklch(0.98 0 0)
---destructive: oklch(0.55 0.22 25)
---success: oklch(0.6 0.18 145)
---warning: oklch(0.65 0.2 65)
---border: oklch(0.9 0.005 250)
---input: oklch(0.9 0.005 250)
---ring: oklch(0.52 0.2 250)
-```
+Defined as CSS variables in `app/globals.css`. Light and dark themes; **dark is default**.
 
-### Dark Theme
-```css
---background: oklch(0.1 0.008 250)
---foreground: oklch(0.98 0 0)
---card: oklch(0.14 0.008 250)
---card-foreground: oklch(0.98 0 0)
---primary: oklch(0.55 0.22 250)
---secondary: oklch(0.2 0.008 250)
---muted: oklch(0.2 0.008 250)
---muted-foreground: oklch(0.75 0 0)
---accent: oklch(0.6 0.22 280)
---border: oklch(0.24 0.008 250)
---input: oklch(0.2 0.008 250)
-```
+| Token | Light | Dark | Usage |
+|-------|-------|------|-------|
+| `--background` | `#e8e8e8` | `#07070d` | Page base |
+| `--foreground` | `#222222` | `#e8e8e8` | Text |
+| `--card` | `#ffffff` | `#0d0d1a` | Panels |
+| `--primary` | `#0055aa` | `#00e5ff` | Buttons, links, active, progress |
+| `--accent` | `#8800aa` | `#ff00ff` | Secondary highlights, achievements, friend |
+| `--success` | `#228833` | `#00ff41` | Correct query, completed objective |
+| `--warning` | `#cc8800` | `#ffcc00` | Hints, XP tiers, penalties |
+| `--destructive` | `#cc2222` | `#ff3333` | Errors, query failures |
+| `--border` | `#c0c0c0` | `#222244` | All borders + pixel shadows |
+| `--muted` | `#d4d0c8` | `#1a1a2e` | Inset wells, disabled |
 
-Neutrals are tinted toward brand blue (hue 250) at low chroma (0.005-0.008). Gives dark backgrounds a subtle noir blue cast.
-
-### Semantic Color Usage
-| Token | Usage |
-|-------|-------|
-| primary | Buttons, links, active states, progress fill |
-| accent | Secondary highlights, achievements UI |
-| success | Correct query, objectives completed |
-| destructive | Errors, query failures |
-| warning | XP penalties, hints warning |
-| muted | Subtle backgrounds, disabled states |
+**Rule:** never hardcode Tailwind palette colors (`text-emerald-400`, `bg-green-500`, …) or
+raw hex in JSX. Use semantic tokens only. SVG that must be theme-aware uses
+`fill="var(--primary)"` etc. so it follows the theme class automatically.
 
 ## Typography
 
-### Families
-| Role | Font | CSS Variable |
-|------|------|-------------|
-| Display (headings) | Oswald (sans, condensed) | `--font-oswald` |
-| Body (UI) | Sora (sans, geometric) | `--font-sora` |
-| Mono (code) | Geist Mono (variable) | `--font-geist-mono` |
+| Role | Font | Variable | Applied via |
+|------|------|----------|-------------|
+| Display (headings) | Press Start 2P | `--font-display` | `font-display tracking-wide` |
+| Body (UI + prose) | Pixelify Sans (400–700 variable) | `--font-body` | `font-sans` (default) |
+| Mono (code + numerals) | JetBrains Mono (100–800 variable) | `--font-jetbrains-mono` | `font-mono tabular-nums` |
 
-Usage: `className="font-display"` for headings, `font-sans` (default) for body.
+- Headings use `font-display` at reduced sizes (`text-lg`–`text-4xl`) — the font is wide, so
+  reserve it for short labels. Long prose stays in the body font.
+- Body font carries real weights (400–700): `font-semibold`/`font-bold` render as designed.
+  Do not rely on faux bold anywhere.
+- **Size floor:** nothing below `text-[10px]`, and 10px only for badges/meta chips; labels
+  start at `text-[11px]`/`text-xs` (12px). Inputs and form text use `text-base` (16px).
+- **Sans vs mono is a role split, not a style choice:** narrative and UI copy render in the
+  body font; the mono face is reserved for code, SQL, identifiers (table/column names), and
+  measured values (XP, timers, ranks, stats, counters) so digits don't jitter.
+- Code (CodeMirror, terminal, SQL output) uses the real monospace, never the body font.
+- Italic is not part of the system: the pixel faces have no true italics and synthesized
+  obliques are banned. Use weight, color, or size to differentiate.
 
-### Scale
-- **body**: 14–16px (text-sm / text-base)
-- **headings**: text-lg → text-5xl, `font-display tracking-tight`
-- **code**: text-sm font-mono
-- **captions**: text-xs
+## Spacing & Shape
 
-## Spacing
-- Grid system: Tailwind spacing scale (4px base)
-- Card padding: p-6 (24px)
-- Section gaps: gap-6 / gap-8
-- Page max-width: max-w-7xl (1280px)
-- Consistent border radius: rounded-xl (12px), rounded-lg (8px)
+- Grid: Tailwind 4px scale.
+- Page max-width `max-w-7xl`; panels `p-3`–`p-6`; section gaps `gap-6`/`gap-8`.
+- Radius: `0` for chrome, `3px` for product panels (`.pixel-panel`). No other radii.
 
-## Elevation
-- Cards: `border border-border bg-card` (minimal, flat)
-- Hover: `hover:border-primary/50 hover:shadow-lg`
-- Header: `bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/60`
-- Modal overlay: `bg-black/50 backdrop-blur-sm`
+## Pixel Primitives (`app/globals.css`)
+
+| Class | Effect |
+|-------|--------|
+| `.pixel-card` | Hard frame: `border-2`, `bg-card`, 4px pixel shadow, square. Chrome. |
+| `.pixel-panel` | Soft frame: `border-2`, `bg-card`, 3px radius, 2px pixel shadow. Product. |
+| `.pixel-inset` | Recessed well: `border-2`, `bg-muted`, inset shadow. Progress tracks, code gutters. |
+| `.pixel-press` | `:active` sinks element by `translate(2px,2px)` and removes its shadow. |
+| `.shadow-pixel` / `.shadow-pixel-sm` / `.shadow-pixel-primary` | Offset hard shadows. |
+| `.bg-pixel-grid` | Faint 32px grid background. Console/canvas surfaces only (e.g. the landing terminal section) — never tiled across every section. |
+| `.animate-blink-pixel` | Stepped on/off blink (cursor + loading dots). |
+| `.scanlines` | Global CRT scanline overlay on `<body>`. |
 
 ## Component States
+
 ### Button (`_atoms/button.tsx`)
-- base: `inline-flex items-center justify-center rounded-lg transition-all`
-- disabled: `opacity-50 pointer-events-none`
-- focus: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`
-- variants: primary / secondary / outline / ghost / destructive
-- sizes: sm / md / lg
+- Base: `pixel-press border-2`, focus-visible ring with offset, disabled dims + no cursor.
+- Variants: primary / secondary / outline / ghost / destructive. All carry a pixel shadow
+  that disappears on `:active` (the press).
+- Sizes: sm / md / lg.
 
 ### Badge (`_atoms/badge.tsx`)
-- base: `inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-colors`
-- variants: default / primary / success / warning / destructive / outline
+- `border-2`, square, `tracking-wide`, `whitespace-nowrap`. Variants share the semantic palette.
 
 ### Input (`_atoms/input.tsx`)
-- base: `flex h-11 w-full rounded-lg border border-input bg-input px-4 py-2 text-base`
-- focus: `focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`
-- error: `border-destructive focus-visible:ring-destructive`
+- `border-2 border-input`, square, focus ring with offset, error border uses `destructive`.
 
-## Motion Patterns
-- **Easing**: `ease-out-expo` (cubic-bezier(0.16, 1, 0.3, 1)) and `ease-out-quart` available as utilities
-- **Transitions**: transition-all with duration-300 / 500
-- **Progress bars**: `duration-500 ease-out`
-- **Hover cards**: `hover:-translate-y-1 hover:shadow-lg`, 300ms
-- **Modal entrance**: `animate-in zoom-in-95 duration-200` (tw-animate-css)
-- **Victory banner**: `animate-in zoom-in-95 duration-300 ease-out-expo`
-- **Timer gold pulse**: `animate-gold-pulse` (keyframe glow effect)
-- **Loading**: `animate-spin` (spinner), `animate-pulse` (skeleton)
-- **No Framer Motion / GSAP** — only CSS transitions, keyframes, and tw-animate-css
-- **`prefers-reduced-motion: reduce`** respected globally (durations set to 0.01ms)
+### Avatar (`_atoms/avatar.tsx`)
+- Square (`border-2`), not circular — consistent with the pixel grid.
+
+## Browser Surfaces
+
+The parts not drawn by components still carry the theme (declared once in `app/globals.css`,
+plus `ThemeProvider`):
+
+- `::selection` uses primary/primary-foreground; `caret-color` is primary everywhere.
+- Scrollbars are themed: `::-webkit-scrollbar` rules for Chrome/Safari (10px, square thumb in
+  `--border`, primary on hover, no buttons); `scrollbar-width`/`scrollbar-color` are scoped to
+  Firefox via `@supports (-moz-appearance: none)` so Chrome keeps the custom scrollbars.
+- `colorScheme` is set on `<html>` from `ThemeProvider` (inline style, syncs with the theme
+  toggle) so UA surfaces — default scrollbars, form controls — follow the active theme.
+- Tab pattern is one shape everywhere: `border-b-2` track + `-mb-[2px] border-b-2
+  border-transparent` buttons, active gets `text-primary border-primary`. No background-tinted
+  tab variants.
+
+## Motion
+
+- Easing utilities: `ease-out-expo`, `ease-out-quart`.
+- Scroll reveal: `Reveal` atom (IntersectionObserver, `once`, staggered `delay`).
+- Pixel press: 90ms transform + shadow.
+- Modal entrance: `animate-in zoom-in-95`; progress bars `duration-500 ease-out`.
+- Landing hero: `<canvas>` "Investigation Grid" (`_components/_organisms/pixelHero.tsx`) —
+  low-res buffer scaled with `image-rendering: pixelated`; ~30fps; static frame under
+  `prefers-reduced-motion` or `< 768px`.
+- **No animation libraries.** CSS transitions/keyframes + `tw-animate-css` only.
+- `prefers-reduced-motion: reduce` globally zeroes durations.
+
+## Icon & Emoji Policy
+
+- **Icons:** `feather-icons-react` for all UI chrome (nav, buttons, cards, empty states,
+  labels, stat tiles).
+- **Emoji:** allowed only in narrative/tier/celebration content — achievement icons, chapter
+  tier medals (🥇🥈🥉), narrative deduction marker, victory banner. Never in chrome.
+- No emoji for buttons, nav links, labels, or section headers.
 
 ## Accessibility
-- focus-visible rings on all interactive elements (buttons, inputs, tabs)
-- aria-label on: theme toggler, friend notification bell, close buttons
-- aria-current on tab buttons
-- aria-live="polite" on results panel
-- role="alert" on error/feedback messages
-- Semantic HTML throughout (button, input, label, nav, table, th, tr, td)
-- Form fields linked via htmlFor/id
-- Dark/light theme with class-based toggle
-- No jest-axe or a11y linting configured yet
 
-## Icon System
-- Library: feather-icons-react (feather icons) — primary icon set
-- Used in: header nav, achievements, stats, close buttons, user menu, search
-- Emoji only in content areas (narrative, tier badges, empty state illustrations)
-- No emoji in UI chrome (buttons, nav links, labels)
+- Focus-visible rings (with offset) on all interactive elements.
+- `aria-label` on icon-only controls; `aria-current` on tabs; `aria-live="polite"` on results;
+  `role="alert"` on errors; semantic `button`/`nav`/`table`/`th`/`td`.
+- Form fields linked via `htmlFor`/`id`.
+- Class-based dark/light toggle, dark default, persisted in `localStorage`.
+- `prefers-reduced-motion` respected globally.
+
+## Files of note
+
+- `app/globals.css` — tokens + primitives.
+- `app/layout.tsx` — font wiring (`Press Start 2P`, `Pixelify Sans`, `JetBrains Mono`).
+- `_context/themeProvider.tsx` — theme class + `colorScheme` on `<html>`.
+- `_components/_molecules/logo.tsx` — pixel-bitmap magnifier, theme-aware via CSS vars.
+- `_components/_organisms/pixelHero.tsx` — landing canvas.
+- `app/icon.svg`, `app/apple-icon.tsx`, `app/opengraph-image.tsx`, `app/manifest.ts` — brand
+  assets on the pixel palette.

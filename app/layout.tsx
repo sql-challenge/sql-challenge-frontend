@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Press_Start_2P, VT323 } from "next/font/google";
+import { JetBrains_Mono, Pixelify_Sans, Press_Start_2P } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/_context/themeProvider";
 import { UserProvider } from "@/_context/userContext";
@@ -11,9 +11,13 @@ const pressStart2P = Press_Start_2P({
   subsets: ["latin"],
 });
 
-const vt323 = VT323({
+const pixelifySans = Pixelify_Sans({
   variable: "--font-body",
-  weight: "400",
+  subsets: ["latin"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
@@ -68,7 +72,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${pressStart2P.variable} ${vt323.variable} h-full`}
+      className={`${pressStart2P.variable} ${pixelifySans.variable} ${jetbrainsMono.variable} h-full`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col scanlines">

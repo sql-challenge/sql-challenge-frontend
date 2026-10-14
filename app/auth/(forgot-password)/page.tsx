@@ -5,6 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import { sendPasswordResetEmail } from "firebase/auth"
+import { ArrowLeft, Mail } from "feather-icons-react"
 import { Logo } from "@/_components/_molecules/logo"
 import { AuthCard } from "@/_components/_organisms/auth-card"
 import { FormField } from "@/_components/_molecules/form-field"
@@ -43,17 +44,10 @@ export default function ForgotPasswordPage() {
 
           <AuthCard>
             <div className="text-center space-y-4">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-success/10">
-                <svg className="h-8 w-8 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                  />
-                </svg>
+              <div className="mx-auto flex h-16 w-16 items-center justify-center border-2 border-success/40 bg-success/10">
+                <Mail className="h-8 w-8 text-success" />
               </div>
-              <h2 className="text-2xl font-bold">Confira seu Email</h2>
+              <h2 className="text-xl font-display tracking-wide">Confira seu Email</h2>
               <p className="text-muted-foreground">
                 Enviamos instruções de redefinição de senha para <span className="font-semibold text-foreground">{email}</span>
               </p>
@@ -85,7 +79,7 @@ export default function ForgotPasswordPage() {
           <div className="mb-6 flex justify-center">
             <Logo size="lg" />
           </div>
-          <h1 className="text-3xl font-bold text-balance">Redefina sua Senha</h1>
+          <h1 className="text-2xl font-display tracking-wide text-balance">Redefina sua Senha</h1>
           <p className="mt-2 text-muted-foreground">
             Digite seu email e enviaremos instruções para redefinir sua senha
           </p>
@@ -104,7 +98,7 @@ export default function ForgotPasswordPage() {
             />
 
             {error && (
-              <p className="text-sm text-red-400 text-center">{error}</p>
+              <p className="text-sm text-destructive text-center">{error}</p>
             )}
 
             <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
@@ -115,9 +109,7 @@ export default function ForgotPasswordPage() {
           <div className="mt-6">
             <Link href="/auth/login" className="cursor-pointer">
               <Button variant="ghost" className="w-full">
-                <svg className="mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
+                <ArrowLeft className="mr-2 h-4 w-4" />
                 Voltar para Login
               </Button>
             </Link>

@@ -85,7 +85,7 @@
 
 @theme inline {
   --font-sans: var(--font-body);
-  --font-mono: var(--font-body);
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-display: var(--font-display);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -138,6 +138,45 @@
     font-family: var(--font-body);
     image-rendering: pixelated;
     image-rendering: crisp-edges;
+  }
+  ::selection {
+    background-color: var(--primary);
+    color: var(--primary-foreground);
+  }
+  body,
+  input,
+  textarea,
+  [contenteditable] {
+    caret-color: var(--primary);
+  }
+  /* Firefox-only thin scrollbars; Chrome/Safari use the ::-webkit-scrollbar
+     rules below, which are ignored when scrollbar-width/color are set. */
+  @supports (-moz-appearance: none) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--border);
+    border: 2px solid var(--background);
+    border-radius: 0;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--primary);
+  }
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-button {
+    display: none;
   }
 }
 
@@ -204,6 +243,47 @@
       rgba(255,255,255,.015) 2px,
       rgba(255,255,255,.015) 4px
     );
+  }
+}
+
+@layer components {
+  /* Hard 8-bit frame — chrome (square, 4px pixel shadow) */
+  .pixel-card {
+    border: 2px solid var(--border);
+    background-color: var(--card);
+    box-shadow: 4px 4px 0 0 var(--border);
+  }
+
+  /* Softened frame — product surfaces (2px radius, 2px pixel shadow) */
+  .pixel-panel {
+    border: 2px solid var(--border);
+    background-color: var(--card);
+    border-radius: 3px;
+    box-shadow: 2px 2px 0 0 var(--border);
+  }
+
+  /* Blocky inset wells (progress tracks, code gutters) */
+  .pixel-inset {
+    border: 2px solid var(--border);
+    background-color: var(--muted);
+    box-shadow: inset 2px 2px 0 0 rgba(0, 0, 0, 0.18);
+  }
+
+  /* Tactile press: element sinks into its pixel shadow */
+  .pixel-press {
+    transition: transform 90ms ease-out, box-shadow 90ms ease-out;
+  }
+  .pixel-press:active {
+    transform: translate(2px, 2px);
+    box-shadow: none !important;
+  }
+
+  /* SQL editor uses the real monospace, not the display font */
+  .cm-editor,
+  .cm-content,
+  .cm-gutters {
+    font-family: var(--font-mono);
+    font-size: 13px;
   }
 }
 
