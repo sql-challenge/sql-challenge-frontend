@@ -120,7 +120,7 @@ export default function CapituloEditorPage() {
   }, [hintsRevealed.length]);
 
   const syncProgressToBackend = useCallback(
-    (opts?: { capFinish?: number; xpObtido?: number }) => {
+    (opts?: { capFinish?: number; xpObtido?: number; keepalive?: boolean }) => {
       if (!user?.uid) return Promise.resolve();
 
       const capFinish = opts?.capFinish ?? 0;
@@ -133,7 +133,7 @@ export default function CapituloEditorPage() {
         return Promise.resolve();
       }
 
-      const syncPromise = api.post(`/api/user/${user.uid}/progress`, {
+      const body = {
         desafioId,
         nameChallenge: desafioId,
         capFinish,
@@ -141,7 +141,21 @@ export default function CapituloEditorPage() {
         tempoSegundos: secondsDelta,
         totalQueries: queriesDelta,
         totalHints: hintsDelta,
-      }).then(() => {
+      };
+
+      // keepalive (vitória): payload precisa chegar mesmo se a aba fechar já já.
+      // Os refs de delta avançam na hora (payload já está no fio); o promise
+      // fica em progressSyncRef p/ handleContinue esperar antes de reler o user.
+      if (opts?.keepalive) {
+        const keepalivePromise = api.postKeepalive(`/api/user/${user.uid}/progress`, body);
+        sentQueriesRef.current += queriesDelta;
+        sentHintsRef.current += hintsDelta;
+        sentSecondsRef.current += secondsDelta;
+        progressSyncRef.current = keepalivePromise;
+        return keepalivePromise;
+      }
+
+      const syncPromise = api.post(`/api/user/${user.uid}/progress`, body).then(() => {
         sentQueriesRef.current += queriesDelta;
         sentHintsRef.current += hintsDelta;
         sentSecondsRef.current += secondsDelta;
@@ -164,6 +178,13 @@ export default function CapituloEditorPage() {
       setCurrentObjetivoIndex(restored.currentObjetivoIndex);
       setCompletedObjetivos(restored.completedObjetivos);
       setHintsRevealed(restored.hintsRevealed);
+
+      // Baseline: tempo/dicas restaurados JÁ contam no servidor (chapter_sessions).
+      // Sem este init, o primeiro syncProgress do mount reenviaria os valores
+      // restaurados como deltas novos → dupla contagem em challenge_progress.
+      // Queries são por-sentada (não restauradas) → baseline permanece 0.
+      sentSecondsRef.current = totalSecondsRef.current;
+      sentHintsRef.current = restored.hintsRevealed.length;
     }
     setSessionRestored(true);
   }, [user?.uid, sessionLoaded, restored, sessionRestored]);
@@ -306,7 +327,13 @@ export default function CapituloEditorPage() {
     return () => window.removeEventListener("keydown", handleKeyDown)
   })
 
+  // Guarda síncrona contra duplo disparo — o listener de ⌘⏎ ignora o
+  // disabled do botão; dois Enter rápidos antes do re-render executariam
+  // a query duas vezes (e duplicariam o POST de vitória).
+  const runGuardRef = useRef(false);
+
   const handleRunQuery = async () => {
+    if (runGuardRef.current) return;
     if (!query.trim()) {
       setError("Por favor, escreva uma query SQL.");
       return;
@@ -317,6 +344,7 @@ export default function CapituloEditorPage() {
     }
     if (!capituloView) return;
 
+    runGuardRef.current = true;
     setIsRunning(true);
     setError(null);
     setObjetivoFeedback(null);
@@ -356,7 +384,8 @@ export default function CapituloEditorPage() {
             { currentObjetivoIndex, completedObjetivos: newCompleted, hintsRevealed },
             true
           );
-          syncProgressToBackend({ capFinish: capituloView.capitulo.numero, xpObtido: finalXp });
+          // keepalive: XP chega mesmo se o aluno fechar a aba na tela de vitória
+          syncProgressToBackend({ capFinish: capituloView.capitulo.numero, xpObtido: finalXp, keepalive: true });
         } else {
           const nextIndex = currentObjetivoIndex + 1;
           setPendingAdvance({ type: "next", nextIndex });
@@ -371,6 +400,7 @@ export default function CapituloEditorPage() {
       setError(err instanceof Error ? err.message : "Erro ao executar query");
       setResults(null);
     } finally {
+      runGuardRef.current = false;
       setIsRunning(false);
     }
   };

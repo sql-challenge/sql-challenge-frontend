@@ -23,7 +23,10 @@ interface UseChapterSessionReturn {
   saveProgress: (state: SessionState, isClosing?: boolean) => void;
 }
 
-const AUTOSAVE_INTERVAL_MS = 5 * 60_000;
+// Autosave a cada 60s — reduz a janela de tempo perdido em fechamentos sujos
+// (crash, aba morta). O fechamento sujo restante é reconciliado no backend
+// via last_started_at (getSession).
+const AUTOSAVE_INTERVAL_MS = 60_000;
 
 export function useChapterSession(
   uid: string | null | undefined,
@@ -175,7 +178,7 @@ export function useChapterSession(
     };
   }, [uid, sessionLoaded, saveProgress]);
 
-  // Autosave a cada 30s
+  // Autosave a cada 60s
   useEffect(() => {
     if (!uid || !sessionLoaded) return;
 

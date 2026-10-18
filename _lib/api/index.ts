@@ -155,6 +155,28 @@ class ApiClient {
         return this.request<T>(path, { method: "POST", body, token })
     }
 
+    /**
+     * POST fire-and-forget com keepalive — sobrevive ao fechamento da aba
+     * e leva o header Authorization. Use para payloads que precisam chegar
+     * mesmo se o usuário fechar a página logo em seguida (ex.: XP de vitória).
+     */
+    postKeepalive<T>(path: string, body?: unknown): Promise<void> {
+        const bearerToken = this.token
+        return fetch(`${this.baseUrl}${path}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                ...(bearerToken ? { Authorization: `Bearer ${bearerToken}` } : {}),
+            },
+            body: JSON.stringify(body),
+            keepalive: true,
+        }).then(async (response) => {
+            if (!response.ok) {
+                console.error("Keepalive POST failed:", response.status)
+            }
+        }).catch((err) => console.error("Keepalive POST error:", err))
+    }
+
     async put<T>(path: string, body?: unknown, token?: string): Promise<T> {
         return this.request<T>(path, { method: "PUT", body, token })
     }
