@@ -8,9 +8,11 @@ import { useAuth } from "@/_context/userContext"
 import { useRouter } from "next/navigation"
 import { Logo } from "@/_components/_molecules/logo"
 import { AuthCard } from "@/_components/_organisms/auth-card"
+import { VerifyEmailScreen } from "@/_components/_organisms/verifyEmailScreen"
 import { FormField } from "@/_components/_molecules/form-field"
 import { Button } from "@/_components/_atoms/button"
 import { registerSchema } from "@/_lib/forms"
+import { EmailVerificationSentError } from "@/_lib/errors"
 
 export default function RegisterPage() {
   const [username, setUsername] = useState("")
@@ -19,6 +21,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [awaitingVerification, setAwaitingVerification] = useState(false)
 
   const { signUp, signInWithGoogle, signInWithGithub } = useAuth()
   const router = useRouter()
@@ -36,10 +39,19 @@ export default function RegisterPage() {
       await signUp(parsed.data)
       router.push("/dashboard")
     } catch (err: unknown) {
+      // Produção: verificação enviada e conta deslogada → tela "confira seu email"
+      if (err instanceof EmailVerificationSentError) {
+        setAwaitingVerification(true)
+        return
+      }
       setError(err instanceof Error ? err.message : "Erro ao criar conta.")
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (awaitingVerification) {
+    return <VerifyEmailScreen email={email} mode="sent" />
   }
 
   return (

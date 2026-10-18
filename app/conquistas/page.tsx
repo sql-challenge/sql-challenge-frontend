@@ -35,22 +35,20 @@ export default function ConquistasPage() {
       return api.get<typeof user>(`/api/user/uid/${uid}`);
     };
 
-    const localXpSnapshot = user.xp ?? 0;
     fetchUserByUid(user.uid)
       .then(async (fresh) => {
         setIsLoading(false);
         if (!fresh?.uid) return;
 
-        let syncedUser = fresh;
-        if (localXpSnapshot > (fresh.xp ?? 0)) {
-          await api.put("/api/user/", { uid: fresh.uid, xp: localXpSnapshot }).catch((err) => console.error("XP sync error:", err));
-          syncedUser = { ...fresh, xp: localXpSnapshot };
-        }
-        if (syncedUser.xp !== user?.xp || syncedUser.username !== user?.username) {
-          updateUserLocal(syncedUser);
+        // O servidor é a única fonte de verdade para XP — nunca enviamos o
+        // snapshot local de volta (cliente não pode gravar XP: updateUserSchema
+        // não aceita xp/rankingPosition). Divergências se corrigem sozinhas
+        // quando os endpoints de progresso/conquistas re-sincronizam.
+        if (fresh.xp !== user?.xp || fresh.username !== user?.username) {
+          updateUserLocal(fresh);
         }
 
-        await checkAchievements(syncedUser);
+        await checkAchievements(fresh);
       })
       .catch((err) => {
         setIsLoading(false);

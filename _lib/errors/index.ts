@@ -41,6 +41,15 @@ export class ApiError extends Error {
   }
 
   /**
+   * Flow-control errors do fluxo de autenticação (lançadas pelo userContext,
+   * não por chamadas HTTP) — as páginas de login/registro usam-nas para
+   * trocar a tela sem tratar como falha.
+   */
+  isEmailVerificationGate(): boolean {
+    return this.code === "EMAIL_NOT_VERIFIED"
+  }
+
+  /**
    * Get user-friendly error message
    */
   getUserMessage(): string {
@@ -53,5 +62,28 @@ export class ApiError extends Error {
     }
     //
     return this.message
+  }
+}
+
+/**
+ * Lançada pelo signUp em produção após enviar o email de verificação.
+ * Não é uma falha — sinaliza para a página de registro trocar para a
+ * tela "confira seu email".
+ */
+export class EmailVerificationSentError extends Error {
+  constructor() {
+    super("Verificação de email enviada")
+    this.name = "EmailVerificationSentError"
+  }
+}
+
+/**
+ * Lançada pelo signIn em produção quando a conta de email/senha ainda
+ * não está verificada. A página de login mostra a tela de verificação.
+ */
+export class EmailUnverifiedError extends Error {
+  constructor() {
+    super("Email não verificado")
+    this.name = "EmailUnverifiedError"
   }
 }

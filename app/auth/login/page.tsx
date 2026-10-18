@@ -7,22 +7,24 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Logo } from "@/_components/_molecules/logo"
 import { AuthCard } from "@/_components/_organisms/auth-card"
+import { VerifyEmailScreen } from "@/_components/_organisms/verifyEmailScreen"
 import { FormField } from "@/_components/_molecules/form-field"
 import { Button } from "@/_components/_atoms/button"
 import { useAuth } from "@/_context/userContext"
 import { loginSchema } from "@/_lib/forms"
+import { EmailUnverifiedError } from "@/_lib/errors"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
+  const [unverified, setUnverified] = useState(false)
 
-  const { signIn, signInWithGoogle, signInWithGithub } = useAuth()
+  const { signIn, signInWithGoogle, signInWithGithub, signOut } = useAuth()
   const router = useRouter()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const doLogin = async () => {
     setError("")
     const parsed = loginSchema.safeParse({ email, password })
     if (!parsed.success) {
@@ -34,10 +36,36 @@ export default function LoginPage() {
       await signIn(email, password)
       router.push("/dashboard")
     } catch (err: unknown) {
+      // Produção: conta email/senha ainda não verificada → tela de verificação
+      if (err instanceof EmailUnverifiedError) {
+        setUnverified(true)
+        return
+      }
       setError(err instanceof Error ? err.message : "Erro ao entrar.")
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    await doLogin()
+  }
+
+  const handleUseOtherAccount = async () => {
+    await signOut()
+    setUnverified(false)
+  }
+
+  if (unverified) {
+    return (
+      <VerifyEmailScreen
+        email={email}
+        mode="gate"
+        onVerified={doLogin}
+        onUseOtherAccount={handleUseOtherAccount}
+      />
+    )
   }
 
   return (

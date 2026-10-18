@@ -25,13 +25,16 @@ import { api } from "@/_lib/api"
 import type React from "react"
 import { createContext, useContext, useCallback, useEffect, useState, useMemo } from "react"
 import { User } from '@/_lib/types/user'
+import { EmailVerificationSentError, EmailUnverifiedError } from "@/_lib/errors"
 import {
   signInWithGoogle as firebaseSignInWithGoogle,
   signInWithGithub as firebaseSignInWithGithub,
   signInWithEmailPassword as firebaseSignInWithEmailPassword,
   createUserWithEmailPassword as firebaseCreateUserWithEmailPassword,
+  sendVerificationEmail,
   firebaseSignOut,
-  onFirebaseAuthStateChanged,
+  onFirebaseIdTokenChanged,
+  REQUIRE_EMAIL_VERIFICATION,
 } from "@/_lib/firebase/auth"
 import type { RegisterFormData } from "@/_lib/forms"
 
@@ -98,7 +101,10 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   const uid = user?.uid ?? null
 
   useEffect(() => {
-    const unsubscribe = onFirebaseAuthStateChanged(async (firebaseUser) => {
+    // onIdTokenChanged: mantém o token do api client sempre fresco —
+    // dispara no boot, no login/logout E na rotação automática de token (~1h),
+    // evitando 401 em cascata (logout forçado) em sessões longas.
+    const unsubscribe = onFirebaseIdTokenChanged(async (firebaseUser) => {
       if (firebaseUser) {
         try {
           const freshToken = await firebaseUser.getIdToken()
@@ -114,8 +120,19 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe()
   }, [])
 
+  // Gate (produção): qualquer provedor com email não verificado não entra.
+  // Google/GitHub normalmente entregam email_verified=true; GitHub pode
+  // retornar email sem verificar — nesse caso cai na mesma tela de verificação.
+  const assertEmailVerified = (firebaseUser: { emailVerified: boolean }) => {
+    if (REQUIRE_EMAIL_VERIFICATION && !firebaseUser.emailVerified) {
+      throw new EmailUnverifiedError()
+    }
+  }
+
   const signIn = async (email: string, password: string) => {
-    const { idToken } = await firebaseSignInWithEmailPassword(email, password)
+    const { idToken, credential } = await firebaseSignInWithEmailPassword(email, password)
+    assertEmailVerified(credential.user)
+
     persistToken(idToken)
     const user = await api.post<User>('/api/user/auth/oauth', { idToken })
     persist(user)
@@ -123,7 +140,15 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signUp = async (form: RegisterFormData) => {
-    const { idToken } = await firebaseCreateUserWithEmailPassword(form.email, form.password)
+    const { idToken, credential } = await firebaseCreateUserWithEmailPassword(form.email, form.password)
+
+    // Gate (produção): envia verificação e desloga — só entra após confirmar.
+    if (REQUIRE_EMAIL_VERIFICATION) {
+      await sendVerificationEmail()
+      await firebaseSignOut()
+      throw new EmailVerificationSentError()
+    }
+
     persistToken(idToken)
     const user = await api.post<User>('/api/user/auth/oauth', { idToken, displayName: form.username })
     persist(user)
@@ -131,7 +156,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signInWithGoogle = async () => {
-    const { idToken, displayName, photoURL } = await firebaseSignInWithGoogle()
+    const { idToken, displayName, photoURL, credential } = await firebaseSignInWithGoogle()
+    assertEmailVerified(credential.user)
     persistToken(idToken)
     const user = await api.post<User>('/api/user/auth/oauth', { idToken, displayName, photoURL })
     persist(user)
@@ -139,7 +165,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signInWithGithub = async () => {
-    const { idToken, displayName, photoURL } = await firebaseSignInWithGithub()
+    const { idToken, displayName, photoURL, credential } = await firebaseSignInWithGithub()
+    assertEmailVerified(credential.user)
     persistToken(idToken)
     const user = await api.post<User>('/api/user/auth/oauth', { idToken, displayName, photoURL })
     persist(user)

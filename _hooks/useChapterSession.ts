@@ -95,9 +95,20 @@ export function useChapterSession(
       };
 
       if (isClosing) {
+        // fetch keepalive (e não sendBeacon): sendBeacon não envia o header
+        // Authorization → requireAuth rejeitaria com 401 e o último trecho de
+        // tempo da sessão se perderia. keepalive sobrevive ao unload E leva o token.
         const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/api/sessions/${uid}/${desafioId}/${capituloId}`;
-        const blob = new Blob([JSON.stringify(body)], { type: "application/json" });
-        navigator.sendBeacon(url, blob);
+        const token = api.getToken();
+        fetch(url, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+          body: JSON.stringify(body),
+          keepalive: true,
+        }).catch((err) => console.error("Session close save error:", err));
       } else {
         api.patch(`/api/sessions/${uid}/${desafioId}/${capituloId}`, body).catch((err) => console.error("Session save error:", err));
       }

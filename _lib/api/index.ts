@@ -14,6 +14,7 @@ type ApiResponse<T> = {
     error?: string
     fieldErrors?: Record<string, string>
     message?: string
+    code?: string
 }
 
 const DEBUG = typeof window !== "undefined" && process.env["NEXT_PUBLIC_API_DEBUG"] === "true"
@@ -103,14 +104,14 @@ class ApiClient {
                     const message = response.status >= 500
                         ? "Erro interno do servidor. Tente novamente."
                         : data.error
-                    throw new ApiError(message, response.status)
+                    throw new ApiError(message, response.status, data.fieldErrors, data.code)
                 }
 
                 if (!response.ok) {
                     const message = response.status >= 500
                         ? "Erro interno do servidor. Tente novamente."
                         : (data.error || data.message) || "Requisição falhou"
-                    throw new ApiError(message, response.status, data.fieldErrors)
+                    throw new ApiError(message, response.status, data.fieldErrors, data.code)
                 }
 
                 return data.data as T
