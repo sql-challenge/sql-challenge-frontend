@@ -8,7 +8,7 @@ import { api } from "@/_lib/api";
 import { ApiError } from "@/_lib/errors";
 import { formatSeconds } from "@/_hooks/useChapterSession";
 import type { Desafio } from "@/_lib/types/capitulo";
-import { BarChart, Download, Lock, RefreshCw, Clock, Terminal, Zap, BookOpen, ChevronDown, ChevronRight, PlayCircle, Search } from "feather-icons-react";
+import { BarChart, Download, Flag, Lock, RefreshCw, Clock, Terminal, Zap, BookOpen, ChevronDown, ChevronRight, PlayCircle, Search } from "feather-icons-react";
 
 interface SessionBrief {
   capituloId: number;
@@ -54,6 +54,30 @@ interface StudentEvent {
   clientTs: string | null;
   serverTs: string;
 }
+
+interface SecurityFlag {
+  id: string;
+  uid: string;
+  type: string;
+  detail: string;
+  desafioId: string;
+  capituloId: number;
+  serverTs: string;
+}
+
+interface FlagsResponse {
+  desafioId: string | null;
+  flags: SecurityFlag[];
+}
+
+const FLAG_LABELS: Record<string, string> = {
+  xp_over_max: "XP acima do máximo",
+  xp_without_progress: "XP sem avanço",
+  chapter_jump: "Pulo de capítulos",
+  zero_query_victory: "Vitória sem queries",
+  time_over_wallclock: "Tempo acima do relógio",
+  achievement_burst: "Rajada de conquistas",
+};
 
 interface StudentEventsResponse {
   uid: string;
@@ -102,14 +126,21 @@ export default function AdminPage() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [expandedUid, setExpandedUid] = useState<string | null>(null);
   const [eventsByUid, setEventsByUid] = useState<Record<string, StudentEvent[]>>({});
+  const [flags, setFlags] = useState<SecurityFlag[]>([]);
 
   const loadOverview = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setIsRefreshing(true);
     try {
-      const data = await api.get<OverviewResponse>(
-        `/api/admin/overview${desafioId ? `?desafioId=${encodeURIComponent(desafioId)}` : ""}`
-      );
+      const [data, flagData] = await Promise.all([
+        api.get<OverviewResponse>(
+          `/api/admin/overview${desafioId ? `?desafioId=${encodeURIComponent(desafioId)}` : ""}`
+        ),
+        api.get<FlagsResponse>(
+          `/api/admin/flags${desafioId ? `?desafioId=${encodeURIComponent(desafioId)}` : ""}`
+        ).catch(() => ({ desafioId: desafioId || null, flags: [] as SecurityFlag[] })),
+      ]);
       setStudents(data.students ?? []);
+      setFlags(flagData.flags ?? []);
       setAccessDenied(false);
       setError(null);
     } catch (err) {
@@ -187,6 +218,15 @@ export default function AdminPage() {
       (new Date(b.session.lastActivityAt ?? 0).getTime()) - (new Date(a.session.lastActivityAt ?? 0).getTime())
     );
   }, [students]);
+
+  // uid → nº de flags de atividade suspeita
+  const flagsByUid = useMemo(() => {
+    const map: Record<string, SecurityFlag[]> = {};
+    for (const f of flags) {
+      (map[f.uid] ??= []).push(f);
+    }
+    return map;
+  }, [flags]);
 
   const toggleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -330,6 +370,40 @@ export default function AdminPage() {
                 </div>
               )}
 
+              {/* Atividade suspeita (auditoria server-side) */}
+              {flags.length > 0 && (
+                <div className="mb-6">
+                  <h2 className="text-sm font-bold text-foreground mb-2 flex items-center gap-1.5">
+                    <Flag className="w-4 h-4 text-destructive" />
+                    Atividade suspeita ({flags.length})
+                  </h2>
+                  <div className="border-2 border-destructive/30 bg-destructive/5 divide-y divide-border/40">
+                    {flags.slice(0, 20).map((f) => {
+                      const st = students.find((s) => s.uid === f.uid);
+                      return (
+                        <div key={f.id} className="flex items-start gap-2 px-3 py-2">
+                          <span className="text-[10px] font-bold text-destructive border border-destructive/40 bg-destructive/10 px-1.5 py-0.5 shrink-0 uppercase">
+                            {FLAG_LABELS[f.type] ?? f.type}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs text-foreground font-semibold truncate">
+                              {st?.nick || st?.username || f.uid}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground truncate">{f.detail}</p>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground whitespace-nowrap mt-0.5">{relativeTime(f.serverTs)}</span>
+                        </div>
+                      );
+                    })}
+                    {flags.length > 20 && (
+                      <p className="text-[11px] text-muted-foreground px-3 py-1.5">
+                        + {flags.length - 20} mais (veja no CSV do recorte completo)
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Tabela */}
               {isLoading ? (
                 <LoadingScreen />
@@ -364,8 +438,20 @@ export default function AdminPage() {
                                 : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
                             </td>
                             <td className="px-2 py-2">
-                              <p className="font-semibold text-foreground">{s.nick || s.username}</p>
-                              <p className="text-[11px] text-muted-foreground">@{s.username}</p>
+                              <div className="flex items-center gap-1.5">
+                                {(flagsByUid[s.uid]?.length ?? 0) > 0 && (
+                                  <span
+                                    className="shrink-0 inline-flex items-center gap-0.5 text-[10px] font-bold text-destructive border border-destructive/40 bg-destructive/10 px-1 py-0.5"
+                                    title={flagsByUid[s.uid].map((f) => `${FLAG_LABELS[f.type] ?? f.type}: ${f.detail}`).join("\n")}
+                                  >
+                                    <Flag className="w-2.5 h-2.5" />{flagsByUid[s.uid].length}
+                                  </span>
+                                )}
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-foreground truncate">{s.nick || s.username}</p>
+                                  <p className="text-[11px] text-muted-foreground">@{s.username}</p>
+                                </div>
+                              </div>
                             </td>
                             <td className="px-2 py-2 font-mono tabular-nums text-primary">{s.xp.toLocaleString()}</td>
                             <td className="px-2 py-2 font-mono tabular-nums">{s.capFinish}</td>
