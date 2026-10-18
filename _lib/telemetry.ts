@@ -27,6 +27,10 @@ const FLUSH_INTERVAL_MS = 15_000
 const MAX_BATCH = 25
 const MAX_BUFFER = 100 // trava de memória: descarta os mais antigos
 
+// Código de turma/coorte (por deployment via env) — carimbado em cada
+// lote para filtrar por turma dentro de um mesmo desafio na escola.
+const CLASS_CODE: string | null = process.env["NEXT_PUBLIC_CLASS_CODE"] || null
+
 let queue: EventEnvelope[] = []
 let flushTimer: ReturnType<typeof setInterval> | null = null
 
@@ -99,7 +103,10 @@ export async function flushEvents(opts?: { keepalive?: boolean }): Promise<void>
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ events: batch }),
+      body: JSON.stringify({
+        ...(CLASS_CODE ? { classCode: CLASS_CODE } : {}),
+        events: batch,
+      }),
       ...(opts?.keepalive ? { keepalive: true } : {}),
     })
     if (!response.ok) {

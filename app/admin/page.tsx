@@ -1,16 +1,25 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { Header } from "@/_components/_organisms/header";
 import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
 import { LoadingScreen } from "@/_components/_organisms/loadingScreen";
 import { api } from "@/_lib/api";
 import { ApiError } from "@/_lib/errors";
 import { formatSeconds } from "@/_hooks/useChapterSession";
-import { useUser } from "@/_context/userContext";
 import type { Desafio } from "@/_lib/types/capitulo";
-import { BarChart, Download, Lock, RefreshCw, Clock, Terminal, Zap, BookOpen } from "feather-icons-react";
+import { BarChart, Download, Lock, RefreshCw, Clock, Terminal, Zap, BookOpen, ChevronDown, ChevronRight, PlayCircle, Search } from "feather-icons-react";
+
+interface SessionBrief {
+  capituloId: number;
+  desafioId: string;
+  currentObjetivoIndex: number;
+  completedCount: number;
+  totalSeconds: number;
+  isActive: boolean;
+  firstStartedAt: string | null;
+  lastActivityAt: string | null;
+}
 
 interface StudentOverview {
   uid: string;
@@ -27,6 +36,7 @@ interface StudentOverview {
   sessionCount: number;
   firstStartedAt: string | null;
   lastActivityAt: string | null;
+  sessions: SessionBrief[];
 }
 
 interface OverviewResponse {
@@ -34,9 +44,36 @@ interface OverviewResponse {
   students: StudentOverview[];
 }
 
+interface StudentEvent {
+  id: string;
+  type: string;
+  desafioId: string;
+  capituloId: number;
+  classCode: string | null;
+  payload: Record<string, unknown>;
+  clientTs: string | null;
+  serverTs: string;
+}
+
+interface StudentEventsResponse {
+  uid: string;
+  events: StudentEvent[];
+}
+
 type SortKey = "nick" | "xp" | "capFinish" | "tempoSegundos" | "totalQueries" | "totalHints" | "lastActivityAt";
 
 const REFRESH_INTERVAL_MS = 30_000;
+const ACTIVE_WINDOW_MS = 5 * 60_000; // "ativo agora" = atividade nos últimos 5 min
+
+const EVENT_LABELS: Record<string, string> = {
+  session_start: "▶ abriu capítulo",
+  session_end: "⏸ fechou capítulo",
+  query_run: "⌨ rodou query",
+  sql_error: "✗ erro de SQL",
+  hint_revealed: "💡 abriu dica",
+  objetivo_completed: "✔ objetivo resolvido",
+  chapter_victory: "🏆 vitória",
+};
 
 function relativeTime(iso: string | null): string {
   if (!iso) return "—";
@@ -48,9 +85,12 @@ function relativeTime(iso: string | null): string {
   return `há ${Math.floor(diffSec / 86_400)}d`;
 }
 
+function clockTime(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
 export default function AdminPage() {
-  const { user } = useUser();
-  const router = useRouter();
   const [desafios, setDesafios] = useState<Desafio[]>([]);
   const [desafioId, setDesafioId] = useState<string>("");
   const [students, setStudents] = useState<StudentOverview[]>([]);
@@ -60,6 +100,8 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("tempoSegundos");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
+  const [expandedUid, setExpandedUid] = useState<string | null>(null);
+  const [eventsByUid, setEventsByUid] = useState<Record<string, StudentEvent[]>>({});
 
   const loadOverview = useCallback(async (opts?: { silent?: boolean }) => {
     if (!opts?.silent) setIsRefreshing(true);
@@ -96,6 +138,25 @@ export default function AdminPage() {
     return () => clearInterval(interval);
   }, [loadOverview]);
 
+  const loadStudentEvents = useCallback(async (uid: string) => {
+    try {
+      const data = await api.get<StudentEventsResponse>(
+        `/api/admin/students/${uid}/events?limit=60${desafioId ? `&desafioId=${encodeURIComponent(desafioId)}` : ""}`
+      );
+      setEventsByUid((prev) => ({ ...prev, [uid]: data.events ?? [] }));
+    } catch (err) {
+      console.error("Erro ao carregar eventos do aluno:", err);
+    }
+  }, [desafioId]);
+
+  const toggleExpand = (uid: string) => {
+    setExpandedUid((cur) => {
+      const next = cur === uid ? null : uid;
+      if (next && !eventsByUid[next]) void loadStudentEvents(next);
+      return next;
+    });
+  };
+
   const sorted = useMemo(() => {
     const dir = sortDir === "asc" ? 1 : -1;
     return [...students].sort((a, b) => {
@@ -112,6 +173,20 @@ export default function AdminPage() {
       return dir * ((a[sortKey] as number ?? 0) - (b[sortKey] as number ?? 0));
     });
   }, [students, sortKey, sortDir]);
+
+  const liveSessions = useMemo(() => {
+    const now = Date.now();
+    const out: { student: StudentOverview; session: SessionBrief }[] = [];
+    for (const s of students) {
+      for (const sess of s.sessions) {
+        const recent = sess.lastActivityAt && now - new Date(sess.lastActivityAt).getTime() < ACTIVE_WINDOW_MS;
+        if (sess.isActive || recent) out.push({ student: s, session: sess });
+      }
+    }
+    return out.sort((a, b) =>
+      (new Date(b.session.lastActivityAt ?? 0).getTime()) - (new Date(a.session.lastActivityAt ?? 0).getTime())
+    );
+  }, [students]);
 
   const toggleSort = (key: SortKey) => {
     if (key === sortKey) {
@@ -149,7 +224,7 @@ export default function AdminPage() {
     queries: students.reduce((a, s) => a + s.totalQueries, 0),
     hints: students.reduce((a, s) => a + s.totalHints, 0),
     seconds: students.reduce((a, s) => a + s.tempoSegundos, 0),
-    activeNow: students.filter((s) => s.lastActivityAt && Date.now() - new Date(s.lastActivityAt).getTime() < 5 * 60_000).length,
+    activeNow: students.filter((s) => s.lastActivityAt && Date.now() - new Date(s.lastActivityAt).getTime() < ACTIVE_WINDOW_MS).length,
   }), [students]);
 
   const th = (key: SortKey, label: string) => (
@@ -186,7 +261,7 @@ export default function AdminPage() {
                 <div className="flex items-center gap-2">
                   <select
                     value={desafioId}
-                    onChange={(e) => setDesafioId(e.target.value)}
+                    onChange={(e) => { setDesafioId(e.target.value); setExpandedUid(null); }}
                     className="border-2 border-border bg-card text-foreground text-sm px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
                   >
                     <option value="">Todos os desafios</option>
@@ -213,7 +288,7 @@ export default function AdminPage() {
               </div>
 
               {/* Totais */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 mb-4">
                 {[
                   { Icon: Zap, label: "XP ganho", value: totals.xp.toLocaleString() },
                   { Icon: Terminal, label: "Queries", value: totals.queries.toLocaleString() },
@@ -231,14 +306,39 @@ export default function AdminPage() {
 
               {error && <p className="text-sm text-destructive mb-4">{error}</p>}
 
+              {/* Agora — quem está jogando e onde está travado */}
+              {liveSessions.length > 0 && (
+                <div className="mb-6">
+                  <h2 className="text-sm font-bold text-foreground mb-2 flex items-center gap-1.5">
+                    <PlayCircle className="w-4 h-4 text-success" /> Agora
+                  </h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                    {liveSessions.map(({ student, session }) => (
+                      <div key={`${student.uid}_${session.desafioId}_${session.capituloId}`} className="border-2 border-success/30 bg-success/5 px-3 py-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-semibold text-sm text-foreground truncate">{student.nick || student.username}</p>
+                          {session.isActive
+                            ? <span className="text-[10px] font-bold text-success border border-success/40 bg-success/10 px-1.5 py-0.5">AO VIVO</span>
+                            : <span className="text-[10px] text-muted-foreground">{relativeTime(session.lastActivityAt)}</span>}
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          Capítulo {session.capituloId} · objetivo {session.currentObjetivoIndex + 1} · {session.completedCount} resolvido(s) · {formatSeconds(session.totalSeconds)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Tabela */}
               {isLoading ? (
                 <LoadingScreen />
               ) : (
                 <div className="pixel-panel overflow-x-auto">
-                  <table className="w-full min-w-[720px] text-sm">
+                  <table className="w-full min-w-[760px] text-sm">
                     <thead className="border-b-2 border-border">
                       <tr className="text-muted-foreground">
+                        <th className="w-6" />
                         {th("nick", "Aluno")}
                         {th("xp", "XP total")}
                         {th("capFinish", "Capítulos")}
@@ -251,21 +351,38 @@ export default function AdminPage() {
                     </thead>
                     <tbody>
                       {sorted.length === 0 ? (
-                        <tr><td colSpan={8} className="text-center text-muted-foreground py-10">Nenhum aluno encontrad{desafioId ? "o para este desafio" : ""}.</td></tr>
+                        <tr><td colSpan={9} className="text-center text-muted-foreground py-10">Nenhum aluno encontrad{desafioId ? "o para este desafio" : ""}.</td></tr>
                       ) : sorted.map((s) => (
-                        <tr key={s.uid} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
-                          <td className="px-2 py-2">
-                            <p className="font-semibold text-foreground">{s.nick || s.username}</p>
-                            <p className="text-[11px] text-muted-foreground">@{s.username}</p>
-                          </td>
-                          <td className="px-2 py-2 font-mono tabular-nums text-primary">{s.xp.toLocaleString()}</td>
-                          <td className="px-2 py-2 font-mono tabular-nums">{s.capFinish}</td>
-                          <td className="px-2 py-2 font-mono tabular-nums">{s.totalQueries}</td>
-                          <td className="px-2 py-2 font-mono tabular-nums">{s.totalHints}</td>
-                          <td className="px-2 py-2 font-mono tabular-nums">{formatSeconds(s.tempoSegundos)}</td>
-                          <td className="px-2 py-2 text-muted-foreground text-xs whitespace-nowrap">{relativeTime(s.lastActivityAt)}</td>
-                          <td className="px-2 py-2 font-mono tabular-nums">{s.sessionCount}</td>
-                        </tr>
+                        <Fragment key={s.uid}>
+                          <tr
+                            className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
+                            onClick={() => toggleExpand(s.uid)}
+                          >
+                            <td className="px-1 py-2">
+                              {expandedUid === s.uid
+                                ? <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                                : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+                            </td>
+                            <td className="px-2 py-2">
+                              <p className="font-semibold text-foreground">{s.nick || s.username}</p>
+                              <p className="text-[11px] text-muted-foreground">@{s.username}</p>
+                            </td>
+                            <td className="px-2 py-2 font-mono tabular-nums text-primary">{s.xp.toLocaleString()}</td>
+                            <td className="px-2 py-2 font-mono tabular-nums">{s.capFinish}</td>
+                            <td className="px-2 py-2 font-mono tabular-nums">{s.totalQueries}</td>
+                            <td className="px-2 py-2 font-mono tabular-nums">{s.totalHints}</td>
+                            <td className="px-2 py-2 font-mono tabular-nums">{formatSeconds(s.tempoSegundos)}</td>
+                            <td className="px-2 py-2 text-muted-foreground text-xs whitespace-nowrap">{relativeTime(s.lastActivityAt)}</td>
+                            <td className="px-2 py-2 font-mono tabular-nums">{s.sessionCount}</td>
+                          </tr>
+                          {expandedUid === s.uid && (
+                            <tr className="border-b border-border/50">
+                              <td colSpan={9} className="px-3 py-3 bg-muted/20">
+                                <EventsTimeline events={eventsByUid[s.uid]} />
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>
@@ -276,5 +393,38 @@ export default function AdminPage() {
         </div>
       </div>
     </ProtectedRoute>
+  );
+}
+
+function EventsTimeline({ events }: { events?: StudentEvent[] }) {
+  if (!events) {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground py-2">
+        <Search className="w-3.5 h-3.5 animate-pulse" /> Carregando eventos...
+      </div>
+    );
+  }
+  if (events.length === 0) {
+    return <p className="text-xs text-muted-foreground py-2">Nenhum evento registrado ainda para este recorte.</p>;
+  }
+  return (
+    <div className="space-y-1 max-h-72 overflow-y-auto">
+      {events.map((e) => {
+        const sql = typeof e.payload?.["sql"] === "string" ? (e.payload["sql"] as string) : null;
+        const label = EVENT_LABELS[e.type] ?? e.type;
+        return (
+          <div key={e.id} className="flex items-start gap-2 text-xs border-b border-border/30 pb-1">
+            <span className="font-mono text-[10px] text-muted-foreground whitespace-nowrap mt-0.5">{clockTime(e.serverTs)}</span>
+            <span className="whitespace-nowrap font-medium">{label}</span>
+            {sql && (
+              <code className="flex-1 truncate text-[10px] font-mono text-muted-foreground bg-muted px-1.5 py-0.5">{sql}</code>
+            )}
+            {e.type === "objetivo_completed" && typeof e.payload?.["index"] === "number" && (
+              <span className="text-[10px] text-muted-foreground">#{(e.payload["index"] as number) + 1}</span>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
