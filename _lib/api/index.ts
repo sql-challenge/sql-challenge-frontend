@@ -79,11 +79,23 @@ class ApiClient {
             config.body = JSON.stringify(body)
         }
 
-        const doFetch = async (): Promise<T> => {
+        const doFetch = async (attempt = 1): Promise<T> => {
             if (DEBUG) console.debug(`[API] ${method} ${path}`)
 
             try {
                 const response = await fetch(`${this.baseUrl}${path}`, config)
+
+                // 429 (rate limit): o servidor rejeitou a requisição SEM aplicar
+                // a escrita — espera o Retry-After e tenta UMA vez (protege
+                // saves de progresso/XP contra rajadas).
+                if (response.status === 429 && attempt < 2) {
+                    const retryAfter = Number(response.headers.get("Retry-After"))
+                    const delayMs = Number.isFinite(retryAfter) && retryAfter > 0
+                        ? Math.min(retryAfter * 1000, 5000)
+                        : 2000
+                    await new Promise((resolve) => setTimeout(resolve, delayMs))
+                    return doFetch(attempt + 1)
+                }
 
                 if (response.status === 401) {
                     this.onAuthExpiredCb?.()
@@ -162,7 +174,7 @@ class ApiClient {
      */
     postKeepalive<T>(path: string, body?: unknown): Promise<void> {
         const bearerToken = this.token
-        return fetch(`${this.baseUrl}${path}`, {
+        const send = () => fetch(`${this.baseUrl}${path}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -170,8 +182,21 @@ class ApiClient {
             },
             body: JSON.stringify(body),
             keepalive: true,
-        }).then(async (response) => {
-            if (!response.ok) {
+        })
+        return send().then(async (response) => {
+            // 429: escrita rejeitada sem aplicar — espera o Retry-After e
+            // tenta UMA vez; o XP de vitória não pode se perder em silêncio.
+            if (response.status === 429) {
+                const retryAfter = Number(response.headers.get("Retry-After"))
+                const delayMs = Number.isFinite(retryAfter) && retryAfter > 0
+                    ? Math.min(retryAfter * 1000, 5000)
+                    : 2000
+                await new Promise((resolve) => setTimeout(resolve, delayMs))
+                const retry = await send()
+                if (!retry.ok) {
+                    console.error("Keepalive POST failed after retry:", retry.status)
+                }
+            } else if (!response.ok) {
                 console.error("Keepalive POST failed:", response.status)
             }
         }).catch((err) => console.error("Keepalive POST error:", err))
