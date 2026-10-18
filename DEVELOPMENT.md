@@ -1,6 +1,6 @@
 # DEVELOPMENT.md — Ambiente de desenvolvimento
 
-Guia para rodar o frontend localmente. Complementa o [README](./README.md).
+Guia para rodar o frontend localmente. Complementa o [README](./README.md) e o [guia geral do monorepo](../docs/DEVELOPMENT.md) (multiplataforma: Linux · macOS · Windows/WSL2).
 
 ## Pré-requisitos
 
@@ -90,5 +90,5 @@ npx tsc --noEmit # checagem de tipos
 | Login falha / erro de rede no auth | Emuladores do Firebase não estão rodando → `cd ../sql-challenge-backend && npm run emulators` |
 | Conta não encontrada (após trocar para o emulador) | O emulador começa vazio — crie a conta na tela de registro (as contas de produção não existem localmente) |
 | Login falha / dados vazios | Backend não está rodando ou `.env.local` aponta para outra URL |
-| Porta 3000 ocupada | Encerre o processo antigo (`lsof -ti :3000 \| xargs kill`) |
+| Porta 3000 ocupada | Linux: `fuser -k 3000/tcp` · macOS: `lsof -ti :3000 \| xargs kill` |
 | Conteúdo do jogo desatualizado | Reseed no backend: `bash scripts/db-dev.sh reseed` |
