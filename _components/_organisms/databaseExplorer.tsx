@@ -13,6 +13,13 @@ interface DatabaseExplorerProps {
 export function DatabaseExplorer({ database }: DatabaseExplorerProps) {
   const [expandedTables, setExpandedTables] = useState<string[]>([]);
 
+  const allExpanded = database.visaoTabelas.length > 0
+    && database.visaoTabelas.every((t) => expandedTables.includes(t.nome));
+
+  const toggleAll = () => {
+    setExpandedTables(allExpanded ? [] : database.visaoTabelas.map((t) => t.nome));
+  };
+
   const toggleTable = (tableName: string) => {
     setExpandedTables((prev) =>
       prev.includes(tableName)
@@ -24,11 +31,21 @@ export function DatabaseExplorer({ database }: DatabaseExplorerProps) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center gap-2">
-        <Database className="h-5 w-5 text-primary" />
-        <h3 className="text-lg font-bold text-foreground">
-          Estrutura do Banco de Dados
-        </h3>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Database className="h-5 w-5 text-primary" />
+          <h3 className="text-lg font-bold text-foreground">
+            Estrutura do Banco de Dados
+          </h3>
+        </div>
+        <button
+          type="button"
+          onClick={toggleAll}
+          className="pixel-press text-[11px] uppercase tracking-widest text-muted-foreground hover:text-primary border-2 border-border bg-card px-2.5 py-1 shadow-pixel-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-expanded={allExpanded}
+        >
+          {allExpanded ? "Recolher todas" : "Expandir todas"}
+        </button>
       </div>
 
       <p className="text-sm text-muted-foreground">
@@ -212,9 +229,10 @@ function TableCard({ table, isExpanded, onToggle }: TableCardProps) {
                         {table.colunas.map((column) => (
                           <td
                             key={column.nome}
-                            className="p-2 font-mono text-[11px] text-muted-foreground"
+                            className="p-2 font-mono text-[11px] text-muted-foreground max-w-[180px] truncate"
+                            title={row.dados?.[column.nome] != null ? String(row.dados[column.nome]) : undefined}
                           >
-                            {String(row.dados || "NULL")}
+                            {row.dados?.[column.nome] != null ? String(row.dados[column.nome]) : "NULL"}
                           </td>
                         ))}
                       </tr>
