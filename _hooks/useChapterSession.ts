@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/_lib/api";
+import { trackEvent } from "@/_lib/telemetry";
 
 export interface SessionState {
   currentObjetivoIndex: number;
@@ -97,6 +98,17 @@ export function useChapterSession(
         isClosing,
       };
 
+      // Fim de sessão (closing): registra no timeline antes do save,
+      // que reseta os contadores de pausa/início.
+      if (isClosing) {
+        trackEvent({
+          type: "session_end",
+          desafioId,
+          capituloId: Number(capituloId) || 0,
+          payload: { seconds: elapsed },
+        });
+      }
+
       if (isClosing) {
         // fetch keepalive (e não sendBeacon): sendBeacon não envia o header
         // Authorization → requireAuth rejeitaria com 401 e o último trecho de
@@ -156,6 +168,12 @@ export function useChapterSession(
         if (loadRequestIdRef.current !== requestId) return;
         sessionStartRef.current = Date.now();
         setSessionLoaded(true);
+
+        trackEvent({
+          type: "session_start",
+          desafioId,
+          capituloId: Number(capituloId) || 0,
+        });
       });
   }, [uid, desafioId, capituloId]);
 

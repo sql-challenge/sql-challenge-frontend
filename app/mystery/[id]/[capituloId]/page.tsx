@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Header } from "@/_components/_organisms/header";
 import { SqlEditor } from "@/_components/_organisms/sqlEditor";
@@ -17,6 +17,7 @@ import { useUser } from "@/_context/userContext";
 import { NARRATIVAS } from "@/_lib/narrativas";
 import { useAchievements } from "@/_hooks/useAchievements";
 import { AchievementPopup } from "@/_components/_organisms/achievementPopup";
+import { createTracker } from "@/_lib/telemetry";
 import { CheckCircle, PlayCircle, Lock, Search, Clock } from "feather-icons-react";
 
 // Faixas de tempo por capítulo (em segundos)
@@ -81,6 +82,9 @@ export default function CapituloEditorPage() {
   const [totalQueries, setTotalQueries] = useState(0);
   const [showAchievementPopup, setShowAchievementPopup] = useState(false);
   const { newlyUnlocked, checkAchievements, clearNewly } = useAchievements();
+
+  // Tracker de telemetria atado ao capítulo (fila + flush em lote)
+  const track = useMemo(() => createTracker(desafioId, capituloId), [desafioId, capituloId]);
 
   // Delta refs — rastreiam quanto já foi enviado ao backend para evitar dupla contagem
   const sentQueriesRef = useRef(0);
@@ -355,10 +359,24 @@ export default function CapituloEditorPage() {
       setTotalQueries((prev) => prev + 1);
       totalQueriesRef.current = totalQueries + 1;
 
+      // Telemetria: query executada (sql truncado a 200 chars)
+      track("query_run", {
+        sql: query.slice(0, 200),
+        ok: true,
+        rowCount: queryResults.rows.length,
+      });
+
       const objetivo = capituloView.objetivos[currentObjetivoIndex];
       const correct = checkObjetivoCondition(queryResults, objetivo, capituloView.schema.visaoTabelas);
 
       if (correct) {
+        // Telemetria: objetivo resolvido
+        track("objetivo_completed", {
+          objetivoId: objetivo.id,
+          index: currentObjetivoIndex,
+          secondsElapsed: totalSecondsRef.current,
+        });
+
         const newCompleted = [...completedObjetivos, objetivo.id];
         setCompletedObjetivos(newCompleted);
         setNarrativa(NARRATIVAS[objetivo.id] ?? null);
@@ -380,6 +398,15 @@ export default function CapituloEditorPage() {
             ? "Você já havia resolvido este capítulo!"
             : "Você desvendou todos os mistérios deste capítulo!");
           setPendingAdvance({ type: "victory", finalXp });
+
+          // Telemetria: vitória do capítulo
+          track("chapter_victory", {
+            tier: tier.tier,
+            xp: finalXp,
+            hintsUsed: hintsRevealed.length,
+            totalSeconds: totalSecondsRef.current,
+          });
+
           saveProgress(
             { currentObjetivoIndex, completedObjetivos: newCompleted, hintsRevealed },
             true
@@ -399,6 +426,12 @@ export default function CapituloEditorPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao executar query");
       setResults(null);
+
+      // Telemetria: erro de SQL (sql truncado, mensagem truncada)
+      track("sql_error", {
+        sql: query.slice(0, 200),
+        message: (err instanceof Error ? err.message : String(err)).slice(0, 300),
+      });
     } finally {
       runGuardRef.current = false;
       setIsRunning(false);
@@ -408,6 +441,8 @@ export default function CapituloEditorPage() {
   const handleRevealHint = (hintId: number) => {
     if (!hintsRevealed.includes(hintId)) {
       setHintsRevealed([...hintsRevealed, hintId]);
+      // Telemetria: dica aberta (com timestamp do flush)
+      track("hint_revealed", { hintId });
     }
   };
 
