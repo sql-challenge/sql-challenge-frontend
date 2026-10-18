@@ -1,6 +1,9 @@
 # DEVELOPMENT.md — Ambiente de desenvolvimento
 
-Guia para rodar o frontend localmente. Complementa o [README](./README.md) e o [guia geral do monorepo](../docs/DEVELOPMENT.md) (multiplataforma: Linux · macOS · Windows/WSL2).
+Guia para rodar o frontend localmente. Complementa o [README](./README.md) e o
+[guia geral do monorepo](https://github.com/sql-challenge/sql-challenge-monorepo/blob/main/docs/DEVELOPMENT.md)
+(multiplataforma: Linux · macOS · Windows/WSL2) — a **ordem de subida do stack
+completo** (banco + API + emuladores + frontend) vive lá.
 
 ## Pré-requisitos
 
@@ -31,22 +34,11 @@ Acesse [http://localhost:3000](http://localhost:3000).
 > O frontend depende do backend de dev para conteúdo (desafios, capítulos) e auth.
 > Suba o backend antes: `cd ../sql-challenge-backend && bash scripts/db-dev.sh up && npm run dev`.
 
-## Fluxo completo de dev (ordem)
+## Stack completo (ordem de subida)
 
-```bash
-# Terminal 1 — banco + API
-cd ../sql-challenge-backend
-bash scripts/db-dev.sh up     # PostgreSQL de dev (db_gestao_dev)
-npm run dev                   # API em http://localhost:3002
-
-# Terminal 2 — Firebase local (Auth + Firestore)
-cd ../sql-challenge-backend
-npm run emulators             # Auth 9099 · Firestore 8080 · UI 4000
-
-# Terminal 3 — frontend
-cd ../sql-challenge-frontend
-npm run dev                   # UI em http://localhost:3000
-```
+A sequência dos terminais (banco + API, emuladores, frontend) está no
+[guia geral do monorepo](https://github.com/sql-challenge/sql-challenge-monorepo/blob/main/docs/DEVELOPMENT.md),
+seção 4 — fonte única, para não divergir entre os repos.
 
 ## Firebase (dev)
 
