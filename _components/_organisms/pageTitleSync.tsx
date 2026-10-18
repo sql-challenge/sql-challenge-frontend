@@ -12,6 +12,7 @@ function getPageTitle(pathname: string): string {
   if (pathname === "/ranking") return "Ranking";
   if (pathname === "/conquistas") return "Conquistas";
   if (pathname === "/perfil") return "Perfil";
+  if (pathname === "/admin") return "Painel";
   if (pathname === "/auth/login") return "Login";
   if (pathname === "/auth/register") return "Cadastro";
   if (pathname === "/auth/forgot-password") return "Recuperar Senha";

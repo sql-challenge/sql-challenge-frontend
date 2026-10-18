@@ -3,7 +3,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { Header } from "@/_components/_organisms/header";
 import { ProtectedRoute } from "@/_components/_organisms/protectedRoute";
-import { LoadingScreen } from "@/_components/_organisms/loadingScreen";
 import { api } from "@/_lib/api";
 import { ApiError } from "@/_lib/errors";
 import { formatSeconds } from "@/_hooks/useChapterSession";
@@ -267,14 +266,23 @@ export default function AdminPage() {
     activeNow: students.filter((s) => s.lastActivityAt && Date.now() - new Date(s.lastActivityAt).getTime() < ACTIVE_WINDOW_MS).length,
   }), [students]);
 
-  const th = (key: SortKey, label: string) => (
-    <th
-      className="px-2 py-2 text-left text-[11px] uppercase tracking-wider cursor-pointer select-none hover:text-primary"
-      onClick={() => toggleSort(key)}
-    >
-      {label}{sortKey === key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
-    </th>
-  );
+  const th = (key: SortKey, label: string) => {
+    const active = sortKey === key;
+    return (
+      <th
+        className="px-2 py-2 text-left text-[11px] uppercase tracking-wider"
+        aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : undefined}
+      >
+        <button
+          type="button"
+          onClick={() => toggleSort(key)}
+          className={`inline-flex items-center gap-0.5 uppercase tracking-wider hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${active ? "text-foreground" : ""}`}
+        >
+          {label}{active ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
+        </button>
+      </th>
+    );
+  };
 
   return (
     <ProtectedRoute>
@@ -312,7 +320,7 @@ export default function AdminPage() {
                   <button
                     onClick={() => void loadOverview()}
                     disabled={isRefreshing}
-                    className="pixel-press px-3 py-2 border-2 border-border bg-card text-foreground text-sm disabled:opacity-50"
+                    className="pixel-press px-3 py-2 border-2 border-border bg-card text-foreground text-sm shadow-pixel-sm disabled:opacity-50 disabled:cursor-not-allowed"
                     aria-label="Atualizar"
                   >
                     <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
@@ -320,7 +328,7 @@ export default function AdminPage() {
                   <button
                     onClick={exportCsv}
                     disabled={sorted.length === 0}
-                    className="pixel-press flex items-center gap-1.5 px-3 py-2 border-2 border-primary bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50"
+                    className="pixel-press flex items-center gap-1.5 px-3 py-2 border-2 border-primary bg-primary text-primary-foreground text-sm font-medium shadow-pixel-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Download className="w-4 h-4" /> CSV
                   </button>
@@ -397,7 +405,7 @@ export default function AdminPage() {
                     })}
                     {flags.length > 20 && (
                       <p className="text-[11px] text-muted-foreground px-3 py-1.5">
-                        + {flags.length - 20} mais (veja no CSV do recorte completo)
+                        Mostrando as 20 mais recentes de {flags.length}.
                       </p>
                     )}
                   </div>
@@ -406,7 +414,38 @@ export default function AdminPage() {
 
               {/* Tabela */}
               {isLoading ? (
-                <LoadingScreen />
+                <div className="pixel-panel overflow-x-auto">
+                  <table className="w-full min-w-[760px] text-sm">
+                    <thead className="border-b-2 border-border">
+                      <tr className="text-muted-foreground">
+                        <th className="w-6" />
+                        <th className="px-2 py-2 text-left text-[11px] uppercase tracking-wider">Aluno</th>
+                        <th className="px-2 py-2 text-left text-[11px] uppercase tracking-wider">XP total</th>
+                        <th className="px-2 py-2 text-left text-[11px] uppercase tracking-wider">Capítulos</th>
+                        <th className="px-2 py-2 text-left text-[11px] uppercase tracking-wider">Queries</th>
+                        <th className="px-2 py-2 text-left text-[11px] uppercase tracking-wider">Dicas</th>
+                        <th className="px-2 py-2 text-left text-[11px] uppercase tracking-wider">Tempo</th>
+                        <th className="px-2 py-2 text-left text-[11px] uppercase tracking-wider">Última atividade</th>
+                        <th className="px-2 py-2 text-left text-[11px] uppercase tracking-wider">Sessões</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <tr key={i} className="border-b border-border/50">
+                          <td className="px-1 py-3"><span className="block h-3 w-3 bg-muted animate-pulse" /></td>
+                          <td className="px-2 py-3"><span className="block h-3 bg-muted w-24 animate-pulse" /><span className="block h-2 bg-muted w-16 mt-1.5 animate-pulse" /></td>
+                          <td className="px-2 py-3"><span className="block h-3 bg-muted w-12 animate-pulse" /></td>
+                          <td className="px-2 py-3"><span className="block h-3 bg-muted w-8 animate-pulse" /></td>
+                          <td className="px-2 py-3"><span className="block h-3 bg-muted w-8 animate-pulse" /></td>
+                          <td className="px-2 py-3"><span className="block h-3 bg-muted w-14 animate-pulse" /></td>
+                          <td className="px-2 py-3"><span className="block h-3 bg-muted w-16 animate-pulse" /></td>
+                          <td className="px-2 py-3"><span className="block h-3 bg-muted w-10 animate-pulse" /></td>
+                          <td className="px-2 py-3"><span className="block h-3 bg-muted w-8 animate-pulse" /></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               ) : (
                 <div className="pixel-panel overflow-x-auto">
                   <table className="w-full min-w-[760px] text-sm">
@@ -425,12 +464,24 @@ export default function AdminPage() {
                     </thead>
                     <tbody>
                       {sorted.length === 0 ? (
-                        <tr><td colSpan={9} className="text-center text-muted-foreground py-10">Nenhum aluno encontrad{desafioId ? "o para este desafio" : ""}.</td></tr>
+                        <tr><td colSpan={9} className="text-center py-12">
+                          <BarChart className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
+                          <p className="font-semibold text-foreground">Nenhum aluno ainda{desafioId ? " neste desafio" : ""}</p>
+                          <p className="text-sm text-muted-foreground mt-1">Os alunos aparecem aqui quando abrirem um capítulo de mistério.</p>
+                        </td></tr>
                       ) : sorted.map((s) => (
                         <Fragment key={s.uid}>
                           <tr
-                            className="border-b border-border/50 hover:bg-muted/30 transition-colors cursor-pointer"
+                            tabIndex={0}
+                            aria-expanded={expandedUid === s.uid}
+                            className="border-b border-border/50 hover:bg-muted/30 transition-colors duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                             onClick={() => toggleExpand(s.uid)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                toggleExpand(s.uid);
+                              }
+                            }}
                           >
                             <td className="px-1 py-2">
                               {expandedUid === s.uid

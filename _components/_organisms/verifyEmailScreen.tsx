@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Mail, RefreshCw, LogOut, AlertCircle } from "feather-icons-react";
 import { Logo } from "@/_components/_molecules/logo";
@@ -31,13 +31,24 @@ export function VerifyEmailScreen({ email, mode, onVerified, onUseOtherAccount }
   const [isChecking, setIsChecking] = useState(false);
   const [resent, setResent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Cooldown do reenvio: evita spam no Firebase e mostra por quê está desabilitado
+  const RESEND_COOLDOWN_S = 30;
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const t = setTimeout(() => setCooldown((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [cooldown]);
 
   const handleResend = async () => {
+    if (cooldown > 0 || isResending) return;
     setError(null);
     setIsResending(true);
     try {
       await sendVerificationEmail();
       setResent(true);
+      setCooldown(RESEND_COOLDOWN_S);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao reenviar o email.");
     } finally {
@@ -109,17 +120,17 @@ export function VerifyEmailScreen({ email, mode, onVerified, onUseOtherAccount }
                   variant="outline"
                   size="lg"
                   className="w-full"
-                  disabled={isResending}
+                  disabled={isResending || cooldown > 0}
                   onClick={handleResend}
                 >
                   <RefreshCw className="mr-2 h-4 w-4" />
-                  {isResending ? "Reenviando..." : "Reenviar email"}
+                  {isResending ? "Reenviando..." : cooldown > 0 ? `Reenviar email (${cooldown}s)` : "Reenviar email"}
                 </Button>
                 {onUseOtherAccount && (
                   <button
                     type="button"
                     onClick={onUseOtherAccount}
-                    className="mt-2 inline-flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+                    className="mt-2 inline-flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-[3px]"
                   >
                     <LogOut className="h-3.5 w-3.5" />
                     Usar outra conta
