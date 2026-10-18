@@ -247,7 +247,7 @@ Os testes de frontend usam `agent-browser` (Playwright) para simular o usuário 
 | 4 | Login email/senha | Preenche formulário, redireciona para `/dashboard` |
 | 5 | Dashboard | Stats cards, nível, conquistas |
 | 6 | Mysteries | `/mystery` — lista casos disponíveis |
-| 7 | Editor SQL | ⏳ Bloqueado — ver Session Notes no PLAN.md |
+| 7 | Editor SQL | `/mystery/{id}/{capituloId}` — objetivo, editor e resultados (coberto pela suíte `tests/e2e/`) |
 | 8 | Ranking | `/ranking` — tabela pública |
 | 9 | Perfil | `/perfil` — dados e edição |
 | 10 | Conquistas | `/conquistas` — lista conquistas |
