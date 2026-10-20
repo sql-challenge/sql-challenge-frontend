@@ -97,7 +97,14 @@ export class SqlDatabase {
               const val = row[key];
               if (val === null || val === undefined) return "NULL";
               if (typeof val === "boolean") return val ? "1" : "0";
-              if (typeof val === "string") return `'${val.replace(/'/g, "''")}'`;
+              if (typeof val === "string") {
+                // DATE do Postgres chega serializado como ISO datetime
+                // (ex.: "0539-11-01T00:00:00.000Z"). Normaliza para YYYY-MM-DD
+                // para exibição e comparação legíveis no SQLite do jogo.
+                const isoDate = /^(\d{4}-\d{2}-\d{2})T00:00:00(?:\.\d+)?Z$/.exec(val);
+                const normalized = isoDate ? isoDate[1] : val;
+                return `'${normalized.replace(/'/g, "''")}'`;
+              }
               return String(val);
             });
 
@@ -175,9 +182,25 @@ export class SqlDatabase {
         };
       }
 
+      // JOINs podem devolver colunas homônimas (ex.: data_ocorrido das duas
+      // views). Objetos JS colapsariam as chaves e a grade repetiria o último
+      // valor em todas as colunas duplicadas. Sufixa duplicatas (_2, _3...)
+      // para manter cabeçalho e valores alinhados.
+      const uniqueColumns: string[] = [];
+      const usedNames = new Set<string>();
+      for (const col of columns) {
+        let name = col;
+        let suffix = 2;
+        while (usedNames.has(name)) {
+          name = `${col}_${suffix++}`;
+        }
+        usedNames.add(name);
+        uniqueColumns.push(name);
+      }
+
       if (!values || values.length === 0) {
         return {
-          columns,
+          columns: uniqueColumns,
           rows: [],
         };
       }
@@ -186,15 +209,14 @@ export class SqlDatabase {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const rows = values.map((row: any) => {
         const rowObj: Record<string, unknown> = {};
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        columns.forEach((col: any, index: any) => {
+        uniqueColumns.forEach((col, index) => {
           rowObj[col] = row[index];
         });
         return rowObj;
       });
 
       return {
-        columns,
+        columns: uniqueColumns,
         rows,
       };
     } catch (error) {
