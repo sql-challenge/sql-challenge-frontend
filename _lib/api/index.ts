@@ -19,6 +19,16 @@ type ApiResponse<T> = {
 
 const DEBUG = typeof window !== "undefined" && process.env["NEXT_PUBLIC_API_DEBUG"] === "true"
 
+/** Nenhuma requisição pode ficar pendurada indefinidamente (ex.: VPS fora do ar). */
+const DEFAULT_TIMEOUT_MS = 15_000
+
+function withTimeout(signal: AbortSignal | undefined, timeoutMs: number): AbortSignal {
+    const timeout = AbortSignal.timeout(timeoutMs)
+    if (!signal) return timeout
+    // Combina com o signal do chamador quando a plataforma suporta.
+    return typeof AbortSignal.any === "function" ? AbortSignal.any([signal, timeout]) : timeout
+}
+
 class ApiClient {
     private baseUrl: string
     private token: string | null = null
@@ -47,6 +57,7 @@ class ApiClient {
 
     async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
         const { method = "GET", body, headers = {}, token, signal } = options
+        const requestSignal = withTimeout(signal, DEFAULT_TIMEOUT_MS)
 
         // ── Deduplicate concurrent GET requests ────────────────
         if (method === "GET") {
@@ -64,7 +75,7 @@ class ApiClient {
                 "Content-Type": "application/json",
                 ...headers,
             },
-            signal,
+            signal: requestSignal,
         }
 
         const bearerToken = token ?? this.token
@@ -132,7 +143,7 @@ class ApiClient {
                     throw error
                 }
 
-                if (error instanceof DOMException && error.name === "AbortError") {
+                if (error instanceof DOMException && (error.name === "AbortError" || error.name === "TimeoutError")) {
                     throw error
                 }
 

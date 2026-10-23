@@ -28,6 +28,7 @@ export function RankingShell({ initialPlayers }: { initialPlayers: Record<string
   const { user: me } = useUser();
   const [players, setPlayers] = useState<User[]>(() => initialPlayers as unknown as User[]);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(() => initialPlayers.length === 0);
   const mountedRef = useRef(true);
 
   const loadRanking = useCallback(async () => {
@@ -41,11 +42,18 @@ export function RankingShell({ initialPlayers }: { initialPlayers: Record<string
       if (mountedRef.current) {
         setError("Não foi possível carregar o ranking.");
       }
+    } finally {
+      if (mountedRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     mountedRef.current = true;
+    // Carrega imediatamente: o prefetch do servidor pode ter falhado (timeout),
+    // e o primeiro poll não pode esperar o intervalo inteiro.
+    void loadRanking();
     const interval = setInterval(() => loadRanking(), POLL_INTERVAL_MS);
     return () => {
       mountedRef.current = false;
@@ -159,7 +167,14 @@ export function RankingShell({ initialPlayers }: { initialPlayers: Record<string
               );
             })}
 
-            {players.length === 0 && (
+            {loading && players.length === 0 && (
+              <div className="text-center py-12 text-muted-foreground">
+                <TrendingUp className="w-8 h-8 mx-auto mb-3 text-muted-foreground animate-pulse" />
+                <p className="text-base font-semibold text-foreground">Carregando ranking...</p>
+              </div>
+            )}
+
+            {!loading && players.length === 0 && (
               <div className="text-center py-12 text-muted-foreground">
                 <TrendingUp className="w-8 h-8 mx-auto mb-3 text-muted-foreground" />
                 <p className="text-base font-semibold text-foreground">Ranking vazio</p>

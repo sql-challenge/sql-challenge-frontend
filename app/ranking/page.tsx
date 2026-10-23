@@ -6,6 +6,7 @@ async function getRanking() {
   try {
     const res = await fetch(`${baseUrl}/api/user/top?limit=20`, {
       next: { revalidate: 60 },
+      signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) return [];
     const json = await res.json();
